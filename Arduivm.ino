@@ -16,16 +16,23 @@ void setup() {
   //Number n = Number();
   Int32 i5(5);
   Int32 i4(4);
+  Int32 i9(19);
+  Int32 i8(81);
+  Int32 zero(0);
   Add2 add2;
+  JmpIfGreater jig;
   //cells[0]=&n;
   //cells[0]->exec();
   vm.writeCell(&i5, 0);
   vm.writeCell(&i4, 1);
   vm.writeCell(&add2, 2);
-  vm.step();
-  vm.step();
-  vm.step();
-  vm.step();
+  vm.writeCell(&zero, 3);
+  vm.writeCell(&i9, 4);
+  vm.writeCell(&i8, 5);
+
+  vm.writeCell(&jig, 6);
+  for (uint16_t i = 0; i < 20; i++)
+    vm.step();
 
 }
 

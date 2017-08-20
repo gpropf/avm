@@ -33,5 +33,12 @@ class Add2: public Instruction {
     void exec(VM & vm);
 };
 
+
+class JmpIfGreater: public Instruction {
+  public:
+   
+    void exec(VM & vm);
+};
+
 #endif
 

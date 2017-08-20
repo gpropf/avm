@@ -19,6 +19,10 @@ class VM {
     inline void incIP() {
       _IP++;
     }
+    inline void setIP(uint16_t newIP) {
+      Serial.println("New IP:" + String(newIP));
+      _IP = newIP;
+    }
 
     void push(Cell *c);
 };

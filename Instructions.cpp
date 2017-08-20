@@ -31,3 +31,15 @@ void Add2::exec(VM & vm) {
   vm.push(isum32);
   Serial.println("Sum:" + String(sum));
 };
+
+void JmpIfGreater::exec(VM & vm) {
+  //Serial.println("Number::exec()");
+  // Number * n = new Number();
+  Int32 * v1 = static_cast<Int32 *>(vm.pop());
+  Int32 * v2 = static_cast<Int32 *>(vm.pop());
+  Int32 * addr = static_cast<Int32 *>(vm.pop());
+  if (v1->toInt() > v2->toInt()) {
+    vm.setIP((uint16_t)(addr->toInt()));
+  }
+  Serial.println("JmpIfGreater:" + String(addr->toInt()));
+};

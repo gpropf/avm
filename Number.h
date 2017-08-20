@@ -12,7 +12,7 @@ class Number: public Cell {
 
 class Int32: public Number {
   private:
-    int _ival;
+    int32_t _ival;
   public:
     virtual int toInt();
     Int32();

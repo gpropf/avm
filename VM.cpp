@@ -35,7 +35,7 @@ Cell * VM::pop() {
 void VM::push(Cell *c) {
   if (_SP >= _stackSize )
     return;
-  //Serial.println("push 1 - SP:" + String(_SP));
+  Serial.println("push:" + String(static_cast<Int32*>(c)->toInt()) + ", SP:" + String(_SP));
   _stack[_SP++] = c;
   //Serial.println("push 2 - SP:" + String(_SP));
   //_IP++;
