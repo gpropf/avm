@@ -22,6 +22,18 @@
   };
 */
 
+boolean AnalogWrite::exec (VM & vm) {
+  Serial.print("boolean AnalogWrite::exec(), ");
+  Int32 * pinCell =  static_cast<Int32 *>(vm.pop());
+  Serial.print("PIN#:" + String(pinCell->toInt()));
+  Int32 * valCell = static_cast<Int32 *>(vm.pop());
+  Serial.print(", val = " + String(valCell->toInt()) + ", ");
+  analogWrite(pinCell->toInt(), valCell->toInt());
+  vm.push(valCell);
+
+  Serial.println("leaving AnalogWrite::exec()--");
+  return true;
+}
 
 boolean Halt::exec (VM & vm) {
   Serial.print("HALTING!!!! Halt::exec(), ");
@@ -48,6 +60,16 @@ boolean DigitalRead::exec (VM & vm) {
   //vm.readPin(static_cast<Int32 *>(vm.pop()),false);
   return true;
 }
+
+boolean Delay::exec(VM & vm) {
+  Serial.print("Delay::exec() [");
+  
+  Int32 * msec =  static_cast<Int32 *>(vm.pop());
+  Serial.println("]");
+  delay(msec->toInt());
+  Serial.print("Ending Delay::exec() [");
+  return true;
+};
 
 boolean Add2::exec(VM & vm) {
   Serial.print("Add2::exec() [");

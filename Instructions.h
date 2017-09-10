@@ -38,7 +38,19 @@ class Add2: public Instruction {
     boolean exec(VM & vm);
 };
 
+class Delay: public Instruction {
+  public:
+   
+    boolean exec(VM & vm);
+};
+
 class AnalogRead: public Instruction {
+  public:
+   
+    boolean exec(VM & vm);
+};
+
+class AnalogWrite: public Instruction {
   public:
    
     boolean exec(VM & vm);

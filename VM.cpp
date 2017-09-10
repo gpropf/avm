@@ -15,11 +15,19 @@ uint8_t VM::readPin(uint8_t pin, boolean isAnalog) {
   return readVal;
 }
 
+void VM::appendCell(Cell * c) {
+  Serial.println("VM::appendCell() -- _AP:" + String(_AP));
+  _mem[_AP] = c;
+  _AP++;
+  
+  
+}
 
 VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(stackSize) {
 
   _mem = new Cell*[memSize];
   _stack = new Cell*[stackSize];
+  _AP = 0;
   //_IP = 0;
   //_SP = 0;
   //Number n = Number();
