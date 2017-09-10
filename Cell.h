@@ -11,7 +11,7 @@ class Cell {
   public:
     Cell();
     virtual ~Cell();
-    virtual void exec(VM & vm);
+    virtual boolean exec(VM & vm);
     //{
     //return 0;
     //};

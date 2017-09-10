@@ -19,25 +19,42 @@ class Push: public Cell {
 };
 */
 
+class Halt: public Cell {
+  public:
+   
+    boolean exec(VM & vm);
+};
 
 class Instruction: public Cell {
   public:
    
-    void exec(VM & vm);
+    boolean exec(VM & vm);
 };
 
 
 class Add2: public Instruction {
   public:
    
-    void exec(VM & vm);
+    boolean exec(VM & vm);
+};
+
+class AnalogRead: public Instruction {
+  public:
+   
+    boolean exec(VM & vm);
+};
+
+class DigitalRead: public Instruction {
+  public:
+   
+    boolean exec(VM & vm);
 };
 
 
 class JmpIfGreater: public Instruction {
   public:
    
-    void exec(VM & vm);
+    boolean exec(VM & vm);
 };
 
 #endif

@@ -6,7 +6,7 @@ class Number: public Cell {
     Number();
     ~Number();
     virtual int toInt() = 0;
-    void exec(VM & vm);
+    boolean exec(VM & vm);
 };
 
 
@@ -14,7 +14,7 @@ class Int32: public Number {
   private:
     int32_t _ival;
   public:
-    virtual int toInt();
+    int toInt();
     Int32();
     Int32(int i);
     ~Int32();

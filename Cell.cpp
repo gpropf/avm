@@ -5,4 +5,4 @@
 
 Cell::Cell() {}
 Cell::~Cell() {};
-void Cell::exec(VM & vm) {  }
+boolean Cell::exec(VM & vm) {  }
