@@ -1,0 +1,1 @@
+compiler.cpp.flags=-std=gnu++11 -fno-exceptions -frtti -Os -g3 -Wpointer-arith -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib {compiler.warning_flags} -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-sign-compare -fno-rtti -MMD -c

@@ -1,5 +1,6 @@
 #include "Arduino.h"
-
+#include "config.h"
+#include "util.h"
 #include "VM.h"
 #include "Cell.h"
 #include "Number.h"

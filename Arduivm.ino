@@ -1,45 +1,53 @@
 #include "Arduino.h"
-
+#include "config.h"
+#include "util.h"
 #include "VM.h"
 
 #include "Cell.h"
 #include "Instructions.h"
 #include "Number.h"
 
-static const uint8_t TEST_INPUT_PIN = A1;
-static const uint8_t ANALOG_OUT_PIN = 10;
+
 
 VM vm(20, 10);
 
 void setup() {
 
   Serial.begin(57600);
-  Serial.println(String(F("{{ ******************************{{==}} ****************************** }}")));
-  Serial.println(String(F(" {{ ************* Arduivm: Virtually the Best VM Ever! ************* }}")));
-  Serial.println(String(F("{{ ******************************{{==}} ****************************** }}")));
+  Serial.print(F("{{"));
+  Serial.print(repeatString("*", 60));
+  Serial.println(F("}}"));
+  Serial.println(F("Arduivm: Virtually the Best VM Ever!"));
 
-  pinMode(ANALOG_OUT_PIN, OUTPUT);
-  pinMode(TEST_INPUT_PIN, INPUT);
 
-  uint8_t testRead = analogRead(TEST_INPUT_PIN);
-  Serial.println("Testing analog input by reading pin " + String(TEST_INPUT_PIN) + ", got value: " + String(testRead));
+  //pinMode(ANALOG_OUT_PIN, OUTPUT);
+  //pinMode(TEST_INPUT_PIN, INPUT);
 
-  Serial.println("Testing LED, on pin " + String(ANALOG_OUT_PIN) + ", it should blink twice.");
+  //uint8_t testRead = analogRead(TEST_INPUT_PIN);
+  //Serial.println("Testing analog input by reading pin " + String(TEST_INPUT_PIN) + ", got value: " + String(testRead));
+
+  //Serial.println("Testing LED, on pin " + String(ANALOG_OUT_PIN) + ", it should blink twice.");
   // put your setup code here, to run once:
   //Cell ** cells;
   //cells = new Cell*[10];
   //Number n = Number();
-
-  analogWrite(ANALOG_OUT_PIN, 255);
-  delay(1000);
-  analogWrite(ANALOG_OUT_PIN, 0);
-  delay(1000);
-  analogWrite(ANALOG_OUT_PIN, 255);
-  delay(500);
-  analogWrite(ANALOG_OUT_PIN, 0);
+  /*
+    analogWrite(ANALOG_OUT_PIN, 255);
+    delay(1000);
+    analogWrite(ANALOG_OUT_PIN, 0);
+    delay(1000);
+    analogWrite(ANALOG_OUT_PIN, 255);
+    delay(500);
+    analogWrite(ANALOG_OUT_PIN, 0);
+  */
+  Int32 * modeOutput = new Int32(OUTPUT);
+  //Serial.println("Type of modeOutput: " + typeid(*modeOutput).name());
+  Int32 * modeInput = new Int32(INPUT);
+  PinMode * pm = new PinMode();
   Int32 * maxint8 = new Int32(255);
   Int32 * i7 = new Int32(7);
   Int32 * i3 = new Int32(3);
+  Int32 * i10 = new Int32(10);
   Int32 * i19 = new Int32(19);
   Int32 * i81 = new Int32(81);
   Int32 * zero = new Int32(0);
@@ -50,24 +58,24 @@ void setup() {
   AnalogWrite * aw1 = new AnalogWrite();
   Delay * dly = new Delay();
   Int32 * i2500 = new Int32(2500);
-  
+
   //cells[0]=&n;
   //cells[0]->exec();
   Halt * halt = new Halt();
   //
-  vm.appendCell(maxint8);
 
-  vm.appendCell(i3);
-  vm.appendCell(i7);
-  vm.appendCell(add2);
+  vm.appendCell(modeOutput);
+  vm.appendCell(i10);
+  vm.appendCell(pm);
+
+  vm.appendCell(maxint8);
+  vm.appendCell(i10);
   vm.appendCell(aw1);
   vm.appendCell(i2500);
 
   vm.appendCell(dly);
   vm.appendCell(zero);
-  vm.appendCell(i3);
-  vm.appendCell(i7);
-  vm.appendCell(add2);
+  vm.appendCell(i10);
   vm.appendCell(aw1);
   /*
     vm.writeCell(i7, 0);

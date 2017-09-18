@@ -1,4 +1,6 @@
 #include "Arduino.h"
+#include "config.h"
+#include "util.h"
 
 
 
@@ -22,6 +24,35 @@
   };
 */
 
+boolean PinMode::exec (VM & vm) {
+  Serial.print("boolean PinMode::exec(), ");
+  Int32 * pinCell =  static_cast<Int32 *>(vm.pop());
+  Serial.print("PIN#:" + String(pinCell->toInt()));
+  Int32 * valCell = static_cast<Int32 *>(vm.pop());
+  Serial.print(", val = " + String(valCell->toInt()) + ", ");
+  pinMode(pinCell->toInt(), valCell->toInt());
+  //vm.push(valCell);
+
+  Serial.println("leaving PinMode::exec()--");
+  return true;
+}
+
+
+
+
+boolean BindAnalogIn::exec (VM & vm) {
+  Int32 * pinCell;
+  Int32 * memCell;
+  vm.loadBinding(pinCell, memCell);
+  uint32_t pin = pinCell->toInt();
+  
+  vm.setPinIO(pin, INPUT);
+  vm.setPinAD(pin, true);
+  vm.setPinAddress(pin, memCell->toInt());
+  Serial.println("leaving PinMode::exec()--");
+  return true;
+}
+
 boolean AnalogWrite::exec (VM & vm) {
   Serial.print("boolean AnalogWrite::exec(), ");
   Int32 * pinCell =  static_cast<Int32 *>(vm.pop());
@@ -29,7 +60,7 @@ boolean AnalogWrite::exec (VM & vm) {
   Int32 * valCell = static_cast<Int32 *>(vm.pop());
   Serial.print(", val = " + String(valCell->toInt()) + ", ");
   analogWrite(pinCell->toInt(), valCell->toInt());
-  vm.push(valCell);
+  //vm.push(valCell);
 
   Serial.println("leaving AnalogWrite::exec()--");
   return true;
@@ -37,7 +68,7 @@ boolean AnalogWrite::exec (VM & vm) {
 
 boolean Halt::exec (VM & vm) {
   Serial.print("HALTING!!!! Halt::exec(), ");
-  
+
   Serial.println("leaving Halt::exec()--");
   return false;
 }
@@ -55,15 +86,20 @@ boolean AnalogRead::exec (VM & vm) {
 }
 
 boolean DigitalRead::exec (VM & vm) {
-  //static_cast<uint8_t> val =
+  Serial.print("DigitalRead::exec(), ");
+  Int32 * pinCell =  static_cast<Int32 *>(vm.pop());
+  Serial.print("PIN#:" + String(pinCell->toInt()));
+  Int32 * valCell = new Int32(vm.readPin(static_cast<uint8_t>(pinCell->toInt()), false));
+  Serial.print(", val = " + String(valCell->toInt()) + ", ");
+  vm.push(valCell);
 
-  //vm.readPin(static_cast<Int32 *>(vm.pop()),false);
+  Serial.println("leaving DigitalRead::exec()--");
   return true;
 }
 
 boolean Delay::exec(VM & vm) {
   Serial.print("Delay::exec() [");
-  
+
   Int32 * msec =  static_cast<Int32 *>(vm.pop());
   Serial.println("]");
   delay(msec->toInt());

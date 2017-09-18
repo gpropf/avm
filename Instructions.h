@@ -18,6 +18,17 @@ class Push: public Cell {
     void exec(VM & vm);
 };
 */
+class PinMode: public Cell {
+  public:
+   
+    boolean exec(VM & vm);
+};
+
+class BindAnalogIn: public Cell {
+  public:
+   
+    boolean exec(VM & vm);
+};
 
 class Halt: public Cell {
   public:
