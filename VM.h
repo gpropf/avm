@@ -5,6 +5,7 @@ class Cell;
 class Int32;
 class VM {
     class PinBinding {
+      
         uint8_t _pin;
         uint16_t _address;
         boolean _ad; // true = analog, false = digital
@@ -19,12 +20,16 @@ class VM {
         void setIO(uint8_t io);
         void setPin(uint8_t pin);
         uint8_t getPin();
+        void updatePin(VM & vm);
+        PinBinding();
+        PinBinding(uint8_t pin): _pin(pin) {};
     };
   private:
-    PinBinding bindings[NUM_PINS];
+    PinBinding _bindings[NUM_PINS];
 
     Cell ** _stack;
     Cell ** _mem;
+    uint8_t * _progmem;
     uint16_t _memSize, _stackSize, _IP, _SP, _AP;
     // _AP is "append pointer, used at the beginning to make it easy to push a bunch
     // of instructions and data into the memory.
@@ -32,12 +37,17 @@ class VM {
     void setPinIO(uint8_t pin, uint8_t m);
     void setPinAD(uint8_t pin, boolean ad);
     void setPinAddress(uint8_t pin, uint16_t address);
-    void loadBinding(Int32 * pinCell, Int32 * memCell);
+    void loadBinding(Cell * pinCell, Cell * memCell);
     uint8_t readPin(uint8_t pin, boolean isAnalog);
     VM(): _IP(0), _SP(0) , _AP(0) {};
+    
     VM(uint16_t memSize, uint16_t stackSize);
     void writeCell(Cell * c, uint16_t i);
+    Cell * readCell(uint16_t i);
+    uint8_t readMem(uint16_t i);
     void step();
+    void memdump(uint16_t startaddr = 0, uint16_t endaddr = 0);
+    void updateBoundData();
     Cell * pop();
     void appendCell(Cell * c);
     inline uint16_t getIP() {
@@ -47,11 +57,11 @@ class VM {
       _IP++;
     }
     inline void setIP(uint16_t newIP) {
-      Serial.println("New IP:" + String(newIP));
+      dprintln("New IP:" + String(newIP));
       _IP = newIP;
     }
     inline void setSP(uint16_t newIP) {
-      Serial.println("New SP:" + String(newIP));
+      dprintln("New SP:" + String(newIP));
       _SP = newIP;
     }
     void push(Cell *c);

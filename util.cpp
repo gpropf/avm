@@ -10,3 +10,15 @@ String repeatString(const String s, const uint8_t n) {
   return rs;
 }
 
+void dprint(String s) {
+  Serial.flush();
+  Serial.print(s);
+  Serial.flush();
+}
+
+void dprintln(String s) {
+  Serial.flush();
+  Serial.println(s);
+  Serial.flush();
+}
+

@@ -10,30 +10,32 @@
 #include "Number.h"
 /*
   void Pop::exec(VM & vm) {
-  //Serial.println("Number::exec()");
+  //dprintln("Number::exec()");
   // Number * n = new Number();
   Cell * c = vm.pop();
-  Serial.println("Pop (throwaway)");
+  dprintln("Pop (throwaway)");
   };
 
   void Push::exec(VM & vm) {
-  //Serial.println("Number::exec()");
+  //dprintln("Number::exec()");
   // Number * n = new Number();
   Cell * c = vm.pop();
-  Serial.println("Pop (throwaway)");
+  dprintln("Pop (throwaway)");
   };
 */
 
 boolean PinMode::exec (VM & vm) {
-  Serial.print("boolean PinMode::exec(), ");
+  dprint("boolean PinMode::exec(), [");
   Int32 * pinCell =  static_cast<Int32 *>(vm.pop());
-  Serial.print("PIN#:" + String(pinCell->toInt()));
+  int pin = pinCell->toInt();
+  dprint("PIN#:" + String(pin) + ", ");
   Int32 * valCell = static_cast<Int32 *>(vm.pop());
-  Serial.print(", val = " + String(valCell->toInt()) + ", ");
-  pinMode(pinCell->toInt(), valCell->toInt());
+  int val = valCell->toInt();
+  dprint(", val2 = " + String(val) + ", ");
+ // pinMode(pin, val);
   //vm.push(valCell);
 
-  Serial.println("leaving PinMode::exec()--");
+  dprintln("leaving PinMode::exec()--");
   return true;
 }
 
@@ -41,100 +43,101 @@ boolean PinMode::exec (VM & vm) {
 
 
 boolean BindAnalogIn::exec (VM & vm) {
-  Int32 * pinCell;
-  Int32 * memCell;
+   dprint("boolean BindAnalogIn::exec(), [");
+  Cell * pinCell;
+  Cell * memCell;
   vm.loadBinding(pinCell, memCell);
-  uint32_t pin = pinCell->toInt();
   
-  vm.setPinIO(pin, INPUT);
-  vm.setPinAD(pin, true);
-  vm.setPinAddress(pin, memCell->toInt());
-  Serial.println("leaving PinMode::exec()--");
+  
+  vm.setPinIO(pinCell->_d.ival, INPUT);
+  vm.setPinAD(pinCell->_d.ival, true);
+  vm.setPinAddress(pinCell->_d.ival, memCell->_d.ival);
+  dprintln("leaving PinMode::exec()--");
   return true;
 }
 
 boolean AnalogWrite::exec (VM & vm) {
-  Serial.print("boolean AnalogWrite::exec(), ");
+  dprint("boolean AnalogWrite::exec(), [");
   Int32 * pinCell =  static_cast<Int32 *>(vm.pop());
-  Serial.print("PIN#:" + String(pinCell->toInt()));
+  dprint("PIN#:" + String(pinCell->toInt()));
   Int32 * valCell = static_cast<Int32 *>(vm.pop());
-  Serial.print(", val = " + String(valCell->toInt()) + ", ");
+  dprint(", val = " + String(valCell->toInt()) + ", ");
   analogWrite(pinCell->toInt(), valCell->toInt());
   //vm.push(valCell);
 
-  Serial.println("leaving AnalogWrite::exec()--");
+  dprintln("leaving AnalogWrite::exec()--");
   return true;
 }
 
 boolean Halt::exec (VM & vm) {
-  Serial.print("HALTING!!!! Halt::exec(), ");
+  dprint("HALTING!!!! Halt::exec(), [");
 
-  Serial.println("leaving Halt::exec()--");
+  dprintln("leaving Halt::exec()--");
   return false;
 }
 
 boolean AnalogRead::exec (VM & vm) {
-  Serial.print("AnalogRead::exec(), ");
+  dprint("AnalogRead::exec(), [");
   Int32 * pinCell =  static_cast<Int32 *>(vm.pop());
-  Serial.print("PIN#:" + String(pinCell->toInt()));
+  dprint("PIN#:" + String(pinCell->toInt()));
   Int32 * valCell = new Int32(vm.readPin(static_cast<uint8_t>(pinCell->toInt()), true));
-  Serial.print(", val = " + String(valCell->toInt()) + ", ");
+  dprint(", val = " + String(valCell->toInt()) + ", ");
   vm.push(valCell);
 
-  Serial.println("leaving AnalogRead::exec()--");
+  dprintln("leaving AnalogRead::exec()--");
   return true;
 }
 
 boolean DigitalRead::exec (VM & vm) {
-  Serial.print("DigitalRead::exec(), ");
+  dprint("DigitalRead::exec(), [");
   Int32 * pinCell =  static_cast<Int32 *>(vm.pop());
-  Serial.print("PIN#:" + String(pinCell->toInt()));
+  dprint("PIN#:" + String(pinCell->toInt()));
   Int32 * valCell = new Int32(vm.readPin(static_cast<uint8_t>(pinCell->toInt()), false));
-  Serial.print(", val = " + String(valCell->toInt()) + ", ");
+  dprint(", val = " + String(valCell->toInt()) + ", ");
   vm.push(valCell);
 
-  Serial.println("leaving DigitalRead::exec()--");
+  dprintln("leaving DigitalRead::exec()--");
   return true;
 }
 
 boolean Delay::exec(VM & vm) {
-  Serial.print("Delay::exec() [");
+  dprint("Delay::exec() [");
 
   Int32 * msec =  static_cast<Int32 *>(vm.pop());
-  Serial.println("]");
+  dprintln("]");
   delay(msec->toInt());
-  Serial.print("Ending Delay::exec() [");
+  dprint("Ending Delay::exec() [");
   return true;
 };
 
 boolean Add2::exec(VM & vm) {
-  Serial.print("Add2::exec() [");
+  dprint("Add2::exec() [");
   // Number * n = new Number();
   Number * a1 = static_cast<Number *>(vm.pop());
   Number * a2 = static_cast<Number *>(vm.pop());
   int sum = a1->toInt() + a2->toInt();
   Int32 * isum32 = new Int32(sum);
   vm.push(isum32);
-  Serial.println("] Sum:" + String(sum));
+  dprintln("] Sum:" + String(sum));
   return true;
 };
 
 boolean JmpIfGreater::exec(VM & vm) {
-  Serial.print("JmpIfGreater::exec(), ");
-  //Serial.println("Number::exec()");
+  dprint("JmpIfGreater::exec(),[");
+  //dprintln("Number::exec()");
   // Number * n = new Number();
   int v1 = static_cast<Int32 *>(vm.pop())->toInt();
   int  v2 = static_cast<Int32 *>(vm.pop())->toInt();
   uint16_t addr = static_cast<Int32 *>(vm.pop())->toInt();
-  Serial.println(", v1:" + String(v1) + " ,v2:" + String(v2) + " ,addr:" + String(addr));
+  dprintln(", v1:" + String(v1) + " ,v2:" + String(v2) + " ,addr:" + String(addr));
   if (v1 < v2) {
     vm.setIP(addr);
-    Serial.println("Resetting IP=" + String(addr));
+    dprintln("Resetting IP=" + String(addr));
     vm.setSP(0); // FIXME:FIXME:FIXME!!!!! This is a hack to see what the stack problem was.
     return false;
   }
   else {
-    Serial.println("IP Unchanged (Would have been set to " + String(addr) + ")");
+    dprintln("IP Unchanged (Would have been set to " + String(addr) + ")");
     return true;
   }
 
