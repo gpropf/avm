@@ -4,25 +4,30 @@
 
 
 class REPL {
-    String _leftPrompt, _rightPrompt;
-    uint16_t cmdCount = 0;
-    uint16_t eptr = 0;
-    VM *_vm;
+
 
   public:
     enum RunMode : uint8_t {
       STEP = 0,
       RUN = 1
     };
-  private:
-    RunMode _runMode = STEP;
-    boolean _steppingMode = true;
 
+    enum Cmd: uint8_t {
+      NOCMD = 0,
+      BINDPIN = 1,
+      PRINTMEM = 2,
+    };
 
-  public:
     inline RunMode getMode() const {
       return _runMode;
     };
+
+    union Arg {
+      int i;
+      char * c;
+      float f;
+    };
+
     REPL(String leftPrompt, String rightPrompt, VM *vm): _leftPrompt(leftPrompt),
       _rightPrompt(rightPrompt),
       _vm(vm) {};
@@ -33,7 +38,15 @@ class REPL {
     void loop(String subPrompt = "");
     VM * bindVM(VM * vm);
     void toggleStepping();
-
+    void parseCommand(String s); 
+    
+  private:
+    RunMode _runMode = STEP;
+    boolean _steppingMode = true;
+    String _leftPrompt, _rightPrompt;
+    uint16_t cmdCount = 0;
+    uint16_t eptr = 0;
+    VM *_vm;
 };
 
 

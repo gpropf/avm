@@ -4,13 +4,43 @@
 #include "VM.h"
 #include "Cell.h"
 
-#include "Number.h"
+void VM::createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr) {
+  _pinBindings[pin].setIO(io);
+  _pinBindings[pin].setAD(ad);
+  _pinBindings[pin].setAddress(addr);
+  _pinBindings[pin].setPin(pin);
+  
+}
+
+void VM::PinBinding::print() {
+  String modeStr = "";
+  if (_ad ==  true) {
+    modeStr+="A";
+  }
+  else {
+    modeStr+="D";
+  }
+  switch(_io) {
+    case INPUT:
+    modeStr+="I";
+    break;
+    case OUTPUT:
+    modeStr+="O";
+    break;
+    case INPUT_PULLUP:
+    modeStr+="P";
+    break;
+  }
+  dprintln("Pin " + String(_pin) + ", addr:" + String(_address)+ ", mode:" + modeStr); 
+}
+
 VM::PinBinding::PinBinding() {
-  _mode = 255; // They all begin life de-activated.
+  _io = 255; // They all begin life de-activated.
 }
 
 void VM::PinBinding::setIO(uint8_t m) {
-  _mode = m;
+  pinMode(_pin, m);
+  _io = m;
 }
 uint8_t VM::PinBinding::getIO() {
 
@@ -37,19 +67,19 @@ uint8_t VM::PinBinding::getPin() {
 }
 
 void VM::PinBinding::updatePin(VM & vm) {
-  if (_mode == 255) {
-    dprintln("Pin " + String(_pin) + " inactive");
+  if (_io == 255) {
+    //dprintln("Pin " + String(_pin) + " inactive");
     return;
   }
     
   if (_ad) {
-    switch (_mode) {
+    switch (_io) {
       case OUTPUT:
-        dprint("AnalogWrite to pin #: " + String(_pin) + ", ");
+        //dprint("AnalogWrite to pin #: " + String(_pin) + ", ");
 
-
-        //dprint(", val = " + String(valCell->toInt()) + ", ");
-        analogWrite(_pin, vm.readMem(_address));
+uint8_t val = vm.readMem(_address);
+        dprint("Writing " + String(val) + " to pin " + String(_pin));
+        analogWrite(_pin, val);
         //vm.push(valCell);
 
         //dprintln("leaving AnalogWrite::exec()--");
@@ -60,16 +90,18 @@ void VM::PinBinding::updatePin(VM & vm) {
   else {
 
   }
+  dprintln("");
 }
 
 Cell * VM::readCell(uint16_t i) {
-  return _mem[i];
+//  return _mem[i];
+return nullptr;
 }
 
 
 
 uint8_t  VM::readMem(uint16_t i) {
-  return _progmem[i];
+  return _mem[i];
 }
 
 void VM::loadBinding(Cell * pinCell, Cell * memCell) {
@@ -81,8 +113,8 @@ void VM::loadBinding(Cell * pinCell, Cell * memCell) {
 }
 
 void VM::setPinIO(uint8_t pin, uint8_t m) {
-  pinMode(pin, m);
-  _bindings[pin].setIO(m);
+  
+  _pinBindings[pin].setIO(m);
 }
 void VM::setPinAD(uint8_t pin, boolean ad) {
 
@@ -103,7 +135,7 @@ uint8_t VM::readPin(uint8_t pin, boolean isAnalog) {
 
 void VM::appendCell(Cell * c) {
   dprintln("VM::appendCell() -- _AP:" + String(_AP));
-  _mem[_AP] = c;
+//  _mem[_AP] = c;
   _AP++;
 
 
@@ -111,34 +143,43 @@ void VM::appendCell(Cell * c) {
 
 VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(stackSize) {
 
-  _mem = new Cell*[memSize];
+  _mem = new uint8_t[memSize];
   _stack = new Cell*[stackSize];
   _progmem = new uint8_t[memSize];
   _AP = 0;
+  for (uint16_t i = 0;i<memSize;i++)
+  _mem[i] = i;
   //_IP = 0;
   //_SP = 0;
   //Number n = Number();
 }
 
 void VM::writeCell(Cell * c, uint16_t i) {
-  _mem[i] = c;
+//  _mem[i] = c;
 }
 
 void VM::step() {
   updateBoundData();
   dprint("IP:" + String(_IP) + ", " + "SP:" + String(_SP) + ":");
   dprint(" / ");
-  boolean incIP = _mem[_IP]->exec(*this);
+  //boolean incIP = _mem[_IP]->exec(*this);
+  boolean incIP = false;
   if (incIP == true)
     _IP++;
 }
 
 void VM::updateBoundData() {
   for (uint8_t i = 0; i < NUM_PINS; i++) {
-    _bindings[i].updatePin(*this);
+    //dprint("i:" + String(i));
+    _pinBindings[i].updatePin(*this);
+    
   }
 }
 
+void VM::printBindings() {
+  for (uint8_t i = 0; i < NUM_PINS; i++) 
+  _pinBindings[i].print();
+}
 
 Cell * VM::pop() {
   if (_SP < 1 )
@@ -169,4 +210,5 @@ void VM::reset() {
   _IP = 0;
   _SP = 0;
 }
+
 

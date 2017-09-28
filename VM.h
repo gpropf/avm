@@ -9,7 +9,7 @@ class VM {
         uint8_t _pin;
         uint16_t _address;
         boolean _ad; // true = analog, false = digital
-        uint8_t _mode; // INPUT, OUTPUT, INPUT_PULLUP
+        uint8_t _io; // INPUT, OUTPUT, INPUT_PULLUP
       public:
         uint16_t read();
         void write(uint16_t val);
@@ -21,19 +21,22 @@ class VM {
         void setPin(uint8_t pin);
         uint8_t getPin();
         void updatePin(VM & vm);
+        void print();
+        
         PinBinding();
         PinBinding(uint8_t pin): _pin(pin) {};
     };
   private:
-    PinBinding _bindings[NUM_PINS];
+    PinBinding _pinBindings[NUM_PINS];
 
     Cell ** _stack;
-    Cell ** _mem;
+    uint8_t * _mem;
     uint8_t * _progmem;
     uint16_t _memSize, _stackSize, _IP, _SP, _AP;
     // _AP is "append pointer, used at the beginning to make it easy to push a bunch
     // of instructions and data into the memory.
   public:
+  void createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr);
     void setPinIO(uint8_t pin, uint8_t m);
     void setPinAD(uint8_t pin, boolean ad);
     void setPinAddress(uint8_t pin, uint16_t address);
@@ -66,6 +69,7 @@ class VM {
     }
     void push(Cell *c);
     void printStack();
+    void printBindings();
 
     void reset();
 };

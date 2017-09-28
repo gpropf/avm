@@ -6,7 +6,7 @@
 
 
 
-VM vm(20, 10);
+VM vm(300, 10);
 
 REPL repl("$[", "]:", &vm);
 
@@ -14,13 +14,13 @@ REPL repl("$[", "]:", &vm);
 void setup() {
 
   Serial.begin(57600);
-  dprint(F("{{"));
-  dprint(repeatString("*", 60));
-  dprintln(F("}}"));
-  dprintln(F("Arduivm: Virtually the Best VM Ever!"));
+  //dprint(F("{{"));
+  dprintln(repeatString("*", 60));
+  //dprintln(F("}}"));
+  dprintln(F("Arduivm: v0.1"));
+  dprintln(repeatString("*", 60));
 
-
-  //pinMode(ANALOG_OUT_PIN, OUTPUT);
+  pinMode(ANALOG_OUT_PIN, OUTPUT);
   //pinMode(TEST_INPUT_PIN, INPUT);
 
   //uint8_t testRead = analogRead(TEST_INPUT_PIN);
@@ -31,16 +31,16 @@ void setup() {
   //Cell ** cells;
   //cells = new Cell*[10];
   //Number n = Number();
-  /*
-    analogWrite(ANALOG_OUT_PIN, 255);
-    delay(1000);
-    analogWrite(ANALOG_OUT_PIN, 0);
-    delay(1000);
-    analogWrite(ANALOG_OUT_PIN, 255);
-    delay(500);
-    analogWrite(ANALOG_OUT_PIN, 0);
-  */
-  
+
+  analogWrite(ANALOG_OUT_PIN, 255);
+  delay(1000);
+  analogWrite(ANALOG_OUT_PIN, 0);
+  delay(1000);
+  analogWrite(ANALOG_OUT_PIN, 255);
+  delay(500);
+  analogWrite(ANALOG_OUT_PIN, 0);
+
+
 }
 
 void loop() {

@@ -7,7 +7,7 @@
 
 
 void VM::memdump(uint16_t startaddr, uint16_t endaddr) {
-  
+
 }
 
 String REPL::readCommand() {
@@ -71,6 +71,7 @@ void REPL::loop(String subPrompt) {
 
           String cmd = readCommand();
           dprintln(cmd);
+          parseCommand(cmd);
           evalCommand(cmd);
           break;
         }
@@ -103,15 +104,86 @@ void REPL::evalCommand(String cmd) {
       break;
   }
 
-
-  uint16_t cellNum = cmd.toInt();
-  /*
-  if (cellNum != 0) {
-    Atom * a = _lm->_mm->getptr(cellNum);
-    a->print(20);
-  }
-  */
 }
+
+void REPL::parseCommand(String s)
+{
+  int startIndex = 0;
+  //String action;
+  String args[5];
+  uint8_t i = 0;
+  dprintln("parsing..." + s);
+  int spaceAt = 0;
+  dprintln("s init:" + s);
+  while (s != "" && i < 4 && spaceAt != -1) {
+    spaceAt = s.indexOf(" ");
+    if (spaceAt == -1) {
+      args[i] = s;
+
+
+
+    }
+    else {
+      args[i] = s.substring(startIndex, spaceAt);
+      s = s.substring(spaceAt + 1);
+    }
+    dprintln("s:" + s);
+    i++;
+    // b ao 4 556
+
+  }
+
+  for (uint8_t j = 0; j < i; j++) {
+    dprintln("Arg " + String(j) + ": " + args[j]);
+  }
+  String &action = args[0];
+  if (action == "b" || action == "B") {
+    
+    
+    if (i < 3) {
+      dprintln(F("ERROR: Binding syntax: B pin address <AO|AI|DO|DI>"));
+      return;
+    }
+    uint8_t pin = args[1].toInt();
+    boolean ad; // FIXME
+    char c = args[3].charAt(0);
+    switch (c) {
+      case 'a':
+        ad = true;
+        break;
+      case 'd':
+        ad = false;
+        break;
+      default:
+        dprintln(F("ERROR: pin io must be analog ('a') or digital ('d')"));
+    }
+    uint8_t io;
+    c = args[3].charAt(1);
+    switch (c) {
+      case 'o':
+        io = OUTPUT;
+        break;
+      case 'i':
+        io = INPUT;
+        break;
+      case 'p':
+        io = INPUT_PULLUP;
+        break;
+      default:
+        dprintln(F("ERROR: pin io must be input ('a'), input pullup ('p'), or output ('o')"));
+    }
+    
+
+    uint16_t addr = args[2].toInt();
+    _vm->createBinding(pin, io, ad, addr);
+    //_vm->set
+  }
+  else if (action == "p" || action == "P") {
+    _vm->printBindings();
+  }
+}
+
+
 
 VM * REPL::bindVM(VM * vm) {
   VM *oldVM = _vm;
