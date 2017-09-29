@@ -5,7 +5,6 @@
 #include "REPL.h"
 
 
-
 VM vm(300, 10);
 
 REPL repl("$[", "]:", &vm);
@@ -16,6 +15,9 @@ void setup() {
   Serial.begin(57600);
   //dprint(F("{{"));
   dprintln(repeatString("*", 60));
+
+ // dprintln("Pin A0 is:" + String(A0));
+
   //dprintln(F("}}"));
   dprintln(F("Arduivm: v0.1"));
   dprintln(repeatString("*", 60));

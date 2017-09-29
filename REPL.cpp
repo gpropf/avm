@@ -181,6 +181,9 @@ void REPL::parseCommand(String s)
   else if (action == "p" || action == "P") {
     _vm->printBindings();
   }
+   else if (action == "m" || action == "M") {
+    _vm->printMem(args[1].toInt(),args[2].toInt());
+  }
 }
 
 

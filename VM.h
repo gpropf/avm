@@ -29,7 +29,7 @@ class VM {
   private:
     PinBinding _pinBindings[NUM_PINS];
 
-    Cell ** _stack;
+    uint8_t * _stack;
     uint8_t * _mem;
     uint8_t * _progmem;
     uint16_t _memSize, _stackSize, _IP, _SP, _AP;
@@ -50,6 +50,7 @@ class VM {
     uint8_t readMem(uint16_t i);
     void step();
     void memdump(uint16_t startaddr = 0, uint16_t endaddr = 0);
+    void printMem(uint16_t startAddr, uint16_t endAddr);
     void updateBoundData();
     Cell * pop();
     void appendCell(Cell * c);
