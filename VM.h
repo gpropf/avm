@@ -40,7 +40,7 @@ class VM {
     void setPinIO(uint8_t pin, uint8_t m);
     void setPinAD(uint8_t pin, boolean ad);
     void setPinAddress(uint8_t pin, uint16_t address);
-    void loadBinding(Cell * pinCell, Cell * memCell);
+    
     uint8_t readPin(uint8_t pin, boolean isAnalog);
     VM(): _IP(0), _SP(0) , _AP(0) {};
     
@@ -49,11 +49,10 @@ class VM {
     Cell * readCell(uint16_t i);
     uint8_t readMem(uint16_t i);
     void step();
-    void memdump(uint16_t startaddr = 0, uint16_t endaddr = 0);
+    //void memdump(uint16_t startaddr = 0, uint16_t endaddr = 0);
     void printMem(uint16_t startAddr, uint16_t endAddr);
     void updateBoundData();
-    Cell * pop();
-    void appendCell(Cell * c);
+    
     inline uint16_t getIP() {
       return _IP;
     }
@@ -68,7 +67,7 @@ class VM {
       dprintln("New SP:" + String(newIP));
       _SP = newIP;
     }
-    void push(Cell *c);
+    //void push(Cell *c);
     void printStack();
     void printBindings();
 

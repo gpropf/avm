@@ -34,7 +34,7 @@ class REPL {
 
     String getPromptString(String subPrompt);
     String readCommand();
-    void evalCommand(String cmd);
+    //void evalCommand(String cmd);
     void loop(String subPrompt = "");
     VM * bindVM(VM * vm);
     void toggleStepping();

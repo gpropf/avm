@@ -6,9 +6,7 @@
 
 
 
-void VM::memdump(uint16_t startaddr, uint16_t endaddr) {
 
-}
 
 String REPL::readCommand() {
   char readBuf[READ_BUFFER_LENGTH];
@@ -72,7 +70,7 @@ void REPL::loop(String subPrompt) {
           String cmd = readCommand();
           dprintln(cmd);
           parseCommand(cmd);
-          evalCommand(cmd);
+         // evalCommand(cmd);
           break;
         }
       case RUN: {
@@ -86,25 +84,6 @@ void REPL::loop(String subPrompt) {
   }
 }
 
-void REPL::evalCommand(String cmd) {
-  char firstChar = cmd.charAt(0);
-
-  switch (firstChar) {
-    case 'p':
-      _vm->memdump();
-      break;
-    case 'r':
-      _runMode = RUN;
-      break;
-    case 's':
-      //if (_steppingMode)
-      _vm->step();
-      break;
-    default:
-      break;
-  }
-
-}
 
 void REPL::parseCommand(String s)
 {
@@ -183,6 +162,9 @@ void REPL::parseCommand(String s)
   }
    else if (action == "m" || action == "M") {
     _vm->printMem(args[1].toInt(),args[2].toInt());
+  }
+  else if (action == "s" || action == "S") {
+    _vm->step();
   }
 }
 

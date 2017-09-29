@@ -32,7 +32,7 @@ void VM::PinBinding::print() {
   }
   dprintln("Pin " + String(_pin) + ", addr:" + String(_address) + ", mode:" + modeStr);
 }
-
+ 
 VM::PinBinding::PinBinding() {
   _io = 255; // They all begin life de-activated.
 }
@@ -99,10 +99,6 @@ void VM::PinBinding::updatePin(VM & vm) {
   dprintln("");
 }
 
-Cell * VM::readCell(uint16_t i) {
-  //  return _mem[i];
-  return nullptr;
-}
 
 
 
@@ -133,13 +129,6 @@ uint8_t VM::readPin(uint8_t pin, boolean isAnalog) {
   return readVal;
 }
 
-void VM::appendCell(Cell * c) {
-  dprintln("VM::appendCell() -- _AP:" + String(_AP));
-  //  _mem[_AP] = c;
-  _AP++;
-
-
-}
 
 VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(stackSize) {
 
@@ -154,9 +143,6 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
   //Number n = Number();
 }
 
-void VM::writeCell(Cell * c, uint16_t i) {
-  //  _mem[i] = c;
-}
 
 void VM::step() {
   updateBoundData();
@@ -187,24 +173,7 @@ void VM::printMem(uint16_t startAddr, uint16_t endAddr) {
 }
 
 
-Cell * VM::pop() {
-  if (_SP < 1 )
-    return nullptr;
-  dprint("pop - SP:" + String(_SP) + ", ");
-  return _stack[--_SP];
-}
 
-void VM::push(Cell *c) {
-  dprintln("BEGIN vm.push");
-  if (_SP >= _stackSize ) {
-    dprintln("Stack Overflow!!!!!");
-    return;
-  }
-  dprint("push:");// + String(static_cast<Int32*>(c)->toInt()) + ", SP:" + String(_SP) + ", ");
-  _stack[_SP++] = c;
-  //dprintln("push 2 - SP:" + String(_SP));
-  //_IP++;
-}
 
 void VM::printStack() {
   for (uint16_t i = 0; i < _stackSize; i++) {
