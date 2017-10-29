@@ -124,7 +124,7 @@ void REPL::parseCommand(String s)
       return;
     }
     uint8_t pin = args[1].toInt();
-    boolean ad; // FIXME
+    boolean ad = true; // to get rid of annoying compiler warnings about possible undefined value.
     char c = args[3].charAt(0);
     switch (c) {
       case 'a':
@@ -136,7 +136,7 @@ void REPL::parseCommand(String s)
       default:
         dprintln(F("ERROR: pin io must be analog ('a') or digital ('d')"));
     }
-    uint8_t io;
+    uint8_t io = 0; // to get rid of annoying compiler warnings about possible undefined value.
     c = args[3].charAt(1);
     switch (c) {
       case 'o':
