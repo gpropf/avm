@@ -1,6 +1,30 @@
 #ifndef VM_h
 #define VM_h
 
+/*
+   Some Notes on Opcodes and Type System
+   --------------------------------------
+
+   Types: uint8, uint16, uint32, int8, int16, int32, float32, string: 3 bits
+   Stack Operations: push, pop (types determined by type field): 1 bit
+
+Above must be grouped as we must know *what* we are pushing and popping and
+this information is not stored with the values (unless we implement our typed stack idea)
+   
+   Math Operators: add, sub, mul, div: 2 bits
+   Binding Operations: AI, DI, AO, DO, AP, DP: 6 possibilities can be organized by odd/even.
+   Perhaps combine binding ops with push/pop to make a single 3 bit field.
+   
+
+   Branching: jne, jeq, jlt, jgt (Jump if not equal, equal, less than, and greater than respectively): 2 bits
+
+It looks like a single bit could be used to switch between the typed push/pop instructions
+and the others.
+
+
+*/
+
+
 enum class Opcode : uint8_t {
   ADD = 0b00, // Math operation
   SUB = 0b01,
@@ -16,12 +40,14 @@ enum class Opcode : uint8_t {
   JLT = 0b100000,
   JGT = 0b110000,
 
-  BINDAO, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (analog out)
+
   BINDAI, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (analog input)
-  BINDDO, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (digital output)
   BINDDI, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (digital input)
-  BINDDP, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (digital input-pullup)
+  BINDAO, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (analog out)
+  BINDDO, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (digital output)
   BINDAP, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (analog input-pullup)
+  BINDDP, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (digital input-pullup)
+
   PUSH8, // A16: Push an 8 bit value at mem address (uint16_t) onto the stack
   PUSH16, // A16: Push a 16 bit value at mem address (uint16_t) onto the stack
   PUSH32, // A16: Push a 16 bit value at mem address (uint16_t) onto the stack
@@ -29,20 +55,6 @@ enum class Opcode : uint8_t {
   POP16, // A16: Pop the 16 bit value on the top of the stack into memaddress
   POP32, // A16: Push a 16 bit value at mem address (uint16_t) onto the stack
 };
-
-
-
-/*
-  struct Opcode {
-  int x1 : 8 = 42;:
-
-  // int foo : 8 = 0;
-  operation: 4;
-  : 2;
-
-  void process(VM &vm);
-  };
-*/
 
 class VM {
 
@@ -64,12 +76,12 @@ class VM {
         uint8_t getPin();
         void updatePin(VM & vm);
         void print();
-
-
         PinBinding();
         PinBinding(uint8_t pin): _pin(pin) {};
     };
+
   private:
+
     PinBinding _pinBindings[NUM_PINS];
 
     uint8_t * _stack;
@@ -81,15 +93,14 @@ class VM {
     uint16_t _memSize, _stackSize, _SP, _AP;
     // _AP is "append pointer, used at the beginning to make it easy to push a bunch
     // of instructions and data into the memory.
-  public:
-    void createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr);
 
+  public:
+
+    void createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr);
     // void writeByte(uint8_t i32, boolean advanceMemAddr);
     void changeIP(int16_t addressDelta = 0);
     VM(): _ip16(0), _SP(0) , _AP(0) {};
-
     VM(uint16_t memSize, uint16_t stackSize);
-
     uint8_t readMem(uint16_t i);
     void step();
     void printMem(uint16_t startAddr, uint16_t endAddr);
@@ -106,16 +117,9 @@ class VM {
 
     void exec(Opcode opcode);
 
-    inline void setIP(uint16_t newIP) {
-      dprintln("New IP:" + String(newIP));
-      //_IP = newIP;
-      _ip16 = newIP;
-    }
+    void setIP(uint16_t newIP);
 
-    inline void setSP(uint16_t newIP) {
-      dprintln("New SP:" + String(newIP));
-      _SP = newIP;
-    }
+    void setSP(uint16_t newIP);
 
     void printStack();
     void printBindings();
@@ -129,7 +133,6 @@ class VM {
       }
       datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
       *dptr = d;
-
     }
 
     template <class A1 = uint8_t, class A2 = uint16_t, class A3 = int32_t>
@@ -152,29 +155,6 @@ class VM {
       }
     }
 
-    /*
-        template <class datum> writeData(datum d, uint16_t inAddr = 0, boolean advanceMemAddr = true)
-        {
-          // advanceMemAddr: if true we are using the _ip16 as the address. inAddr is ignored in
-          // this case. If advanceMemAddr is false we are using the inAddr.
-
-          uint16_t addr;
-          uint8_t step = 0;
-          if (advanceMemAddr) {
-            addr = _ip16;
-            step = sizeof(datum);
-          }
-          else {
-            addr = inAddr;
-          }
-          datum * dptr = reinterpret_cast<datum*>(&_mem[addr]);
-           dptr = d;
-
-          _ip16 += step;
-
-        }
-    */
-
     template <class datum> datum readData(uint16_t inAddr = 0, boolean advanceIP = true)
     {
       if (advanceIP) {
@@ -183,22 +163,8 @@ class VM {
       }
       datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
       datum d = *dptr;
-
-
       return d;
     }
-    /*
-        template <class datum> datum readData(uint16_t address = 0, boolean advanceMemAddr = true)
-        {
-          datum * dptr = reinterpret_cast<datum*>(&_mem[_ip16]);
-          datum d = *dptr;
-
-          if (advanceMemAddr) {
-            _ip16 += sizeof(datum);
-          }
-          return d;
-        }
-    */
 };
 
 // ===========================================
@@ -210,8 +176,5 @@ class VM {
 //void setPinAddress(uint8_t pin, uint16_t address);
 
 //uint8_t readPin(uint8_t pin, boolean isAnalog);
-
-
-
 
 #endif

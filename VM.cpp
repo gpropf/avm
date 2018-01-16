@@ -144,6 +144,17 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
     _mem[i] = i;
 }
 
+void VM::setSP(uint16_t newIP) {
+      dprintln("New SP:" + String(newIP));
+      _SP = newIP;
+    }
+
+ void VM::setIP(uint16_t newIP) {
+      dprintln("New IP:" + String(newIP));
+      //_IP = newIP;
+      _ip16 = newIP;
+    }
+
 void VM::exec(Opcode opcode) {
   switch(opcode) {
     case Opcode::BINDAI: {

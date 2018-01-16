@@ -70,7 +70,7 @@ void REPL::loop(String subPrompt) {
           String cmd = readCommand();
           dprintln(cmd);
           parseCommand(cmd);
-         // evalCommand(cmd);
+          // evalCommand(cmd);
           break;
         }
       case RUN: {
@@ -87,6 +87,15 @@ void REPL::loop(String subPrompt) {
 
 void REPL::parseCommand(String s)
 {
+  /* --------------------------------
+      Commands language is a super simple
+      Lisp-esque thing. All valid commands
+      have the format: Action arg1 arg2 arg3
+      where Action is the action name and there
+      are 3 optional arguments
+
+
+  */
   int startIndex = 0;
   //String action;
   String args[5];
@@ -98,9 +107,6 @@ void REPL::parseCommand(String s)
     spaceAt = s.indexOf(" ");
     if (spaceAt == -1) {
       args[i] = s;
-
-
-
     }
     else {
       args[i] = s.substring(startIndex, spaceAt);
@@ -117,8 +123,8 @@ void REPL::parseCommand(String s)
   }
   String &action = args[0];
   if (action == "b" || action == "B") {
-    
-    
+    // Bind command syntax is "[bB] pin address <AO|AI|DO|DI>"
+
     if (i < 3) {
       dprintln(F("ERROR: Binding syntax: B pin address <AO|AI|DO|DI>"));
       return;
@@ -126,6 +132,7 @@ void REPL::parseCommand(String s)
     uint8_t pin = args[1].toInt();
     boolean ad = true; // to get rid of annoying compiler warnings about possible undefined value.
     char c = args[3].charAt(0);
+    // First character determines whether we have an analog or digital pin
     switch (c) {
       case 'a':
         ad = true;
@@ -138,6 +145,7 @@ void REPL::parseCommand(String s)
     }
     uint8_t io = 0; // to get rid of annoying compiler warnings about possible undefined value.
     c = args[3].charAt(1);
+    // Second character determines whether we have an input, output, or output pullup pin
     switch (c) {
       case 'o':
         io = OUTPUT;
@@ -151,7 +159,7 @@ void REPL::parseCommand(String s)
       default:
         dprintln(F("ERROR: pin io must be input ('a'), input pullup ('p'), or output ('o')"));
     }
-    
+
 
     uint16_t addr = args[2].toInt();
     _vm->createBinding(pin, io, ad, addr);
@@ -160,8 +168,8 @@ void REPL::parseCommand(String s)
   else if (action == "p" || action == "P") {
     _vm->printBindings();
   }
-   else if (action == "m" || action == "M") {
-    _vm->printMem(args[1].toInt(),args[2].toInt());
+  else if (action == "m" || action == "M") {
+    _vm->printMem(args[1].toInt(), args[2].toInt());
   }
   else if (action == "s" || action == "S") {
     _vm->step();

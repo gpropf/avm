@@ -19,7 +19,7 @@ void setup() {
   // dprintln("Pin A0 is:" + String(A0));
 
   //dprintln(F("}}"));
-  dprintln(F("Arduivm: v0.2"));
+  dprintln(F("Arduivm: v0.3"));
   dprintln(repeatString("*", 60));
 
   pinMode(ANALOG_OUT_PIN, OUTPUT);
