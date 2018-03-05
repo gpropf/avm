@@ -96,6 +96,14 @@ void REPL::parseCommand(String s)
 
 
   */
+
+/*
+ * B pin address <AO|AI|DO|DI>: Bind a pin to a memory address
+ * M start_address end_address: Print the contents of memory between the listed addresses
+ * P: print all pin bindings
+ * S: Step one instruction ahead
+ */
+  
   int startIndex = 0;
   //String action;
   String args[5];

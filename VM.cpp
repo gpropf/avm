@@ -5,21 +5,21 @@
 
 
 /*
-void VM::writeInt32(int32_t i32, boolean advanceMemAddr) {
+  void VM::writeInt32(int32_t i32, boolean advanceMemAddr) {
   int32_t * i32p = static_cast<int32_t*>(_ip16);
-  *i32p = i32;
+   i32p = i32;
   if (advanceMemAddr) {
     _ip16 += sizeof(int32_t);
   }
-}
+  }
 
-void VM::writeByte(uint8_t i32, boolean advanceMemAddr) {
+  void VM::writeByte(uint8_t i32, boolean advanceMemAddr) {
    uint8_t * ui8p = static_cast<uint8_t*>(_ip16);
-  *ui8p = i32;
+   ui8p = i32;
   if (advanceMemAddr) {
     _ip16 += sizeof(uint8_t);
   }
-}
+  }
 */
 
 void VM::changeIP(int16_t addressDelta) {
@@ -55,12 +55,15 @@ void VM::PinBinding::print() {
     case INPUT_PULLUP:
       modeStr += "P";
       break;
+    case NOT_BOUND:
+      modeStr = "Unbound";
+      break;
   }
   dprintln("Pin " + String(_pin) + ", addr:" + String(_address) + ", mode:" + modeStr);
 }
 
 VM::PinBinding::PinBinding() {
-  _io = 255; // They all begin life de-activated.
+  _io = NOT_BOUND; // They all begin life de-activated.
 }
 
 void VM::PinBinding::setIO(uint8_t m) {
@@ -92,8 +95,8 @@ uint8_t VM::PinBinding::getPin() {
 }
 
 void VM::PinBinding::updatePin(VM & vm) {
-  if (_io == 255) {
-    //dprintln("Pin " + String(_pin) + " inactive");
+  if (_io == NOT_BOUND) {
+    dprintln("Pin " + String(_pin) + " inactive");
     return;
   }
 
@@ -120,49 +123,81 @@ void VM::PinBinding::updatePin(VM & vm) {
     }
   }
   else {
-
+    // FIXME: need to fill in digital behavior
   }
   dprintln("");
 }
 
 /*
- uint8_t  VM::readMem(uint16_t i) {
+  uint8_t  VM::readMem(uint16_t i) {
   return _mem[i];
-}
+  }
 */
 
 VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(stackSize) {
 
- _mem = new uint8_t[memSize];
- _ip16 = 0;
-  _stack = new uint8_t[stackSize];
+  _mem = new uint8_t[memSize];
+  _ip16 = 0;
+  _stack = new stackElement[stackSize];
   //_progmem = new uint8_t[memSize];
   //_ip16 = new uint8_t[memSize];
   _ip16Copy = _ip16;
   _AP = 0;
+
+  // Fills the memory with some values for now to show that it's working
   for (uint16_t i = 0; i < memSize; i++)
     _mem[i] = i;
 }
 
 void VM::setSP(uint16_t newIP) {
-      dprintln("New SP:" + String(newIP));
-      _SP = newIP;
-    }
+  dprintln("New SP:" + String(newIP));
+  _SP = newIP;
+}
 
- void VM::setIP(uint16_t newIP) {
-      dprintln("New IP:" + String(newIP));
-      //_IP = newIP;
-      _ip16 = newIP;
-    }
+void VM::setIP(uint16_t newIP) {
+  dprintln("New IP:" + String(newIP));
+  //_IP = newIP;
+  _ip16 = newIP;
+}
 
 void VM::exec(Opcode opcode) {
-  switch(opcode) {
-    case Opcode::BINDAI: {
-      uint8_t pin = readData <uint8_t> ();
-      uint16_t addr = readData <uint16_t> ();
-      createBinding(pin, INPUT, true, addr);
+  if (opcode == Opcode::BINDAO || opcode == Opcode::BINDAI ||
+      opcode == Opcode::BINDDO || opcode == Opcode::BINDDI ||
+      opcode == Opcode::BINDAP || opcode == Opcode::BINDDP) {
+
+    uint16_t addr = readData <uint16_t> ();
+    uint8_t pin = readData <uint8_t> ();
+    uint8_t io;
+    boolean ad;
+    switch (opcode) {
+      case Opcode::BINDAO:
+        ad = true;
+        io = OUTPUT;
+        break;
+      case Opcode::BINDDO:
+        ad = false;
+        io = OUTPUT;
+        break;
+      case Opcode::BINDAI:
+        ad = true;
+        io = INPUT;
+        break;
+      case Opcode::BINDDI:
+        ad = false;
+        io = INPUT;
+        break;
+      case Opcode::BINDAP:
+        ad = true;
+        io = INPUT_PULLUP;
+        break;
+      case Opcode::BINDDP:
+        ad = false;
+        io = INPUT_PULLUP;
+        break;
     }
+    createBinding(pin, io, ad, addr);
   }
+
 }
 
 
@@ -171,10 +206,10 @@ void VM::step() {
   dprint("IP:" + String(static_cast<uint16_t>(_ip16)) + ", " + "SP:" + String(_SP) + ":");
   dprint(" / ");
 
- Opcode opcode = readData <Opcode> (_ip16);
- dprintln("Opcode:" + String(static_cast<uint8_t>(opcode)));
- exec(opcode);
-  
+  Opcode opcode = readData <Opcode> (_ip16);
+  dprintln("Opcode:" + String(static_cast<uint8_t>(opcode)));
+  exec(opcode);
+
 }
 
 void VM::updateBoundData() {

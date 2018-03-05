@@ -19,8 +19,9 @@ void setup() {
   // dprintln("Pin A0 is:" + String(A0));
 
   //dprintln(F("}}"));
-  dprintln(F("Arduivm: v0.3"));
+  dprintln(F("Arduivm: v0.4.1"));
   dprintln(repeatString("*", 60));
+  dprintln("Size of stackElement:" + String(sizeof(stackElement)));
 
   pinMode(ANALOG_OUT_PIN, OUTPUT);
   //pinMode(ANALOG_TEST_INPUT_PIN, INPUT);
@@ -33,11 +34,12 @@ void setup() {
   //Cell ** cells;
   //cells = new Cell*[10];
   //Number n = Number();
-
-  analogWrite(ANALOG_OUT_PIN, 255);
-  delay(1000);
-  analogWrite(ANALOG_OUT_PIN, 0);
-  delay(1000);
+  for (uint8_t i = 0; i < 5; i++) {
+    analogWrite(ANALOG_OUT_PIN, 255);
+    delay(250);
+    analogWrite(ANALOG_OUT_PIN, 0);
+    delay(100);
+  }
   analogWrite(ANALOG_OUT_PIN, 255);
   delay(500);
   analogWrite(ANALOG_OUT_PIN, 0);
@@ -45,16 +47,16 @@ void setup() {
   int32_t intval1 = 1563535288;
   int32_t intval2 = -14350008;
   dprintln("Writing 2 32 bit int vals," + String(intval1) + " and " + String(intval2));
-//  vm.writeData(intval1, 0);
-//  vm.writeData(intval2, 4);
-//  vm.changeIP();
-//  int32_t i = vm.readData <int32_t> (0);
+  //  vm.writeData(intval1, 0);
+  //  vm.writeData(intval2, 4);
+  //  vm.changeIP();
+  //  int32_t i = vm.readData <int32_t> (0);
 
-//  dprintln("Reading 32 bit int val: " + String(i));
-//  i = vm.readData <int32_t> (4);
+  //  dprintln("Reading 32 bit int val: " + String(i));
+  //  i = vm.readData <int32_t> (4);
 
-//  dprintln("Reading 32 bit int val: " + String(i));
-  vm.writeInstruction(Opcode::BINDAI, ANALOG_TEST_INPUT_PIN, static_cast<uint16_t>(20));
+  //  dprintln("Reading 32 bit int val: " + String(i));
+  vm.writeInstruction(Opcode::BINDAI, static_cast<uint16_t>(20), ANALOG_TEST_INPUT_PIN);
   vm.changeIP();
 }
 

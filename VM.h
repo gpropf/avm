@@ -8,22 +8,69 @@
    Types: uint8, uint16, uint32, int8, int16, int32, float32, string: 3 bits
    Stack Operations: push, pop (types determined by type field): 1 bit
 
-Above must be grouped as we must know *what* we are pushing and popping and
-this information is not stored with the values (unless we implement our typed stack idea)
-   
+  Above must be grouped as we must know *what* we are pushing and popping and
+  this information is not stored with the values (unless we implement our typed stack idea)
+
    Math Operators: add, sub, mul, div: 2 bits
    Binding Operations: AI, DI, AO, DO, AP, DP: 6 possibilities can be organized by odd/even.
    Perhaps combine binding ops with push/pop to make a single 3 bit field.
-   
+
 
    Branching: jne, jeq, jlt, jgt (Jump if not equal, equal, less than, and greater than respectively): 2 bits
 
-It looks like a single bit could be used to switch between the typed push/pop instructions
-and the others.
+  It looks like a single bit could be used to switch between the typed push/pop instructions
+  and the others.
 
 
 */
 
+
+enum class stackElementType : uint8_t {
+  // First two bits determines type, uint, int, float, or string
+
+  UINT = 0b00,
+  INT = 0b01,
+  FLOAT = 0b10,
+  STRING = 0b11,
+
+  // Second two bits determines width, 8, 16, or 32 bits. Strings have varying
+  // length.
+
+  WIDTH8 = 0b0100,
+  WIDTH16 = 0b1000,
+  WIDTH32 = 0b1100,
+
+  // Some common types
+
+  UINT8 = UINT & WIDTH8,
+  UINT16 = UINT & WIDTH16,
+  UINT32 = UINT & WIDTH32,
+
+  INT8 = INT & WIDTH8,
+  INT16 = INT & WIDTH16,
+  INT32 = INT & WIDTH32,
+
+};
+
+
+union stackElementData {
+  uint8_t ui8;
+  uint16_t ui16;
+  uint32_t ui32;
+  int8_t i8;
+  int16_t i16;
+  int32_t i32;
+  char * str;
+  float fl;
+  double dbl;
+};
+
+struct stackElement {
+  stackElementType t;
+  stackElementData d;
+
+  //stackElement(stackElementType t, stackElementData d): t(t), d(d) {};
+};
 
 enum class Opcode : uint8_t {
   ADD = 0b00, // Math operation
@@ -31,9 +78,9 @@ enum class Opcode : uint8_t {
   MUL = 0b10,
   DIV = 0b11,
 
-  INT = 0b0000, // Data type operated upon
-  FLT = 0b0100,
-  STR = 0b1100,
+  // INT = 0b0000, // Data type operated upon
+  // FLT = 0b0100,
+  // STR = 0b1100,
 
   JNE = 0b000000, // Conditionals
   JEQ = 0b010000,
@@ -48,12 +95,10 @@ enum class Opcode : uint8_t {
   BINDAP, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (analog input-pullup)
   BINDDP, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (digital input-pullup)
 
-  PUSH8, // A16: Push an 8 bit value at mem address (uint16_t) onto the stack
-  PUSH16, // A16: Push a 16 bit value at mem address (uint16_t) onto the stack
-  PUSH32, // A16: Push a 16 bit value at mem address (uint16_t) onto the stack
-  POP8, // A16: Pop the 8 bit value on the top of the stack into memaddress
-  POP16, // A16: Pop the 16 bit value on the top of the stack into memaddress
-  POP32, // A16: Push a 16 bit value at mem address (uint16_t) onto the stack
+  // PUSH/POP T8 A16 where T (type) is one of
+  PUSH1, PUSH2, PUSH4, PUSHSTR, // Push 1, 2, or 4 bytes or a null terminated string
+  POP1, POP2, POP4, POPSTR, // Pop 1, 2, or 4 bytes or a null terminated string
+
 };
 
 class VM {
@@ -84,7 +129,7 @@ class VM {
 
     PinBinding _pinBindings[NUM_PINS];
 
-    uint8_t * _stack;
+    stackElement * _stack;
     uint8_t * _mem;
     uint16_t _ip16;
     uint16_t _ip16Copy;
@@ -135,7 +180,7 @@ class VM {
       *dptr = d;
     }
 
-    template <class A1 = uint8_t, class A2 = uint16_t, class A3 = int32_t>
+    template <class A1 = uint16_t, class A2 = uint8_t, class A3 = int32_t>
     void writeInstruction(Opcode c, A1 a1 = 0, A2 a2 = 0, A3 a3 = 0)
     {
 
@@ -152,6 +197,7 @@ class VM {
             writeData(a2, _ip16);
             //_ip16 += (sizeof(a2));
           }
+          break;
       }
     }
 
@@ -167,14 +213,5 @@ class VM {
     }
 };
 
-// ===========================================
-// Deprecated Code Below This Line
-// ===========================================
-
-//void setPinIO(uint8_t pin, uint8_t m);
-//void setPinAD(uint8_t pin, boolean ad);
-//void setPinAddress(uint8_t pin, uint16_t address);
-
-//uint8_t readPin(uint8_t pin, boolean isAnalog);
 
 #endif
