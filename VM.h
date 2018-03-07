@@ -72,32 +72,55 @@ struct stackElement {
   //stackElement(stackElementType t, stackElementData d): t(t), d(d) {};
 };
 
+enum class AddressingMode : uint8_t {
+  REL, ABS
+};
+
+enum class DataMode : uint8_t {
+  INT8, INT16, INT32,
+  UINT8, UINT16, UINT32,
+  FLOAT, STRING
+};
+
 enum class Opcode : uint8_t {
-  ADD = 0b00, // Math operation
-  SUB = 0b01,
-  MUL = 0b10,
-  DIV = 0b11,
+  ADD = 1, // Math operation on top 2 stack elements
+  SUB = 2,
+  MUL = 3,
+  DIV = 4,
 
   // INT = 0b0000, // Data type operated upon
   // FLT = 0b0100,
   // STR = 0b1100,
 
-  JNE = 0b000000, // Conditionals
-  JEQ = 0b010000,
-  JLT = 0b100000,
-  JGT = 0b110000,
+  JNE = 0b000000, // Takes a 16 bit address or pointer
+  JEQ = 0b010000, // Takes a 16 bit address or pointer
+  JLT = 0b100000, // Takes a 16 bit address or pointer
+  JGT = 0b110000, // Takes a 16 bit address or pointer
 
 
-  BINDAI, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (analog input)
-  BINDDI, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (digital input)
-  BINDAO, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (analog out)
-  BINDDO, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (digital output)
-  BINDAP, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (analog input-pullup)
-  BINDDP, // V8, A16: Bind a pin (uint8_t) to a mem address (uint16_t) (digital input-pullup)
+  BINDAI, // A16 V8: Bind a mem address (uint16_t) (analog input) to a pin (uint8_t)
+  BINDDI, // A16 V8: Bind a mem address (uint16_t) (digital input) to a pin (uint8_t)
+  BINDAO, // A16 V8: Bind a mem address (uint16_t) (analog out) to a pin (uint8_t)
+  BINDDO, // A16 V8: Bind a mem address (uint16_t) (digital output) to a pin (uint8_t)
+  BINDAP, // A16 V8: Bind a mem address (uint16_t) (analog input-pullup) to a pin (uint8_t)
+  BINDDP, // A16 V8: Bind a mem address (uint16_t) (digital input-pullup) to a pin (uint8_t)
 
-  // PUSH/POP T8 A16 where T (type) is one of
-  PUSH1, PUSH2, PUSH4, PUSHSTR, // Push 1, 2, or 4 bytes or a null terminated string
-  POP1, POP2, POP4, POPSTR, // Pop 1, 2, or 4 bytes or a null terminated string
+  // PUSH/POP from/to A16
+  PUSH, // Push 1, 2, or 4 bytes or a null terminated string according to data mode
+  POP, // Pop 1, 2, or 4 bytes or a null terminated string according to data mode
+
+  REL_MODE, // Set relative addressing mode (i.e. addresses are pointers)
+  ABS_MODE, // Set absolute addressing mode (i.e. addresses are locations of data)
+  DATA_INT8,
+  DATA_INT16,
+  DATA_INT32,
+  DATA_UINT8,
+  DATA_UINT16,
+  DATA_UINT32,
+  DATA_FLOAT,
+  DATA_STRING
+
+
 
 };
 
@@ -121,15 +144,19 @@ class VM {
         uint8_t getPin();
         void updatePin(VM & vm);
         void print();
+
         PinBinding();
         PinBinding(uint8_t pin): _pin(pin) {};
+
     };
 
   private:
 
     PinBinding _pinBindings[NUM_PINS];
+    DataMode _dm;
+    AddressingMode _am;
+    uint8_t * _stack;
 
-    stackElement * _stack;
     uint8_t * _mem;
     uint16_t _ip16;
     uint16_t _ip16Copy;
@@ -149,8 +176,10 @@ class VM {
     uint8_t readMem(uint16_t i);
     void step();
     void printMem(uint16_t startAddr, uint16_t endAddr);
+    void printStatus();
     void updateBoundData();
-
+    void transferData(uint16_t addr, uint8_t * buf, DataMode dm, boolean toStack,
+                            boolean adjustSP = true, boolean alterMemory = true);
     inline uint16_t getIP() {
       return _ip16;
     }
@@ -169,6 +198,26 @@ class VM {
     void printStack();
     void printBindings();
     void reset();
+
+    template <class datum>
+    void writeDataToStackOrMem(datum d, uint16_t addr = 0, uint16_t * pointer = NULL) {
+      // addr: actual location in memory to write to in either stack or mem array
+      // pointer: a bit confusingly this is a pointer to a pointer, either SP or IP
+      // the relevant pointer is advanced by the size of the datum.
+
+      datum * dptr = reinterpret_cast<datum*>(addr);
+      *dptr = d;
+      if (pointer) {
+        (*pointer) += sizeof(datum);
+      }
+    }
+
+
+
+    template <class datum>
+    void push(datum d) {
+      writeDataToStackOrMem(d, &_stack[_SP], &_SP );
+    }
 
     template <class datum>
     void writeData(datum d, uint16_t inAddr = 0, boolean advanceIP = true) {
@@ -197,6 +246,12 @@ class VM {
             writeData(a2, _ip16);
             //_ip16 += (sizeof(a2));
           }
+          break;
+        case Opcode::PUSH:
+          writeData(a1, _ip16);
+          break;
+        case Opcode::POP:
+          writeData(a1, _ip16);
           break;
       }
     }

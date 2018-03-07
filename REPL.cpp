@@ -97,20 +97,22 @@ void REPL::parseCommand(String s)
 
   */
 
-/*
- * B pin address <AO|AI|DO|DI>: Bind a pin to a memory address
- * M start_address end_address: Print the contents of memory between the listed addresses
- * P: print all pin bindings
- * S: Step one instruction ahead
- */
-  
+  /*
+     B pin address <AO|AI|DO|DI>: Bind a pin to a memory address
+     M start_address end_address: Print the contents of memory between the listed addresses
+     P: print all pin bindings
+     S: Step one instruction ahead
+     Q: Print the stack
+     ~: Print status
+  */
+
   int startIndex = 0;
   //String action;
   String args[5];
   uint8_t i = 0;
-  dprintln("parsing..." + s);
+  //dprintln("parsing..." + s);
   int spaceAt = 0;
-  dprintln("s init:" + s);
+  //dprintln("s init:" + s);
   while (s != "" && i < 4 && spaceAt != -1) {
     spaceAt = s.indexOf(" ");
     if (spaceAt == -1) {
@@ -120,15 +122,14 @@ void REPL::parseCommand(String s)
       args[i] = s.substring(startIndex, spaceAt);
       s = s.substring(spaceAt + 1);
     }
-    dprintln("s:" + s);
+    //dprintln("s:" + s);
     i++;
-    // b ao 4 556
-
   }
-
-  for (uint8_t j = 0; j < i; j++) {
-    dprintln("Arg " + String(j) + ": " + args[j]);
-  }
+  /*
+    for (uint8_t j = 0; j < i; j++) {
+      dprintln("Arg " + String(j) + ": " + args[j]);
+    }
+  */
   String &action = args[0];
   if (action == "b" || action == "B") {
     // Bind command syntax is "[bB] pin address <AO|AI|DO|DI>"
@@ -181,6 +182,12 @@ void REPL::parseCommand(String s)
   }
   else if (action == "s" || action == "S") {
     _vm->step();
+  }
+  else if (action == "q" || action == "Q") {
+    _vm->printStack();
+  }
+  else if (action == "~") {
+    _vm->printStatus();
   }
 }
 

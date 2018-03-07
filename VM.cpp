@@ -134,17 +134,78 @@ void VM::PinBinding::updatePin(VM & vm) {
   }
 */
 
+void VM::printStatus() {
+  dprintln("IP:" + String(static_cast<uint16_t>(_ip16)) + ", " + "SP:" + String(_SP) + ":");
+}
+
+void VM::transferData(uint16_t addr, uint8_t * buf, DataMode dm,
+                      boolean toStack, boolean adjustSP,
+                      boolean alterMemory) {
+  uint8_t dataLength;
+  // uint8_t * returnBuffer;
+
+  switch (dm) {
+    case DataMode::UINT8:
+    case DataMode::INT8:
+      dataLength = 1;
+      dprintln("transferData: data length = 1");
+      break;
+    case DataMode::UINT16:
+    case DataMode::INT16:
+      dataLength = 2;
+      break;
+    case DataMode::UINT32:
+    case DataMode::INT32:
+      dataLength = 4;
+      break;
+    case DataMode::FLOAT:
+      dataLength = 4;
+      break;
+    case DataMode::STRING:
+      // FIXME: find the end of the string
+      break;
+    default:
+      dataLength = 0;
+  }
+
+  if (toStack) {
+    for (uint16_t i = 0; i < dataLength; i++) {
+      _stack[_SP + i] = _mem[addr + i];
+    }
+    if (adjustSP)
+      _SP += dataLength;
+  }
+  else {
+    for (uint16_t i = 0; i < dataLength; i++) {
+      if (!alterMemory) {
+        buf[i] = _stack[_SP - dataLength + i];
+      }
+      else {
+        _mem[addr + i] = _stack[_SP - dataLength + i];
+      }
+    }
+    if (adjustSP)
+      _SP -= dataLength;
+  }
+}
+
 VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(stackSize) {
 
+  _dm = DataMode::UINT8;
+  _am = AddressingMode::ABS;
   _mem = new uint8_t[memSize];
   _ip16 = 0;
-  _stack = new stackElement[stackSize];
+  _SP = 0;
+  _stackSize = stackSize;
+  _stack = new uint8_t[stackSize];
   //_progmem = new uint8_t[memSize];
   //_ip16 = new uint8_t[memSize];
   _ip16Copy = _ip16;
   _AP = 0;
 
-  // Fills the memory with some values for now to show that it's working
+  // Fills the memory and stack with some values for now to show that it's working
+  for (uint16_t i = 0; i < _stackSize; i++)
+    _stack[i] = 0;
   for (uint16_t i = 0; i < memSize; i++)
     _mem[i] = i;
 }
@@ -161,6 +222,8 @@ void VM::setIP(uint16_t newIP) {
 }
 
 void VM::exec(Opcode opcode) {
+
+  uint8_t * buf;
   if (opcode == Opcode::BINDAO || opcode == Opcode::BINDAI ||
       opcode == Opcode::BINDDO || opcode == Opcode::BINDDI ||
       opcode == Opcode::BINDAP || opcode == Opcode::BINDDP) {
@@ -197,13 +260,41 @@ void VM::exec(Opcode opcode) {
     }
     createBinding(pin, io, ad, addr);
   }
+  else if (opcode == Opcode::PUSH || opcode == Opcode::POP) {
+    uint16_t addr = readData <uint16_t> ();
+    if (opcode == Opcode::PUSH)
+      transferData(addr, buf, _dm, true);
+    else if (opcode == Opcode::POP)
+      transferData(addr, buf, _dm, false);
+  }
+  else if (opcode == Opcode::ADD || opcode == Opcode::SUB ||
+           opcode == Opcode::MUL || opcode == Opcode::DIV) {
 
+    uint8_t * firstArg = new uint8_t[4];
+    uint8_t * secondArg = new uint8_t[4];
+    transferData(0, firstArg, _dm, false, true, false);
+    transferData(0, secondArg, _dm, false, true, false);
+    // Make 4 byte buffers for all ops
+    switch (opcode) {
+      case Opcode::ADD: {
+          uint32_t sum = *reinterpret_cast<uint32_t*>(firstArg) + *reinterpret_cast<uint32_t*>(secondArg);
+        }
+      case Opcode::SUB:
+      case Opcode::MUL:
+      case Opcode::DIV:
+        break;
+    }
+    delete firstArg;
+    delete secondArg;
+
+  }
+  // FIXME: Do the math here
 }
 
 
 void VM::step() {
   updateBoundData();
-  dprint("IP:" + String(static_cast<uint16_t>(_ip16)) + ", " + "SP:" + String(_SP) + ":");
+  printStatus();
   dprint(" / ");
 
   Opcode opcode = readData <Opcode> (_ip16);
@@ -225,14 +316,16 @@ void VM::printBindings() {
     _pinBindings[i].print();
 }
 
+
+
 void VM::printMem(uint16_t startAddr, uint16_t endAddr) {
-  for (uint8_t i = startAddr; i < endAddr; i++)
+  for (uint16_t i = startAddr; i < endAddr; i++)
     dprintln(String(i) + ": " + String(static_cast<uint8_t>(_mem[i])));
 }
 
 void VM::printStack() {
   for (uint16_t i = 0; i < _stackSize; i++) {
-    //   _stack[i]->print();
+    dprintln(String(i) + ": " + String(static_cast<uint8_t>(_stack[i])));
   }
 }
 

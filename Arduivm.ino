@@ -19,7 +19,7 @@ void setup() {
   // dprintln("Pin A0 is:" + String(A0));
 
   //dprintln(F("}}"));
-  dprintln(F("Arduivm: v0.4.1"));
+  dprintln(F("Arduivm: v0.5.0"));
   dprintln(repeatString("*", 60));
   dprintln("Size of stackElement:" + String(sizeof(stackElement)));
 
@@ -44,19 +44,12 @@ void setup() {
   delay(500);
   analogWrite(ANALOG_OUT_PIN, 0);
 
-  int32_t intval1 = 1563535288;
-  int32_t intval2 = -14350008;
-  dprintln("Writing 2 32 bit int vals," + String(intval1) + " and " + String(intval2));
-  //  vm.writeData(intval1, 0);
-  //  vm.writeData(intval2, 4);
-  //  vm.changeIP();
-  //  int32_t i = vm.readData <int32_t> (0);
-
-  //  dprintln("Reading 32 bit int val: " + String(i));
-  //  i = vm.readData <int32_t> (4);
-
-  //  dprintln("Reading 32 bit int val: " + String(i));
   vm.writeInstruction(Opcode::BINDAI, static_cast<uint16_t>(20), ANALOG_TEST_INPUT_PIN);
+  vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(20));
+  vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(22));
+  vm.writeInstruction(Opcode::ADD);
+  vm.writeInstruction(Opcode::POP, static_cast<uint16_t>(30));
+  
   vm.changeIP();
 }
 
