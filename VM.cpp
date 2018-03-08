@@ -125,7 +125,7 @@ void VM::PinBinding::updatePin(VM & vm) {
   else {
     // FIXME: need to fill in digital behavior
   }
- // dprintln("");
+  // dprintln("");
 }
 
 /*
@@ -173,7 +173,7 @@ String VM::DM2String(DataMode dm) {
 
 
 void VM::printStatus() {
-  String amString = (_am == AddressingMode::REL)? "Relative":"Absolute";
+  String amString = (_am == AddressingMode::REL) ? "Relative" : "Absolute";
   dprintln("IP:" + String(static_cast<uint16_t>(_ip16)) + ", "
            + "SP:" + String(_SP) + ", Data Mode: " + DM2String(_dm)
            + ", Address Mode: " + amString);
@@ -313,7 +313,7 @@ void VM::exec(Opcode opcode) {
     uint16_t addr = readData <uint16_t> ();
     if (_am == AddressingMode::REL)
       addr = readData <uint16_t> (addr, false);
-      
+
     if (opcode == Opcode::PUSH)
       transferData(addr, buf, _dm, true);
     else if (opcode == Opcode::POP)
@@ -381,6 +381,19 @@ void VM::exec(Opcode opcode) {
       case Opcode::DATA_FLOAT:
         _dm = DataMode::FLOAT;
         dprintln ("DataMode::FLOAT;");
+        break;
+      case Opcode::DATA_UINT8:
+        _dm = DataMode::UINT8;
+        dprintln ("DataMode::UINT8;");
+        break;
+
+      case Opcode::REL_MODE:
+        _am = AddressingMode::REL;
+        dprintln ("AddressingMode::REL;");
+        break;
+      case Opcode::NOOP:
+
+        dprintln ("NOOP -- Doing nothing!");
         break;
       default:
         break;

@@ -54,6 +54,13 @@ void setup() {
   vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(VM::DATA_SEG + 16));
   vm.writeInstruction(Opcode::ADD);
   vm.writeInstruction(Opcode::POP, static_cast<uint16_t>(VM::DATA_SEG + 20));
+  vm.writeInstruction(Opcode::REL_MODE);
+  vm.writeInstruction(Opcode::DATA_UINT8);
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(VM::DATA_SEG + 30));
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
 
   float const fl1 = 1.3;
   float const fl2 = 3.14159;
@@ -61,6 +68,7 @@ void setup() {
   vm.writeData(fl1, VM::DATA_SEG + 12, false);
   vm.writeData(fl2, VM::DATA_SEG + 16, false);
   vm.writeData(sumfls, VM::DATA_SEG + 26, false);
+  vm.writeData(static_cast<uint16_t>(VM::DATA_SEG + 40), VM::DATA_SEG + 30, false);
 
   vm.changeIP();
 }

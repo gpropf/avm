@@ -147,7 +147,9 @@ enum class Opcode : uint8_t {
   DATA_UINT16,
   DATA_UINT32,
   DATA_FLOAT,
-  DATA_STRING
+  DATA_STRING,
+
+  NOOP,
 
 
 
@@ -197,7 +199,7 @@ class VM {
     // of instructions and data into the memory.
 
   public:
-    static const uint16_t DATA_SEG = 30;
+    static const uint16_t DATA_SEG = 100;
     String DM2String(DataMode dm);
     void createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr);
     // void writeByte(uint8_t i32, boolean advanceMemAddr);
