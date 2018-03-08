@@ -141,7 +141,7 @@ void VM::printStatus() {
 void VM::transferData(uint16_t addr, uint8_t * buf, DataMode dm,
                       boolean toStack, boolean adjustSP,
                       boolean alterMemory) {
-  uint8_t dataLength;
+  int8_t dataLength = 0;
   // uint8_t * returnBuffer;
 
   switch (dm) {
@@ -165,15 +165,19 @@ void VM::transferData(uint16_t addr, uint8_t * buf, DataMode dm,
       // FIXME: find the end of the string
       break;
     default:
-      dataLength = 0;
+      //dataLength = 0;
+      break;
   }
 
   if (toStack) {
     for (uint16_t i = 0; i < dataLength; i++) {
-      _stack[_SP + i] = _mem[addr + i];
+      if (!alterMemory) {
+        _stack[_SP + i] = buf[i];
+      }
+      else {
+        _stack[_SP + i] = _mem[addr + i];
+      }
     }
-    if (adjustSP)
-      _SP += dataLength;
   }
   else {
     for (uint16_t i = 0; i < dataLength; i++) {
@@ -184,9 +188,11 @@ void VM::transferData(uint16_t addr, uint8_t * buf, DataMode dm,
         _mem[addr + i] = _stack[_SP - dataLength + i];
       }
     }
-    if (adjustSP)
-      _SP -= dataLength;
+
+    dataLength = -dataLength;
   }
+  if (adjustSP)
+    _SP += dataLength;
 }
 
 VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(stackSize) {
@@ -223,7 +229,7 @@ void VM::setIP(uint16_t newIP) {
 
 void VM::exec(Opcode opcode) {
 
-  uint8_t * buf;
+  uint8_t * buf = NULL;
   if (opcode == Opcode::BINDAO || opcode == Opcode::BINDAI ||
       opcode == Opcode::BINDDO || opcode == Opcode::BINDDI ||
       opcode == Opcode::BINDAP || opcode == Opcode::BINDDP) {
@@ -257,6 +263,8 @@ void VM::exec(Opcode opcode) {
         ad = false;
         io = INPUT_PULLUP;
         break;
+      default:
+        break;
     }
     createBinding(pin, io, ad, addr);
   }
@@ -271,17 +279,25 @@ void VM::exec(Opcode opcode) {
            opcode == Opcode::MUL || opcode == Opcode::DIV) {
 
     uint8_t * firstArg = new uint8_t[4];
+    
     uint8_t * secondArg = new uint8_t[4];
+    zeros(firstArg,4);
+    zeros(secondArg,4);
     transferData(0, firstArg, _dm, false, true, false);
     transferData(0, secondArg, _dm, false, true, false);
     // Make 4 byte buffers for all ops
     switch (opcode) {
       case Opcode::ADD: {
-          uint32_t sum = *reinterpret_cast<uint32_t*>(firstArg) + *reinterpret_cast<uint32_t*>(secondArg);
+          uint32_t * sum = new uint32_t;
+          *sum = *reinterpret_cast<uint32_t*>(firstArg) + *reinterpret_cast<uint32_t*>(secondArg);
+          transferData(0, reinterpret_cast<uint8_t*>(sum), DataMode::UINT8, true, true, false);
+          delete sum;
         }
       case Opcode::SUB:
       case Opcode::MUL:
       case Opcode::DIV:
+        break;
+      default:
         break;
     }
     delete firstArg;
