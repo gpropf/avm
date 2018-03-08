@@ -21,7 +21,7 @@ void setup() {
   //dprintln(F("}}"));
   dprintln(F("Arduivm: v0.5.0"));
   dprintln(repeatString("*", 60));
-  dprintln("Size of stackElement:" + String(sizeof(stackElement)));
+  //dprintln("Size of stackElement:" + String(sizeof(stackElement)));
 
   pinMode(ANALOG_OUT_PIN, OUTPUT);
   //pinMode(ANALOG_TEST_INPUT_PIN, INPUT);
@@ -44,12 +44,24 @@ void setup() {
   delay(500);
   analogWrite(ANALOG_OUT_PIN, 0);
 
-  vm.writeInstruction(Opcode::BINDAI, static_cast<uint16_t>(20), ANALOG_TEST_INPUT_PIN);
-  vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(20));
-  vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(22));
+  vm.writeInstruction(Opcode::BINDAI, static_cast<uint16_t>(VM::DATA_SEG), ANALOG_TEST_INPUT_PIN);
+  vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(VM::DATA_SEG));
+  vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(VM::DATA_SEG + 2));
   vm.writeInstruction(Opcode::ADD);
-  vm.writeInstruction(Opcode::POP, static_cast<uint16_t>(30));
-  
+  vm.writeInstruction(Opcode::POP, static_cast<uint16_t>(VM::DATA_SEG + 10));
+  vm.writeInstruction(Opcode::DATA_FLOAT);
+  vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(VM::DATA_SEG + 12));
+  vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(VM::DATA_SEG + 16));
+  vm.writeInstruction(Opcode::ADD);
+  vm.writeInstruction(Opcode::POP, static_cast<uint16_t>(VM::DATA_SEG + 20));
+
+  float const fl1 = 1.3;
+  float const fl2 = 3.14159;
+  float sumfls = fl1 + fl2;
+  vm.writeData(fl1, VM::DATA_SEG + 12, false);
+  vm.writeData(fl2, VM::DATA_SEG + 16, false);
+  vm.writeData(sumfls, VM::DATA_SEG + 26, false);
+
   vm.changeIP();
 }
 

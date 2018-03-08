@@ -181,7 +181,12 @@ void REPL::parseCommand(String s)
     _vm->printMem(args[1].toInt(), args[2].toInt());
   }
   else if (action == "s" || action == "S") {
-    _vm->step();
+    uint16_t steps = 1;
+    if (i > 1) {
+      steps = args[1].toInt();
+    }
+    for (uint16_t j = 0; j < steps; j++)
+      _vm->step();
   }
   else if (action == "q" || action == "Q") {
     _vm->printStack();

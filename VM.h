@@ -23,15 +23,14 @@
 
 
 */
-
-
-enum class stackElementType : uint8_t {
+/*
+  enum class stackElementType : uint8_t {
   // First two bits determines type, uint, int, float, or string
 
-  UINT = 0b00,
-  INT = 0b01,
-  FLOAT = 0b10,
-  STRING = 0b11,
+  UINT = 0b0000,
+  INT = 0b0001,
+  FLOAT = 0b0010,
+  STRING = 0b0011,
 
   // Second two bits determines width, 8, 16, or 32 bits. Strings have varying
   // length.
@@ -50,10 +49,10 @@ enum class stackElementType : uint8_t {
   INT16 = INT & WIDTH16,
   INT32 = INT & WIDTH32,
 
-};
-
-
-union stackElementData {
+  };
+*/
+/*
+  union stackElementData {
   uint8_t ui8;
   uint16_t ui16;
   uint32_t ui32;
@@ -63,23 +62,53 @@ union stackElementData {
   char * str;
   float fl;
   double dbl;
-};
-
-struct stackElement {
+  };
+*/
+/*
+  struct stackElement {
   stackElementType t;
   stackElementData d;
 
   //stackElement(stackElementType t, stackElementData d): t(t), d(d) {};
-};
+  };
+*/
 
 enum class AddressingMode : uint8_t {
   REL, ABS
 };
 
 enum class DataMode : uint8_t {
-  INT8, INT16, INT32,
-  UINT8, UINT16, UINT32,
-  FLOAT, STRING
+  // First two bits determines type, uint, int, float, or string
+
+  UINT = 0b0000,
+  INT = 0b0001,
+  FLOAT = 0b0010,
+  STRING = 0b0011,
+  GENERAL_TYPE_MASK = STRING,
+
+  // Second two bits determines width, 8, 16, or 32 bits. Strings have varying
+  // length.
+
+  WIDTH8 = 0b0100,
+  WIDTH16 = 0b1000,
+  WIDTH32 = 0b1100,
+  WIDTH_TYPE_MASK = WIDTH32,
+
+  // Some common types
+
+  UINT8 = UINT + WIDTH8,
+  UINT16 = UINT + WIDTH16,
+  UINT32 = UINT + WIDTH32,
+
+  INT8 = INT + WIDTH8,
+  INT16 = INT + WIDTH16,
+  INT32 = INT + WIDTH32
+
+
+
+          //INT8, INT16, INT32,
+          //UINT8, UINT16, UINT32,
+          //FLOAT, STRING
 };
 
 enum class Opcode : uint8_t {
@@ -152,6 +181,7 @@ class VM {
 
   private:
 
+
     PinBinding _pinBindings[NUM_PINS];
     DataMode _dm;
     AddressingMode _am;
@@ -167,7 +197,8 @@ class VM {
     // of instructions and data into the memory.
 
   public:
-
+    static const uint16_t DATA_SEG = 30;
+    String DM2String(DataMode dm);
     void createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr);
     // void writeByte(uint8_t i32, boolean advanceMemAddr);
     void changeIP(int16_t addressDelta = 0);
@@ -179,7 +210,7 @@ class VM {
     void printStatus();
     void updateBoundData();
     void transferData(uint16_t addr, uint8_t * buf, DataMode dm, boolean toStack,
-                            boolean adjustSP = true, boolean alterMemory = true);
+                      boolean adjustSP = true, boolean alterMemory = true);
     inline uint16_t getIP() {
       return _ip16;
     }

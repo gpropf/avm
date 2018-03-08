@@ -96,7 +96,7 @@ uint8_t VM::PinBinding::getPin() {
 
 void VM::PinBinding::updatePin(VM & vm) {
   if (_io == NOT_BOUND) {
-    dprintln("Pin " + String(_pin) + " inactive");
+    //dprintln("Pin " + String(_pin) + " inactive");
     return;
   }
 
@@ -106,7 +106,7 @@ void VM::PinBinding::updatePin(VM & vm) {
           //dprint("AnalogWrite to pin #: " + String(_pin) + ", ");
 
           uint8_t val = vm.readData <uint8_t> (_address);
-          dprint("Writing " + String(val) + " to pin " + String(_pin));
+          dprintln("Writing " + String(val) + " to pin " + String(_pin));
           analogWrite(_pin, val);
           //vm.push(valCell);
 
@@ -125,7 +125,7 @@ void VM::PinBinding::updatePin(VM & vm) {
   else {
     // FIXME: need to fill in digital behavior
   }
-  dprintln("");
+ // dprintln("");
 }
 
 /*
@@ -134,8 +134,49 @@ void VM::PinBinding::updatePin(VM & vm) {
   }
 */
 
+String VM::DM2String(DataMode dm) {
+  DataMode generalType = static_cast<DataMode>(static_cast<uint8_t>(dm) & static_cast<uint8_t>(DataMode::GENERAL_TYPE_MASK));
+  String s = "";
+  switch (generalType) {
+    case DataMode::UINT:
+      s += "UINT";
+      break;
+    case DataMode::INT:
+      s += "INT";
+      break;
+    case DataMode::FLOAT:
+      s += "FLOAT";
+      break;
+    case DataMode::STRING:
+      s += "STRING";
+      break;
+    default:
+      break;
+
+  }
+  DataMode widthType = static_cast<DataMode>(static_cast<uint8_t>(dm) & static_cast<uint8_t>(DataMode::WIDTH_TYPE_MASK));
+  switch (widthType) {
+    case DataMode::WIDTH8:
+      s += "8";
+      break;
+    case DataMode::WIDTH16:
+      s += "16";
+      break;
+    case DataMode::WIDTH32:
+      s += "32";
+      break;
+    default:
+      break;
+  }
+  return s;
+}
+
+
 void VM::printStatus() {
-  dprintln("IP:" + String(static_cast<uint16_t>(_ip16)) + ", " + "SP:" + String(_SP) + ":");
+  String amString = (_am == AddressingMode::REL)? "Relative":"Absolute";
+  dprintln("IP:" + String(static_cast<uint16_t>(_ip16)) + ", "
+           + "SP:" + String(_SP) + ", Data Mode: " + DM2String(_dm)
+           + ", Address Mode: " + amString);
 }
 
 void VM::transferData(uint16_t addr, uint8_t * buf, DataMode dm,
@@ -270,6 +311,9 @@ void VM::exec(Opcode opcode) {
   }
   else if (opcode == Opcode::PUSH || opcode == Opcode::POP) {
     uint16_t addr = readData <uint16_t> ();
+    if (_am == AddressingMode::REL)
+      addr = readData <uint16_t> (addr, false);
+      
     if (opcode == Opcode::PUSH)
       transferData(addr, buf, _dm, true);
     else if (opcode == Opcode::POP)
@@ -279,30 +323,68 @@ void VM::exec(Opcode opcode) {
            opcode == Opcode::MUL || opcode == Opcode::DIV) {
 
     uint8_t * firstArg = new uint8_t[4];
-    
+
     uint8_t * secondArg = new uint8_t[4];
-    zeros(firstArg,4);
-    zeros(secondArg,4);
+    zeros(firstArg, 4);
+    zeros(secondArg, 4);
     transferData(0, firstArg, _dm, false, true, false);
     transferData(0, secondArg, _dm, false, true, false);
     // Make 4 byte buffers for all ops
+    DataMode generalType = static_cast<DataMode>(static_cast<uint8_t>(_dm) & 0b0011);
     switch (opcode) {
+
       case Opcode::ADD: {
-          uint32_t * sum = new uint32_t;
-          *sum = *reinterpret_cast<uint32_t*>(firstArg) + *reinterpret_cast<uint32_t*>(secondArg);
-          transferData(0, reinterpret_cast<uint8_t*>(sum), DataMode::UINT8, true, true, false);
-          delete sum;
+
+          switch (generalType) {
+            case DataMode::UINT: {
+                uint32_t * sum = new uint32_t;
+                *sum = *reinterpret_cast<uint32_t*>(firstArg) + *reinterpret_cast<uint32_t*>(secondArg);
+                transferData(0, reinterpret_cast<uint8_t*>(sum), _dm, true, true, false);
+                delete sum;
+                break;
+              }
+            case DataMode::INT: {
+                int32_t * sum = new int32_t;
+                *sum = *reinterpret_cast<int32_t*>(firstArg) + *reinterpret_cast<int32_t*>(secondArg);
+                transferData(0, reinterpret_cast<uint8_t*>(sum), _dm, true, true, false);
+                delete sum;
+                break;
+              }
+            case DataMode::FLOAT: {
+                float * sum = new float;
+                *sum = *reinterpret_cast<float*>(firstArg) + *reinterpret_cast<float*>(secondArg);
+                transferData(0, reinterpret_cast<uint8_t*>(sum), _dm, true, true, false);
+                delete sum;
+                break;
+              }
+            case DataMode::STRING: {
+                //FIXME
+                break;
+              }
+          }
+
         }
       case Opcode::SUB:
       case Opcode::MUL:
       case Opcode::DIV:
         break;
+
       default:
         break;
     }
     delete firstArg;
     delete secondArg;
 
+  }
+  else {
+    switch (opcode) {
+      case Opcode::DATA_FLOAT:
+        _dm = DataMode::FLOAT;
+        dprintln ("DataMode::FLOAT;");
+        break;
+      default:
+        break;
+    }
   }
   // FIXME: Do the math here
 }
