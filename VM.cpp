@@ -22,6 +22,19 @@
   }
 */
 
+void VM::writeString(char * sptr, uint16_t inAddr , boolean advanceIP) {
+  uint16_t stringLength =  getStringLength(sptr);
+  char *copysptr = sptr;
+  if (advanceIP) {
+    inAddr = _ip16;
+    _ip16 += stringLength;
+  }
+  for (uint16_t i = 0; i < stringLength; i++ ) {
+    _mem[inAddr + i] = *copysptr;
+    copysptr++;
+  }
+}
+
 void VM::changeIP(int16_t addressDelta) {
   // The zero here acts as a semaphor value causing the address to reset to its original value.
   if (addressDelta == 0)
@@ -134,55 +147,18 @@ void VM::PinBinding::updatePin(VM & vm) {
   }
 */
 
-String VM::DM2String(DataMode dm) {
-  DataMode generalType = static_cast<DataMode>(static_cast<uint8_t>(dm) & static_cast<uint8_t>(DataMode::GENERAL_TYPE_MASK));
-  String s = "";
-  switch (generalType) {
-    case DataMode::UINT:
-      s += "UINT";
-      break;
-    case DataMode::INT:
-      s += "INT";
-      break;
-    case DataMode::FLOAT:
-      s += "FLOAT";
-      break;
-    case DataMode::STRING:
-      s += "STRING";
-      break;
-    default:
-      break;
-
-  }
-  DataMode widthType = static_cast<DataMode>(static_cast<uint8_t>(dm) & static_cast<uint8_t>(DataMode::WIDTH_TYPE_MASK));
-  switch (widthType) {
-    case DataMode::WIDTH8:
-      s += "8";
-      break;
-    case DataMode::WIDTH16:
-      s += "16";
-      break;
-    case DataMode::WIDTH32:
-      s += "32";
-      break;
-    default:
-      break;
-  }
-  return s;
-}
-
 
 void VM::printStatus() {
   String amString = (_am == AddressingMode::REL) ? "Relative" : "Absolute";
   dprintln("IP:" + String(static_cast<uint16_t>(_ip16)) + ", "
-           + "SP:" + String(_SP) + ", Data Mode: " + DM2String(_dm)
+           + "SP:" + String(_SP) + ", Data Mode: " + getDataTypeAndWidthString()
            + ", Address Mode: " + amString);
 }
 
 void VM::transferData(uint16_t addr, uint8_t * buf, DataMode dm,
                       boolean toStack, boolean adjustSP,
                       boolean alterMemory) {
-  int8_t dataLength = 0;
+  int16_t dataLength = 0;
   // uint8_t * returnBuffer;
 
   switch (dm) {
@@ -203,7 +179,22 @@ void VM::transferData(uint16_t addr, uint8_t * buf, DataMode dm,
       dataLength = 4;
       break;
     case DataMode::STRING:
-      // FIXME: find the end of the string
+      if (toStack) {
+        dprintln("String addr: " + String(addr));
+        dataLength = getStringLength(&_mem[addr]);
+        //dprintln("String addr: " + String(addr));
+        dprintln("String is " + String(dataLength) + " bytes long");
+      }
+      else {
+
+        dprintln("from stack to mem, String addr: " + String(addr));
+        dataLength = getStringLength(&_stack[addr]);
+        //dprintln("String addr: " + String(addr));
+        dprintln("String is " + String(dataLength) + " bytes long");
+
+
+
+      }
       break;
     default:
       //dataLength = 0;
@@ -266,6 +257,44 @@ void VM::setIP(uint16_t newIP) {
   dprintln("New IP:" + String(newIP));
   //_IP = newIP;
   _ip16 = newIP;
+}
+
+int16_t VM::getStringLength(char * startAddr) {
+  char * p = startAddr;
+  uint16_t i = 0;
+  //dprintln("VM::getStringLength(char * startAddr)");
+  while (true) {
+    if (*p == 0 || i >= MAX_STRING_LENGTH )
+      return i;
+    dprintln("At index " + String(i) + " char is " + String(*p));
+    i++;
+    p++;
+
+  }
+
+}
+
+String VM::getDataTypeAndWidthString(DataMode dm) {
+  
+  if (dm == DataMode::INVALID_MODE) {
+    dm = _dm;
+  }
+  uint8_t dmuint = static_cast<uint8_t>(dm);
+  String sdm = String(VM::dmString[dmuint & static_cast<uint8_t>(DataMode::GENERAL_TYPE_MASK)]);;
+  dmuint = dmuint >> 2;
+  switch (dmuint) {
+    case 1:
+      sdm += "8";
+      break;
+    case 2:
+      sdm += "16";
+      break;
+    default:
+      sdm += "32";
+      break;
+    
+  }
+  return sdm;
 }
 
 void VM::exec(Opcode opcode) {
@@ -332,11 +361,17 @@ void VM::exec(Opcode opcode) {
     // Make 4 byte buffers for all ops
     DataMode generalType = static_cast<DataMode>(static_cast<uint8_t>(_dm) & 0b0011);
     switch (opcode) {
-
+      // To simplify the code for the mathematical instructions I have decided to just compute
+      // all types of int and uint as 32 bit types and then stuff them back into
+      // the appropriate size containers when done. Eventually we should trap
+      // overflows by checking the "high bytes" as needed but this isn't done ATM.
       case Opcode::ADD: {
-
+          dprint (F("OPCODE: ADD "));
+          dprintln(getDataTypeAndWidthString());
           switch (generalType) {
+
             case DataMode::UINT: {
+                
                 uint32_t * sum = new uint32_t;
                 *sum = *reinterpret_cast<uint32_t*>(firstArg) + *reinterpret_cast<uint32_t*>(secondArg);
                 transferData(0, reinterpret_cast<uint8_t*>(sum), _dm, true, true, false);
@@ -344,6 +379,7 @@ void VM::exec(Opcode opcode) {
                 break;
               }
             case DataMode::INT: {
+                
                 int32_t * sum = new int32_t;
                 *sum = *reinterpret_cast<int32_t*>(firstArg) + *reinterpret_cast<int32_t*>(secondArg);
                 transferData(0, reinterpret_cast<uint8_t*>(sum), _dm, true, true, false);
@@ -351,6 +387,7 @@ void VM::exec(Opcode opcode) {
                 break;
               }
             case DataMode::FLOAT: {
+                
                 float * sum = new float;
                 *sum = *reinterpret_cast<float*>(firstArg) + *reinterpret_cast<float*>(secondArg);
                 transferData(0, reinterpret_cast<uint8_t*>(sum), _dm, true, true, false);
@@ -380,20 +417,24 @@ void VM::exec(Opcode opcode) {
     switch (opcode) {
       case Opcode::DATA_FLOAT:
         _dm = DataMode::FLOAT;
-        dprintln ("DataMode::FLOAT;");
+        dprintln (F("DataMode::FLOAT;"));
         break;
       case Opcode::DATA_UINT8:
         _dm = DataMode::UINT8;
-        dprintln ("DataMode::UINT8;");
+        dprintln (F("DataMode::UINT8;"));
+        break;
+      case Opcode::DATA_STRING:
+        _dm = DataMode::STRING;
+        dprintln (F("DataMode::STRING;"));
         break;
 
       case Opcode::REL_MODE:
         _am = AddressingMode::REL;
-        dprintln ("AddressingMode::REL;");
+        dprintln (F("AddressingMode::REL;"));
         break;
       case Opcode::NOOP:
 
-        dprintln ("NOOP -- Doing nothing!");
+        dprintln (F("NOOP -- Doing nothing!"));
         break;
       default:
         break;

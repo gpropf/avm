@@ -19,7 +19,7 @@ void setup() {
   // dprintln("Pin A0 is:" + String(A0));
 
   //dprintln(F("}}"));
-  dprintln(F("Arduivm: v0.5.0"));
+  dprintln(F("Arduivm: v0.6.0"));
   dprintln(repeatString("*", 60));
   //dprintln("Size of stackElement:" + String(sizeof(stackElement)));
 
@@ -54,14 +54,24 @@ void setup() {
   vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(VM::DATA_SEG + 16));
   vm.writeInstruction(Opcode::ADD);
   vm.writeInstruction(Opcode::POP, static_cast<uint16_t>(VM::DATA_SEG + 20));
+  //vm.writeInstruction(Opcode::REL_MODE);
+  //vm.writeInstruction(Opcode::DATA_UINT8);
+  vm.writeInstruction(Opcode::DATA_STRING);
+  vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(VM::DATA_SEG + 60));
+  vm.writeInstruction(Opcode::POP, static_cast<uint16_t>(VM::DATA_SEG + 80));
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::REL_MODE);
-  vm.writeInstruction(Opcode::DATA_UINT8);
-  vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::DATA_UINT16);
   vm.writeInstruction(Opcode::PUSH, static_cast<uint16_t>(VM::DATA_SEG + 30));
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
 
+
+  /* **********************************************************************
+      This code writes our initial constants into memory above the program
+   * **********************************************************************
+  */
   float const fl1 = 1.3;
   float const fl2 = 3.14159;
   float sumfls = fl1 + fl2;
@@ -69,12 +79,16 @@ void setup() {
   vm.writeData(fl2, VM::DATA_SEG + 16, false);
   vm.writeData(sumfls, VM::DATA_SEG + 26, false);
   vm.writeData(static_cast<uint16_t>(VM::DATA_SEG + 40), VM::DATA_SEG + 30, false);
+  const String testStr = "Greg";
+  vm.writeString(testStr.c_str(), VM::DATA_SEG + 60, false);
+  vm.writeData(static_cast<const uint8_t>(0), VM::DATA_SEG + 60 + testStr.length(), false);
 
+  // Call changeIP with no args to reset the counter
   vm.changeIP();
 }
 
 void loop() {
-  dprintln("\n\nloop() starting....");
+  //dprintln("\n\nloop() starting....");
   //while (true) {
   repl.loop();
   //}

@@ -50,7 +50,7 @@ class REPL {
     boolean _steppingMode = true;
     String _leftPrompt, _rightPrompt;
     uint16_t cmdCount = 0;
-    uint16_t eptr = 0;
+    uint16_t _eptr = 0;
     VM *_vm;
 };
 

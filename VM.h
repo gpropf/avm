@@ -77,6 +77,8 @@ enum class AddressingMode : uint8_t {
   REL, ABS
 };
 
+
+
 enum class DataMode : uint8_t {
   // First two bits determines type, uint, int, float, or string
 
@@ -102,14 +104,16 @@ enum class DataMode : uint8_t {
 
   INT8 = INT + WIDTH8,
   INT16 = INT + WIDTH16,
-  INT32 = INT + WIDTH32
-
+  INT32 = INT + WIDTH32,
+  INVALID_MODE
 
 
           //INT8, INT16, INT32,
           //UINT8, UINT16, UINT32,
           //FLOAT, STRING
 };
+
+
 
 enum class Opcode : uint8_t {
   ADD = 1, // Math operation on top 2 stack elements
@@ -150,6 +154,8 @@ enum class Opcode : uint8_t {
   DATA_STRING,
 
   NOOP,
+  CALL, // Takes a uint16_t address of the function to call. Automatically saves return address
+  RET, // Uses stored return address and leaves return value on stack
 
 
 
@@ -197,10 +203,15 @@ class VM {
     uint16_t _memSize, _stackSize, _SP, _AP;
     // _AP is "append pointer, used at the beginning to make it easy to push a bunch
     // of instructions and data into the memory.
+    int16_t getStringLength(char * startAddr);
+    static constexpr char * dmString = "UIFS";
+    //static const String dwStrings[3] = {"8", "16", "32"};
 
   public:
+    void writeString(char * sptr, uint16_t inAddr = 0, boolean advanceIP = true);
+    String getDataTypeAndWidthString(DataMode dm = DataMode::INVALID_MODE);
     static const uint16_t DATA_SEG = 100;
-    String DM2String(DataMode dm);
+   
     void createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr);
     // void writeByte(uint8_t i32, boolean advanceMemAddr);
     void changeIP(int16_t addressDelta = 0);

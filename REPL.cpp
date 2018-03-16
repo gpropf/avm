@@ -57,7 +57,7 @@ String REPL::getPromptString(String subPrompt) {
   if (subPrompt != "") {
     tabs = "\t";
   }
-  return tabs + _leftPrompt + String(eptr) + _rightPrompt + subPrompt;
+  return tabs + _leftPrompt + String(_eptr++) + _rightPrompt + subPrompt;
 }
 
 void REPL::loop(String subPrompt) {
