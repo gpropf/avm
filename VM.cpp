@@ -3,25 +3,54 @@
 #include "util.h"
 #include "VM.h"
 
-
-/*
-  void VM::writeInt32(int32_t i32, boolean advanceMemAddr) {
-  int32_t * i32p = static_cast<int32_t*>(_ip16);
-   i32p = i32;
-  if (advanceMemAddr) {
-    _ip16 += sizeof(int32_t);
-  }
-  }
-
-  void VM::writeByte(uint8_t i32, boolean advanceMemAddr) {
-   uint8_t * ui8p = static_cast<uint8_t*>(_ip16);
-   ui8p = i32;
-  if (advanceMemAddr) {
-    _ip16 += sizeof(uint8_t);
-  }
-  }
-*/
-
+/* Machine Design Overview:
+ *  
+ *  Registers: There are 16 32bit general purpose regs. Two are actually "reserved" though they are referenced
+ *  using the standard instructions (i.e. there are no special PUSH or POP instructions for them). R0 is essentially
+ *  the "accumulator" that is the target of all math ops. R1 is the "state register". Bit fields here determine data type,
+ *  data width, perhaps addressing mode.
+ *  
+ *  
+ *  Instruction Families
+ *  
+ *  -- <Math op> <RA:4 bits, RB: 4bits>: ADD, SUB, MUL, DIV, POW, OR, AND, NOT: all use registers only. 
+ *    Data type is set using mode register
+ *    
+ *  -- <Jump> <Addr: 16 bits> <RA:4 bits, RB: 4bits>: JEQ, JNE, JLT, JGT, JGTE, JLTE, JMP: Jump to Addr if registers
+ *    are; equal, not equal, RA < RB, RA > RB, RA >= RB, RA <= RB, any (i.e. unconditional jump).
+ *    
+ *  -- <Stack op> {<Addr: 16 bits> || <RA:4 bits, RB: 4bits> || No argument} These are the ops;
+ *  PUSHREGS <RA:4 bits, RB: 4bits>: Pushes two registers onto the stack according to current data mode. If RA = RB
+ *  we only push one.
+ *  
+ *  POPREGS <RA:4 bits, RB: 4bits>: Pops stack values into two registers. If RA = RB we only pop one.
+ *  we only push one.
+ *  
+ *  PUSH <Addr: 16 bits>: Push the object at <Addr> onto the stack
+ *  POP <Addr: 16 bits>: Pop the stack into memory at <Addr>
+ *  
+ *  PUSHCONST <variable width: 8 - 32 bits>: Push the specified constant onto the stack. Size of constant is
+ *  determined by mode. This is a convenience op to allow one-time-use constants to be inlined instead 
+ *  of storing them somewhere and referencing that address.
+ *  
+ *  
+ *  PUSHALLREGS <No argument: 0 bits>: Push contents of all registers onto the stack. This is a shortcut
+ *  used to make saving of stack frame state convenient when calling a function within a function.
+ *  
+ *  POPALLREGS <No argument: 0 bits>: Pop contents of all registers from the stack. This is a shortcut
+ *  used to make resotation of stack frame state convenient when returning from a called 
+ *  function within a function.
+ *  
+ *  -- CALL <Addr: 16 bits>: pushes the return address onto the stack. This is computed as the instruction 
+ *  directly following CALL.
+ *  
+ *  -- <
+ *  
+ *  
+ *  
+ *  
+ *  
+ */
 void VM::writeString(char * sptr, uint16_t inAddr , boolean advanceIP) {
   uint16_t stringLength =  getStringLength(sptr);
   char *copysptr = sptr;
