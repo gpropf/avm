@@ -4,53 +4,74 @@
 #include "VM.h"
 
 /* Machine Design Overview:
- *  
- *  Registers: There are 16 32bit general purpose regs. Two are actually "reserved" though they are referenced
- *  using the standard instructions (i.e. there are no special PUSH or POP instructions for them). R0 is essentially
- *  the "accumulator" that is the target of all math ops. R1 is the "state register". Bit fields here determine data type,
- *  data width, perhaps addressing mode.
- *  
- *  
- *  Instruction Families
- *  
- *  -- <Math op> <RA:4 bits, RB: 4bits>: ADD, SUB, MUL, DIV, POW, OR, AND, NOT: all use registers only. 
- *    Data type is set using mode register
- *    
- *  -- <Jump> <Addr: 16 bits> <RA:4 bits, RB: 4bits>: JEQ, JNE, JLT, JGT, JGTE, JLTE, JMP: Jump to Addr if registers
- *    are; equal, not equal, RA < RB, RA > RB, RA >= RB, RA <= RB, any (i.e. unconditional jump).
- *    
- *  -- <Stack op> {<Addr: 16 bits> || <RA:4 bits, RB: 4bits> || No argument} These are the ops;
- *  PUSHREGS <RA:4 bits, RB: 4bits>: Pushes two registers onto the stack according to current data mode. If RA = RB
- *  we only push one.
- *  
- *  POPREGS <RA:4 bits, RB: 4bits>: Pops stack values into two registers. If RA = RB we only pop one.
- *  we only push one.
- *  
- *  PUSH <Addr: 16 bits>: Push the object at <Addr> onto the stack
- *  POP <Addr: 16 bits>: Pop the stack into memory at <Addr>
- *  
- *  PUSHCONST <variable width: 8 - 32 bits>: Push the specified constant onto the stack. Size of constant is
- *  determined by mode. This is a convenience op to allow one-time-use constants to be inlined instead 
- *  of storing them somewhere and referencing that address.
- *  
- *  
- *  PUSHALLREGS <No argument: 0 bits>: Push contents of all registers onto the stack. This is a shortcut
- *  used to make saving of stack frame state convenient when calling a function within a function.
- *  
- *  POPALLREGS <No argument: 0 bits>: Pop contents of all registers from the stack. This is a shortcut
- *  used to make resotation of stack frame state convenient when returning from a called 
- *  function within a function.
- *  
- *  -- CALL <Addr: 16 bits>: pushes the return address onto the stack. This is computed as the instruction 
- *  directly following CALL.
- *  
- *  -- <
- *  
- *  
- *  
- *  
- *  
- */
+
+    Registers: There are 16 32bit general purpose regs. Two are actually "reserved" though they are referenced
+    using the standard instructions (i.e. there are no special PUSH or POP instructions for them). R0 is essentially
+    the "accumulator" that is the target of all math ops. R1 is the "state register". Bit fields here determine data type,
+    data width, perhaps addressing mode.
+
+
+    Instruction Families
+
+    -- <Math op> <RA:4 bits, RB: 4bits>: ADD, SUB, MUL, DIV, POW, OR, AND, NOT: all use registers only.
+      Data type is set using mode register
+
+    -- <Jump> <Addr: 16 bits> <RA:4 bits, RB: 4bits>: JEQ, JNE, JLT, JGT, JGTE, JLTE, JMP: Jump to Addr if registers
+      are; equal, not equal, RA < RB, RA > RB, RA >= RB, RA <= RB, any (i.e. unconditional jump).
+
+    -- <Stack op> {<Addr: 16 bits> || <RA:4 bits, RB: 4bits> || No argument} These are the ops;
+    PUSHREGS <RA:4 bits, RB: 4bits>: Pushes two registers onto the stack according to current data mode. If RA = RB
+    we only push one.
+
+    POPREGS <RA:4 bits, RB: 4bits>: Pops stack values into two registers. If RA = RB we only pop one.
+    we only push one.
+
+    PUSH <Addr: 16 bits>: Push the object at <Addr> onto the stack
+    POP <Addr: 16 bits>: Pop the stack into memory at <Addr>
+
+    PUSHCONST <variable width: 8 - 32 bits>: Push the specified constant onto the stack. Size of constant is
+    determined by mode. This is a convenience op to allow one-time-use constants to be inlined instead
+    of storing them somewhere and referencing that address.M
+
+
+    PUSHALLREGS <No argument: 0 bits>: Push contents of all registers onto the stack. This is a shortcut
+    used to make saving of stack frame state convenient when calling a function within a function.
+
+    POPALLREGS <No argument: 0 bits>: Pop contents of all registers from the stack. This is a shortcut
+    used to make resotation of stack frame state convenient when returning from a called
+    function within a function.
+
+    -- CALL <Addr: 16 bits>: pushes the return address onto the stack. This is computed as the instruction
+    directly following CALL.
+
+    -- <
+
+
+  Example program
+
+  func pow(x,n)
+                  SP:STACK_TOP - 2*dm, Stack [x,n]
+  PUSH8_CONST8 0:8, [0:dm,x,n], SP:STACK_TOP - 3*dm
+  PUSH8_CONST8 1:8, [1:dm,0:dm,x,n], SP:STACK_TOP - 4*dm
+  CMP_SPREL 1,3, (STACK_TOP - 1*dm, STACK_TOP - 3*dm)
+
+  JEQ BAILOUT
+  INC 1:(SP-1*dm), [1,1:dm,x,n]
+  MUL_SPREL 2,0, (SP-2*dm, SP-0*dm --> SP-0*dm) [x,1:dm,x,n]
+
+  Label: BAILOUT
+  POPREG 0 (SP --> R0) [n:dm,x,n]
+  SP += 3*dm []
+  PUSHREG 0 [x^n]
+  RET
+
+
+
+*/
+
+static const char* VM::_dataModeStrings[8] = {"U8", "U16", "U32", "I8", "I16", "I32", "FL", "STR"};
+static const uint8_t VM::dataWidth[] = {1, 2, 4, 1, 2, 4, 4, 2};
+
 void VM::writeString(char * sptr, uint16_t inAddr , boolean advanceIP) {
   uint16_t stringLength =  getStringLength(sptr);
   char *copysptr = sptr;
@@ -184,76 +205,13 @@ void VM::printStatus() {
            + ", Address Mode: " + amString);
 }
 
+
+
+
 void VM::transferData(uint16_t addr, uint8_t * buf, DataMode dm,
                       boolean toStack, boolean adjustSP,
                       boolean alterMemory) {
-  int16_t dataLength = 0;
-  // uint8_t * returnBuffer;
 
-  switch (dm) {
-    case DataMode::UINT8:
-    case DataMode::INT8:
-      dataLength = 1;
-      dprintln("transferData: data length = 1");
-      break;
-    case DataMode::UINT16:
-    case DataMode::INT16:
-      dataLength = 2;
-      break;
-    case DataMode::UINT32:
-    case DataMode::INT32:
-      dataLength = 4;
-      break;
-    case DataMode::FLOAT:
-      dataLength = 4;
-      break;
-    case DataMode::STRING:
-      if (toStack) {
-        dprintln("String addr: " + String(addr));
-        dataLength = getStringLength(&_mem[addr]);
-        //dprintln("String addr: " + String(addr));
-        dprintln("String is " + String(dataLength) + " bytes long");
-      }
-      else {
-
-        dprintln("from stack to mem, String addr: " + String(addr));
-        dataLength = getStringLength(&_stack[addr]);
-        //dprintln("String addr: " + String(addr));
-        dprintln("String is " + String(dataLength) + " bytes long");
-
-
-
-      }
-      break;
-    default:
-      //dataLength = 0;
-      break;
-  }
-
-  if (toStack) {
-    for (uint16_t i = 0; i < dataLength; i++) {
-      if (!alterMemory) {
-        _stack[_SP + i] = buf[i];
-      }
-      else {
-        _stack[_SP + i] = _mem[addr + i];
-      }
-    }
-  }
-  else {
-    for (uint16_t i = 0; i < dataLength; i++) {
-      if (!alterMemory) {
-        buf[i] = _stack[_SP - dataLength + i];
-      }
-      else {
-        _mem[addr + i] = _stack[_SP - dataLength + i];
-      }
-    }
-
-    dataLength = -dataLength;
-  }
-  if (adjustSP)
-    _SP += dataLength;
 }
 
 VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(stackSize) {
@@ -262,19 +220,18 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
   _am = AddressingMode::ABS;
   _mem = new uint8_t[memSize];
   _ip16 = 0;
-  _SP = 0;
+  _SP = STACK_TOP;
   _stackSize = stackSize;
-  _stack = new uint8_t[stackSize];
-  //_progmem = new uint8_t[memSize];
-  //_ip16 = new uint8_t[memSize];
   _ip16Copy = _ip16;
   _AP = 0;
 
   // Fills the memory and stack with some values for now to show that it's working
-  for (uint16_t i = 0; i < _stackSize; i++)
-    _stack[i] = 0;
+
   for (uint16_t i = 0; i < memSize; i++)
     _mem[i] = i;
+
+  for (uint8_t i = 0; i < 16; i++)
+    _reg[i * 4] = i;
 }
 
 void VM::setSP(uint16_t newIP) {
@@ -303,31 +260,56 @@ int16_t VM::getStringLength(char * startAddr) {
 
 }
 
+//void VM::moveData(uint8_t * srcptr, uint8_t * destptr, DataMode dm) {
+void VM::moveData(uint8_t * srcptr, uint8_t * destptr, uint8_t datumWidth) {
+
+  for (uint8_t i = 0; i < datumWidth; i++)
+    destptr[i] = srcptr[i];
+}
+
+uint8_t * VM::getPtr(uint16_t addr, Location locationType) {
+ 
+ 
+  //, SPREL, MEM_IND, SP_IND,
+  switch (locationType) {
+    case Location::MEM:
+      return &_mem[addr];
+      break;
+    case Location::SPREL:
+      return &_mem[_SP + addr];
+      break;
+    case Location::MEM_IND:
+      addr = _mem[addr];
+      return &_mem[addr];
+      break;
+    case Location::SPREL_IND:
+      addr = _mem[_SP + addr];
+      return &_mem[addr];
+      break;
+    case Location::REG:
+      return &_reg[addr * 4];
+      break;
+
+  }
+}
+
 String VM::getDataTypeAndWidthString(DataMode dm) {
-  
+
   if (dm == DataMode::INVALID_MODE) {
     dm = _dm;
   }
   uint8_t dmuint = static_cast<uint8_t>(dm);
-  String sdm = String(VM::dmString[dmuint & static_cast<uint8_t>(DataMode::GENERAL_TYPE_MASK)]);;
-  dmuint = dmuint >> 2;
-  switch (dmuint) {
-    case 1:
-      sdm += "8";
-      break;
-    case 2:
-      sdm += "16";
-      break;
-    default:
-      sdm += "32";
-      break;
-    
-  }
+  String sdm = String(_dataModeStrings[dmuint]);
+
   return sdm;
 }
 
-void VM::exec(Opcode opcode) {
+static uint8_t VM::getDataWidth(DataMode dm) {
+  return dataWidth[static_cast<uint8_t>(dm)];
+}
 
+void VM::exec(Opcode opcode) {
+  uint8_t opcodeVal = static_cast<uint8_t>(opcode);
   uint8_t * buf = NULL;
   if (opcode == Opcode::BINDAO || opcode == Opcode::BINDAI ||
       opcode == Opcode::BINDDO || opcode == Opcode::BINDDI ||
@@ -367,18 +349,50 @@ void VM::exec(Opcode opcode) {
     }
     createBinding(pin, io, ad, addr);
   }
-  else if (opcode == Opcode::PUSH || opcode == Opcode::POP) {
-    uint16_t addr = readData <uint16_t> ();
-    if (_am == AddressingMode::REL)
-      addr = readData <uint16_t> (addr, false);
+  else if (opcode >= Opcode::PP_START && opcode <= Opcode::PP_END) {
 
-    if (opcode == Opcode::PUSH)
-      transferData(addr, buf, _dm, true);
-    else if (opcode == Opcode::POP)
-      transferData(addr, buf, _dm, false);
+    uint8_t * srcptr;
+    uint8_t * destptr;
+    //uint8_t stackAdjustment = VM::getDataWidth(_dm);
+    //if (_am == AddressingMode::REL)
+    //  addr = readData <uint16_t> (addr, false);
+    switch (opcode) {
+      case Opcode::PUSH8_MEM: {
+          uint16_t addr = readData <uint16_t> ();
+          srcptr = getPtr(addr, Location::MEM);
+          dprintln("PUSH from:" + String(addr));
+          _SP -= 1;
+          dprintln("_SP = :" + String(_SP));
+          destptr = &_mem[_SP];
+
+          moveData(srcptr, destptr, 1);
+          break;
+        }
+      case Opcode::POP8_REGS: {
+          uint8_t targetRegisters = readData <uint8_t> ();
+          dprintln("POP targets = :" + String(targetRegisters));
+          srcptr = getPtr(_SP, Location::MEM);
+          uint16_t reg1 = targetRegisters & 0x0f; // low nibble (4bits)
+          uint16_t reg2 = (targetRegisters & 0xf0) >> 4; // high nibble (4bits)
+          dprintln("reg1 = :" + String(reg1));
+          dprintln("reg2 = :" + String(reg2));
+          destptr = getPtr(reg1, Location::REG);
+          moveData(srcptr, destptr, 1);
+          _SP += 1;
+          srcptr = getPtr(_SP, Location::MEM);
+          dprintln("POP _SP = :" + String(_SP));
+          destptr = getPtr(reg2, Location::REG);
+          moveData(srcptr, destptr, 1);
+          _SP += 1;
+          dprintln("POP _SP = :" + String(_SP));
+          break;
+        }
+    }
+
+
   }
-  else if (opcode == Opcode::ADD || opcode == Opcode::SUB ||
-           opcode == Opcode::MUL || opcode == Opcode::DIV) {
+  else if (opcode == Opcode::ADD_INT8 || opcode == Opcode::SUB_INT8 ||
+           opcode == Opcode::MUL_INT8 || opcode == Opcode::DIV_INT8) {
 
     uint8_t * firstArg = new uint8_t[4];
 
@@ -394,21 +408,25 @@ void VM::exec(Opcode opcode) {
       // all types of int and uint as 32 bit types and then stuff them back into
       // the appropriate size containers when done. Eventually we should trap
       // overflows by checking the "high bytes" as needed but this isn't done ATM.
-      case Opcode::ADD: {
+      case Opcode::ADD_INT8: {
           dprint (F("OPCODE: ADD "));
-          dprintln(getDataTypeAndWidthString());
+          //dprintln(getDataTypeAndWidthString());
           switch (generalType) {
 
-            case DataMode::UINT: {
-                
+            case DataMode::UINT8:
+            case DataMode::UINT16:
+            case DataMode::UINT32: {
+
                 uint32_t * sum = new uint32_t;
                 *sum = *reinterpret_cast<uint32_t*>(firstArg) + *reinterpret_cast<uint32_t*>(secondArg);
                 transferData(0, reinterpret_cast<uint8_t*>(sum), _dm, true, true, false);
                 delete sum;
                 break;
               }
-            case DataMode::INT: {
-                
+            case DataMode::INT8:
+            case DataMode::INT16:
+            case DataMode::INT32: {
+
                 int32_t * sum = new int32_t;
                 *sum = *reinterpret_cast<int32_t*>(firstArg) + *reinterpret_cast<int32_t*>(secondArg);
                 transferData(0, reinterpret_cast<uint8_t*>(sum), _dm, true, true, false);
@@ -416,7 +434,7 @@ void VM::exec(Opcode opcode) {
                 break;
               }
             case DataMode::FLOAT: {
-                
+
                 float * sum = new float;
                 *sum = *reinterpret_cast<float*>(firstArg) + *reinterpret_cast<float*>(secondArg);
                 transferData(0, reinterpret_cast<uint8_t*>(sum), _dm, true, true, false);
@@ -430,9 +448,9 @@ void VM::exec(Opcode opcode) {
           }
 
         }
-      case Opcode::SUB:
-      case Opcode::MUL:
-      case Opcode::DIV:
+      case Opcode::SUB_INT8:
+      case Opcode::MUL_INT8:
+      case Opcode::DIV_INT8:
         break;
 
       default:
@@ -444,23 +462,26 @@ void VM::exec(Opcode opcode) {
   }
   else {
     switch (opcode) {
-      case Opcode::DATA_FLOAT:
+      /*
+        case Opcode::DATA_FLOAT:
         _dm = DataMode::FLOAT;
         dprintln (F("DataMode::FLOAT;"));
         break;
-      case Opcode::DATA_UINT8:
+        case Opcode::DATA_UINT8:
         _dm = DataMode::UINT8;
         dprintln (F("DataMode::UINT8;"));
         break;
-      case Opcode::DATA_STRING:
+        case Opcode::DATA_STRING:
         _dm = DataMode::STRING;
         dprintln (F("DataMode::STRING;"));
         break;
 
-      case Opcode::REL_MODE:
+        case Opcode::REL_MODE:
         _am = AddressingMode::REL;
         dprintln (F("AddressingMode::REL;"));
         break;
+
+      */
       case Opcode::NOOP:
 
         dprintln (F("NOOP -- Doing nothing!"));
@@ -505,8 +526,14 @@ void VM::printMem(uint16_t startAddr, uint16_t endAddr) {
 }
 
 void VM::printStack() {
-  for (uint16_t i = 0; i < _stackSize; i++) {
-    dprintln(String(i) + ": " + String(static_cast<uint8_t>(_stack[i])));
+  for (uint16_t i = STACK_TOP - 1; i > STACK_TOP - _stackSize; i--) {
+    dprintln(String(i) + ": " + String(static_cast<uint8_t>(_mem[i])));
+  }
+}
+
+void VM::printRegisters() {
+  for (uint8_t i = 0; i < 16 ; i++) {
+    dprintln("Reg " + String(i) + ": " + String(static_cast<uint32_t>(_reg[i * 4])));
   }
 }
 

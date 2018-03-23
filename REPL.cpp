@@ -191,6 +191,9 @@ void REPL::parseCommand(String s)
   else if (action == "q" || action == "Q") {
     _vm->printStack();
   }
+  else if (action == "r" || action == "R") {
+    _vm->printRegisters();
+  }
   else if (action == "~") {
     _vm->printStatus();
   }

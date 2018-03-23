@@ -9,6 +9,7 @@ const uint8_t READ_BUFFER_LENGTH = 5;
 const uint8_t REPL_DELAY = 10;
 
 const uint16_t VM_MEM_SIZE = 300;
+const uint16_t STACK_TOP = VM_MEM_SIZE;
 const uint16_t VM_STACK_SIZE = 50;
 const uint16_t MAX_STRING_LENGTH = 1024;
 
