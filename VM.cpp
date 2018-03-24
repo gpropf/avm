@@ -199,10 +199,9 @@ void VM::PinBinding::updatePin(VM & vm) {
 
 
 void VM::printStatus() {
-  String amString = (_am == AddressingMode::REL) ? "Relative" : "Absolute";
+  //String amString = (_am == AddressingMode::REL) ? "Relative" : "Absolute";
   dprintln("IP:" + String(static_cast<uint16_t>(_ip16)) + ", "
-           + "SP:" + String(_SP) + ", Data Mode: " + getDataTypeAndWidthString()
-           + ", Address Mode: " + amString);
+           + "SP:" + String(_SP)) ;
 }
 
 
@@ -217,7 +216,7 @@ void VM::transferData(uint16_t addr, uint8_t * buf, DataMode dm,
 VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(stackSize) {
 
   _dm = DataMode::UINT8;
-  _am = AddressingMode::ABS;
+  //_am = AddressingMode::ABS;
   _mem = new uint8_t[memSize];
   _ip16 = 0;
   _SP = STACK_TOP;
@@ -402,7 +401,7 @@ void VM::exec(Opcode opcode) {
     }
     createBinding(pin, io, ad, addr);
   }
-  else if (opcode >= Opcode::PP_START_8 && opcode <= Opcode::PP_END_8) {
+  else if (opcode < Opcode::FIXED_WIDTH_BASE) {
 
     uint8_t * srcptr;
     uint8_t * destptr;
@@ -436,6 +435,21 @@ void VM::exec(Opcode opcode) {
           dprintln("POP _SP = :" + String(_SP));
           break;
         }
+      case Opcode::ADD_INT_8: {
+          uint8_t targetRegisters = readData <uint8_t> ();
+          RegPair tr = getRegPair(targetRegisters);
+          srcptr = getPtr(tr.reg1, Location::REG);
+          destptr = getPtr(tr.reg2, Location::REG);
+
+          uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
+          uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
+
+          *destreg += *srcreg;
+
+          dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg));
+         
+          break;
+        }
     }
 
 
@@ -443,15 +457,11 @@ void VM::exec(Opcode opcode) {
   else if (opcode == Opcode::ADD_INT_8 || opcode == Opcode::SUB_INT_8 ||
            opcode == Opcode::MUL_INT_8 || opcode == Opcode::DIV_INT_8) {
 
-    uint8_t * firstArg = new uint8_t[4];
 
-    uint8_t * secondArg = new uint8_t[4];
-    zeros(firstArg, 4);
-    zeros(secondArg, 4);
-    transferData(0, firstArg, _dm, false, true, false);
-    transferData(0, secondArg, _dm, false, true, false);
-    // Make 4 byte buffers for all ops
-    DataMode generalType = static_cast<DataMode>(static_cast<uint8_t>(_dm) & 0b0011);
+
+
+
+
     switch (opcode) {
       // To simplify the code for the mathematical instructions I have decided to just compute
       // all types of int and uint as 32 bit types and then stuff them back into
@@ -459,42 +469,8 @@ void VM::exec(Opcode opcode) {
       // overflows by checking the "high bytes" as needed but this isn't done ATM.
       case Opcode::ADD_INT_8: {
           dprint (F("OPCODE: ADD "));
-          //dprintln(getDataTypeAndWidthString());
-          switch (generalType) {
 
-            case DataMode::UINT8:
-            case DataMode::UINT16:
-            case DataMode::UINT32: {
 
-                uint32_t * sum = new uint32_t;
-                *sum = *reinterpret_cast<uint32_t*>(firstArg) + *reinterpret_cast<uint32_t*>(secondArg);
-                transferData(0, reinterpret_cast<uint8_t*>(sum), _dm, true, true, false);
-                delete sum;
-                break;
-              }
-            case DataMode::INT8:
-            case DataMode::INT16:
-            case DataMode::INT32: {
-
-                int32_t * sum = new int32_t;
-                *sum = *reinterpret_cast<int32_t*>(firstArg) + *reinterpret_cast<int32_t*>(secondArg);
-                transferData(0, reinterpret_cast<uint8_t*>(sum), _dm, true, true, false);
-                delete sum;
-                break;
-              }
-            case DataMode::FLOAT: {
-
-                float * sum = new float;
-                *sum = *reinterpret_cast<float*>(firstArg) + *reinterpret_cast<float*>(secondArg);
-                transferData(0, reinterpret_cast<uint8_t*>(sum), _dm, true, true, false);
-                delete sum;
-                break;
-              }
-            case DataMode::STRING: {
-                //FIXME
-                break;
-              }
-          }
 
         }
       case Opcode::SUB_INT_8:
@@ -505,8 +481,6 @@ void VM::exec(Opcode opcode) {
       default:
         break;
     }
-    delete firstArg;
-    delete secondArg;
 
   }
   else {

@@ -65,20 +65,30 @@ void setup() {
   vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 22));
   vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 26));
   //vm.writeInstruction(Opcode::ADD);
-  vm.writeInstruction(Opcode::POP_REGS_8, static_cast<uint16_t>(VM::DATA_SEG + 30));
+  regTargets = 0x89;
+  vm.writeInstruction(Opcode::POP_REGS_8, 0, regTargets);
   //vm.writeInstruction(Opcode::REL_MODE);
   //vm.writeInstruction(Opcode::DATA_UINT8);
   //vm.writeInstruction(Opcode::DATA_STRING);
-  vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 60));
-  vm.writeInstruction(Opcode::POP_REGS_8, static_cast<uint16_t>(VM::DATA_SEG + 80));
+  vm.writeInstruction(Opcode::ADD_INT_8, 0, static_cast<uint8_t>(0x45));
+
+// This block of NOOPs is just to mark the end of the program
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
-  //vm.writeInstruction(Opcode::REL_MODE);
-  //vm.writeInstruction(Opcode::DATA_UINT16);
-  vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 30));
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
 
+  /*
+    vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 60));
+    vm.writeInstruction(Opcode::POP_REGS_8, static_cast<uint16_t>(VM::DATA_SEG + 80));
+    vm.writeInstruction(Opcode::NOOP);
+    vm.writeInstruction(Opcode::NOOP);
+    //vm.writeInstruction(Opcode::REL_MODE);
+    //vm.writeInstruction(Opcode::DATA_UINT16);
+    vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 30));
+    vm.writeInstruction(Opcode::NOOP);
+    vm.writeInstruction(Opcode::NOOP);
+  */
 
   /* **********************************************************************
       This code writes our initial constants into memory above the program

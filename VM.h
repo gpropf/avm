@@ -170,9 +170,8 @@ enum class Opcode : uint8_t {
   END_8 = CMP_UINT_8 + 1,
 
 
-
-  FIXED_WIDTH_BASE = 200,
   // Below this we only need one of each instruction since there are not multiple data widths.
+  FIXED_WIDTH_BASE = 200,
   CMP_FLOAT = FIXED_WIDTH_BASE,
   CMP_STRING = FIXED_WIDTH_BASE + 1,
 
@@ -190,74 +189,6 @@ enum class Opcode : uint8_t {
   BINDAP = BIND_BASE + 4, // A16 V8: Bind a mem address (uint16_t) (analog input-pullup) to a pin (uint8_t)
   BINDDP = BIND_BASE + 5, // A16 V8: Bind a mem address (uint16_t) (digital input-pullup) to a pin (uint8_t)
 
-
-
-
-  // PUSH/POP from/to A16
-  /*
-    PP_START_8 = 15,
-
-    PUSH_MEM_8 = 2 * PUSH_BASE_8,
-    PUSH_SPREL_8 = 17,
-    PUSH_CONST_8 = 18,
-    PUSH_SPREL_8_IND = 19,
-    PUSH8_REG = 20,
-
-    PUSH16_MEM = 21,
-    PUSH16_SPREL = 22,
-    PUSH16_CONST = 23,
-    PUSH16_SPREL_IND = 24,
-    PUSH16_REG = 25,
-
-    PUSH32_MEM = 26,
-    PUSH32_SPREL = 27,
-    PUSH32_CONST = 28,
-    PUSH32_SPREL_IND = 29,
-    PUSH32_REG = 30,
-
-    POP_REGS_8 = 32,
-    POP8_SPREL = 33,
-    POP_REGS_8_IND = 34,
-    POP8_SPREL_IND = 35,
-    POP8_REG = 36,
-
-    POP16_MEM = 37,
-    POP16_SPREL = 38,
-    POP16_MEM_IND = 39,
-    POP16_SPREL_IND = 40,
-    POP16_REG = 41,
-
-    POP32_MEM = 42,
-    POP32_SPREL = 43,
-    POP32_MEM_IND = 44,
-    POP32_SPREL_IND = 45,
-    POP32_REG = 46,
-
-    PP_END_8 = 47,
-
-    MOV8_REG2_SPREL = 48,
-    MOV16_REG2_SPREL = 49,
-    MOV32_REG2_SPREL = 50,
-    MOV8_SPREL2_REG = 51,
-    MOV16_SPREL2_REG = 52,
-    MOV32_SPREL2_REG = 53,
-
-    MOV8_ADDR_REG2_REG = 54, // Treat the value in RA as an address and move the data found there to RB
-    MOV16_ADDR_REG2_REG = 54,
-    MOV32_ADDR_REG2_REG = 54,
-
-
-    REL_MODE, // Set relative addressing mode (i.e. addresses are pointers)
-    ABS_MODE, // Set absolute addressing mode (i.e. addresses are locations of data)
-    DATA_INT8,
-    DATA_INT16,
-    DATA_INT32,
-    DATA_UINT8,
-    DATA_UINT16,
-    DATA_UINT32,
-    DATA_FLOAT,
-    DATA_STRING,
-  */
   NOOP,
   CALL, // Takes a uint16_t address of the function to call. Automatically saves return address
   RET, // Uses stored return address and leaves return value on stack
@@ -304,7 +235,7 @@ class VM {
 
     PinBinding _pinBindings[NUM_PINS];
     DataMode _dm;
-    AddressingMode _am;
+    //AddressingMode _am;
     //uint8_t * _stack;
 
     uint8_t * _mem;
@@ -404,7 +335,12 @@ class VM {
         case Opcode::POP_REGS_8:
           writeData(a2, _ip16);
           break;
-
+        case Opcode::ADD_INT_8:
+        case Opcode::MUL_INT_8:
+        case Opcode::DIV_INT_8:
+        case Opcode::SUB_INT_8:
+          writeData(a2, _ip16);
+          break;
         case Opcode::BINDAO:
         case Opcode::BINDDO:
         case Opcode::BINDDI:
