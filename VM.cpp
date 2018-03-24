@@ -51,8 +51,8 @@
 
   func pow(x,n)
                   SP:STACK_TOP - 2*dm, Stack [x,n]
-  PUSH8_CONST8 0:8, [0:dm,x,n], SP:STACK_TOP - 3*dm
-  PUSH8_CONST8 1:8, [1:dm,0:dm,x,n], SP:STACK_TOP - 4*dm
+  PUSH_CONST_88 0:8, [0:dm,x,n], SP:STACK_TOP - 3*dm
+  PUSH_CONST_88 1:8, [1:dm,0:dm,x,n], SP:STACK_TOP - 4*dm
   CMP_SPREL 1,3, (STACK_TOP - 1*dm, STACK_TOP - 3*dm)
 
   JEQ BAILOUT
@@ -268,8 +268,8 @@ void VM::moveData(uint8_t * srcptr, uint8_t * destptr, uint8_t datumWidth) {
 }
 
 uint8_t * VM::getPtr(uint16_t addr, Location locationType) {
- 
- 
+
+
   //, SPREL, MEM_IND, SP_IND,
   switch (locationType) {
     case Location::MEM:
@@ -308,9 +308,62 @@ static uint8_t VM::getDataWidth(DataMode dm) {
   return dataWidth[static_cast<uint8_t>(dm)];
 }
 
+static Opcode VM::getOpcodeByDataWidth(Opcode c, uint8_t dw) {
+  uint8_t cval = static_cast<uint8_t>(c);
+  switch (dw) {
+    case 1:
+      return c;
+      break;
+    case 2:
+      return static_cast<Opcode>(cval + static_cast<uint8_t>(Opcode::END_8));
+      break;
+    case 4:
+      return static_cast<Opcode>(cval + static_cast<uint8_t>(Opcode::END_8) * 2);
+      break;
+    default:
+      return c;
+  }
+
+}
+
+
+static OpcodeAndDataWidth VM::getOpcodeAndDataWidth(Opcode c) {
+  uint8_t cval = static_cast<uint8_t>(c);
+  const uint8_t widths[] = {1, 2, 4};
+  OpcodeAndDataWidth opcodeAndWidth;
+
+  if (cval < static_cast<uint8_t>(Opcode::END_8) * 3) {
+
+    opcodeAndWidth.c = static_cast<Opcode>(cval % static_cast<uint8_t>(Opcode::END_8));
+    opcodeAndWidth.dw = widths[cval / static_cast<uint8_t>(Opcode::END_8)];
+  }
+  else {
+    opcodeAndWidth.c = c;
+    opcodeAndWidth.dw = 0;
+  }
+
+  return opcodeAndWidth;
+}
+
+RegPair VM::getRegPair(uint8_t registers) {
+  dprintln("POP targets = :" + String(registers));
+  RegPair rp;
+  rp.reg1 = registers & 0x0f; // low nibble (4bits)
+  rp.reg2 = (registers & 0xf0) >> 4; // high nibble (4bits)
+  dprintln("reg1 = :" + String(rp.reg1));
+  dprintln("reg2 = :" + String(rp.reg2));
+  return rp;
+}
+
 void VM::exec(Opcode opcode) {
   uint8_t opcodeVal = static_cast<uint8_t>(opcode);
   uint8_t * buf = NULL;
+
+  OpcodeAndDataWidth opPair = VM::getOpcodeAndDataWidth(opcode);
+  dprintln("Processed opcode = " + String(static_cast<uint8_t>(opPair.c)));
+  dprintln("Data is " + String(opPair.dw) + " bytes wide");
+  opcode = opPair.c;
+  //uint8_t dw = opPair.dw;
   if (opcode == Opcode::BINDAO || opcode == Opcode::BINDAI ||
       opcode == Opcode::BINDDO || opcode == Opcode::BINDDI ||
       opcode == Opcode::BINDAP || opcode == Opcode::BINDDP) {
@@ -349,7 +402,7 @@ void VM::exec(Opcode opcode) {
     }
     createBinding(pin, io, ad, addr);
   }
-  else if (opcode >= Opcode::PP_START && opcode <= Opcode::PP_END) {
+  else if (opcode >= Opcode::PP_START_8 && opcode <= Opcode::PP_END_8) {
 
     uint8_t * srcptr;
     uint8_t * destptr;
@@ -357,33 +410,29 @@ void VM::exec(Opcode opcode) {
     //if (_am == AddressingMode::REL)
     //  addr = readData <uint16_t> (addr, false);
     switch (opcode) {
-      case Opcode::PUSH8_MEM: {
+      case Opcode::PUSH_MEM_8: {
           uint16_t addr = readData <uint16_t> ();
           srcptr = getPtr(addr, Location::MEM);
-          dprintln("PUSH from:" + String(addr));
-          _SP -= 1;
+          dprintln("PUSH from address:" + String(addr));
+          _SP -= opPair.dw;
           dprintln("_SP = :" + String(_SP));
           destptr = &_mem[_SP];
 
-          moveData(srcptr, destptr, 1);
+          moveData(srcptr, destptr, opPair.dw);
           break;
         }
-      case Opcode::POP8_REGS: {
+      case Opcode::POP_REGS_8: {
           uint8_t targetRegisters = readData <uint8_t> ();
-          dprintln("POP targets = :" + String(targetRegisters));
+          RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(_SP, Location::MEM);
-          uint16_t reg1 = targetRegisters & 0x0f; // low nibble (4bits)
-          uint16_t reg2 = (targetRegisters & 0xf0) >> 4; // high nibble (4bits)
-          dprintln("reg1 = :" + String(reg1));
-          dprintln("reg2 = :" + String(reg2));
-          destptr = getPtr(reg1, Location::REG);
-          moveData(srcptr, destptr, 1);
-          _SP += 1;
+          destptr = getPtr(tr.reg1, Location::REG);
+          moveData(srcptr, destptr, opPair.dw);
+          _SP += opPair.dw;
           srcptr = getPtr(_SP, Location::MEM);
           dprintln("POP _SP = :" + String(_SP));
-          destptr = getPtr(reg2, Location::REG);
-          moveData(srcptr, destptr, 1);
-          _SP += 1;
+          destptr = getPtr(tr.reg2, Location::REG);
+          moveData(srcptr, destptr, opPair.dw);
+          _SP += opPair.dw;
           dprintln("POP _SP = :" + String(_SP));
           break;
         }
@@ -391,8 +440,8 @@ void VM::exec(Opcode opcode) {
 
 
   }
-  else if (opcode == Opcode::ADD_INT8 || opcode == Opcode::SUB_INT8 ||
-           opcode == Opcode::MUL_INT8 || opcode == Opcode::DIV_INT8) {
+  else if (opcode == Opcode::ADD_INT_8 || opcode == Opcode::SUB_INT_8 ||
+           opcode == Opcode::MUL_INT_8 || opcode == Opcode::DIV_INT_8) {
 
     uint8_t * firstArg = new uint8_t[4];
 
@@ -408,7 +457,7 @@ void VM::exec(Opcode opcode) {
       // all types of int and uint as 32 bit types and then stuff them back into
       // the appropriate size containers when done. Eventually we should trap
       // overflows by checking the "high bytes" as needed but this isn't done ATM.
-      case Opcode::ADD_INT8: {
+      case Opcode::ADD_INT_8: {
           dprint (F("OPCODE: ADD "));
           //dprintln(getDataTypeAndWidthString());
           switch (generalType) {
@@ -448,9 +497,9 @@ void VM::exec(Opcode opcode) {
           }
 
         }
-      case Opcode::SUB_INT8:
-      case Opcode::MUL_INT8:
-      case Opcode::DIV_INT8:
+      case Opcode::SUB_INT_8:
+      case Opcode::MUL_INT_8:
+      case Opcode::DIV_INT_8:
         break;
 
       default:
@@ -521,19 +570,23 @@ void VM::printBindings() {
 
 
 void VM::printMem(uint16_t startAddr, uint16_t endAddr) {
+  dprintln(repeatString("M", 20));
   for (uint16_t i = startAddr; i < endAddr; i++)
     dprintln(String(i) + ": " + String(static_cast<uint8_t>(_mem[i])));
 }
 
 void VM::printStack() {
+  dprintln(repeatString("S", 20));
   for (uint16_t i = STACK_TOP - 1; i > STACK_TOP - _stackSize; i--) {
     dprintln(String(i) + ": " + String(static_cast<uint8_t>(_mem[i])));
   }
 }
 
 void VM::printRegisters() {
+  dprintln(repeatString("R", 20));
   for (uint8_t i = 0; i < 16 ; i++) {
-    dprintln("Reg " + String(i) + ": " + String(static_cast<uint32_t>(_reg[i * 4])));
+    uint32_t * regptr32 = reinterpret_cast<uint32_t*>(&_reg[i * 4]);
+    dprintln("Reg " + String(i) + ": " + String(*regptr32));
   }
 }
 

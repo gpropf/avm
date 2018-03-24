@@ -46,26 +46,36 @@ void setup() {
 
   uint8_t regTargets = 0x45;
 
+  Opcode testop = static_cast<Opcode>(27);
+  Opcode widePush = VM::getOpcodeByDataWidth (Opcode::PUSH_MEM_8, 2);
+
+  OpcodeAndDataWidth opPair = VM::getOpcodeAndDataWidth(testop);
+  dprintln("8 bit instructions end at " + String(static_cast<uint8_t>(Opcode::END_8)));
+  dprintln("Test OP = " + String(static_cast<uint8_t>(opPair.c)) + ", Width = " + String(opPair.dw));
+
   vm.writeInstruction(Opcode::BINDAI, static_cast<uint16_t>(VM::DATA_SEG + ANALOG_TEST_INPUT_PIN), ANALOG_TEST_INPUT_PIN);
-  vm.writeInstruction(Opcode::PUSH8_MEM, static_cast<uint16_t>(VM::DATA_SEG));
-  vm.writeInstruction(Opcode::PUSH8_MEM, static_cast<uint16_t>(VM::DATA_SEG + 2));
+  vm.writeInstruction(widePush, static_cast<uint16_t>(VM::DATA_SEG));
+
+
+  dprintln("Wide Push = " + String(static_cast<uint8_t>(widePush)));
+  vm.writeInstruction(widePush, static_cast<uint16_t>(VM::DATA_SEG + 2));
   //vm.writeInstruction(Opcode::ADD);
-  vm.writeInstruction(Opcode::POP8_REGS, 0, regTargets);
+  vm.writeInstruction(VM::getOpcodeByDataWidth (Opcode::POP_REGS_8, 2), 0, regTargets);
   //vm.writeInstruction(Opcode::DATA_FLOAT);
-  vm.writeInstruction(Opcode::PUSH8_MEM, static_cast<uint16_t>(VM::DATA_SEG + 22));
-  vm.writeInstruction(Opcode::PUSH8_MEM, static_cast<uint16_t>(VM::DATA_SEG + 26));
+  vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 22));
+  vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 26));
   //vm.writeInstruction(Opcode::ADD);
-  vm.writeInstruction(Opcode::POP8_REGS, static_cast<uint16_t>(VM::DATA_SEG + 30));
+  vm.writeInstruction(Opcode::POP_REGS_8, static_cast<uint16_t>(VM::DATA_SEG + 30));
   //vm.writeInstruction(Opcode::REL_MODE);
   //vm.writeInstruction(Opcode::DATA_UINT8);
   //vm.writeInstruction(Opcode::DATA_STRING);
-  vm.writeInstruction(Opcode::PUSH8_MEM, static_cast<uint16_t>(VM::DATA_SEG + 60));
-  vm.writeInstruction(Opcode::POP8_REGS, static_cast<uint16_t>(VM::DATA_SEG + 80));
+  vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 60));
+  vm.writeInstruction(Opcode::POP_REGS_8, static_cast<uint16_t>(VM::DATA_SEG + 80));
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
   //vm.writeInstruction(Opcode::REL_MODE);
   //vm.writeInstruction(Opcode::DATA_UINT16);
-  vm.writeInstruction(Opcode::PUSH8_MEM, static_cast<uint16_t>(VM::DATA_SEG + 30));
+  vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 30));
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
 
