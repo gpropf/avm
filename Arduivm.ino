@@ -10,30 +10,9 @@ VM vm(VM_MEM_SIZE, VM_STACK_SIZE);
 REPL repl("$[", "]:", &vm);
 
 
-void setup() {
-
-  Serial.begin(57600);
-  //dprint(F("{{"));
-  dprintln(repeatString("*", 60));
-
-  // dprintln("Pin A0 is:" + String(A0));
-
-  //dprintln(F("}}"));
-  dprintln(F("Arduivm: v0.8.0"));
-  dprintln(repeatString("*", 60));
-  //dprintln("Size of stackElement:" + String(sizeof(stackElement)));
-
+void flashLEDs () {
   pinMode(ANALOG_OUT_PIN, OUTPUT);
-  //pinMode(ANALOG_TEST_INPUT_PIN, INPUT);
 
-  //uint8_t testRead = analogRead(ANALOG_TEST_INPUT_PIN);
-  //dprintln("Testing analog input by reading pin " + String(ANALOG_TEST_INPUT_PIN) + ", got value: " + String(testRead));
-
-  //dprintln("Testing LED, on pin " + String(ANALOG_OUT_PIN) + ", it should blink twice.");
-  // put your setup code here, to run once:
-  //Cell ** cells;
-  //cells = new Cell*[10];
-  //Number n = Number();
   for (uint8_t i = 0; i < 5; i++) {
     analogWrite(ANALOG_OUT_PIN, 255);
     delay(250);
@@ -43,6 +22,18 @@ void setup() {
   analogWrite(ANALOG_OUT_PIN, 255);
   delay(500);
   analogWrite(ANALOG_OUT_PIN, 0);
+}
+
+void setup() {
+
+  Serial.begin(57600);
+
+  dprintln(repeatString("*", 60));
+  dprintln(F("Arduivm: v0.9.0"));
+  dprintln(repeatString("*", 60));
+
+  flashLEDs();
+
 
   uint8_t regTargets = 0x45;
 
@@ -72,10 +63,21 @@ void setup() {
   //vm.writeInstruction(Opcode::DATA_STRING);
   vm.writeInstruction(Opcode::ADD_INT_8, 0, static_cast<uint8_t>(0x45));
 
-// This block of NOOPs is just to mark the end of the program
+
+  vm.writeInstruction(Opcode::CALL, static_cast<uint16_t>(30));
+
+  // This block of NOOPs is just to mark the end of the program
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
+
+  vm.writeInstruction(Opcode::RET);
   vm.writeInstruction(Opcode::NOOP);
 
   /*

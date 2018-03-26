@@ -447,42 +447,14 @@ void VM::exec(Opcode opcode) {
           *destreg += *srcreg;
 
           dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg));
-         
+
           break;
         }
     }
 
 
   }
-  else if (opcode == Opcode::ADD_INT_8 || opcode == Opcode::SUB_INT_8 ||
-           opcode == Opcode::MUL_INT_8 || opcode == Opcode::DIV_INT_8) {
 
-
-
-
-
-
-    switch (opcode) {
-      // To simplify the code for the mathematical instructions I have decided to just compute
-      // all types of int and uint as 32 bit types and then stuff them back into
-      // the appropriate size containers when done. Eventually we should trap
-      // overflows by checking the "high bytes" as needed but this isn't done ATM.
-      case Opcode::ADD_INT_8: {
-          dprint (F("OPCODE: ADD "));
-
-
-
-        }
-      case Opcode::SUB_INT_8:
-      case Opcode::MUL_INT_8:
-      case Opcode::DIV_INT_8:
-        break;
-
-      default:
-        break;
-    }
-
-  }
   else {
     switch (opcode) {
       /*
@@ -505,6 +477,24 @@ void VM::exec(Opcode opcode) {
         break;
 
       */
+      case Opcode::CALL: {
+          uint16_t addr = readData <uint16_t> ();
+          //_ip16 += 3; // Skip over CALL and its 16 bit address arg.
+          uint8_t * ipValPtr = reinterpret_cast<uint8_t*>(&_ip16);
+          _SP -= 2; // make room on stack for return address
+          uint8_t * destptr = &_mem[_SP];
+          dprintln("CALL --- Calling function at addr: " + String(addr) + " and putting " + String(_ip16) + " on the stack");
+          moveData(ipValPtr, destptr, 2);
+          _ip16 = addr;
+          break;
+        }
+      case Opcode::RET: {
+          uint16_t * retAddr = reinterpret_cast<uint16_t*>(&_mem[_SP]);
+          dprintln("RET! Would jump back to addr: " + String(*retAddr));
+          _SP+=2;
+          _ip16 = *retAddr;
+          break;
+        }
       case Opcode::NOOP:
 
         dprintln (F("NOOP -- Doing nothing!"));

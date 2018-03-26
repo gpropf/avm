@@ -190,8 +190,8 @@ enum class Opcode : uint8_t {
   BINDDP = BIND_BASE + 5, // A16 V8: Bind a mem address (uint16_t) (digital input-pullup) to a pin (uint8_t)
 
   NOOP,
-  CALL, // Takes a uint16_t address of the function to call. Automatically saves return address
-  RET, // Uses stored return address and leaves return value on stack
+  CALL = 255, // Takes a uint16_t address of the function to call. Automatically saves return address
+  RET = 254, // Uses stored return address and leaves return value on stack
 
 
 
@@ -326,9 +326,11 @@ class VM {
       OpcodeAndDataWidth opPair = getOpcodeAndDataWidth(c);
 
 
-
+      // This switch only does something if we have an instruction with an argument
       switch (opPair.c) {
-
+        case Opcode::CALL:
+          writeData(a1, _ip16);
+          break;
         case Opcode::PUSH_MEM_8:
           writeData(a1, _ip16);
           break;
