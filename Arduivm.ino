@@ -29,53 +29,79 @@ void setup() {
   Serial.begin(57600);
 
   dprintln(repeatString("*", 60));
-  dprintln(F("Arduivm: v0.9.0"));
+  dprintln(F("Arduivm: v0.10.0"));
   dprintln(repeatString("*", 60));
 
   flashLEDs();
 
-
-  uint8_t regTargets = 0x45;
+  //dprintln("Numeric value of comparisons 3/4, 4/3, 3/3: " + String (3 > 4) + "," + String (4 > 3) + "," + String (3 == 3));
+  //dprintln("END_8 = " + String(static_cast<uint8_t>(Opcode::END_8)));
+  uint8_t regTargets = 0xef;
 
   Opcode testop = static_cast<Opcode>(27);
   Opcode widePush = VM::getOpcodeByDataWidth (Opcode::PUSH_MEM_8, 2);
 
   OpcodeAndDataWidth opPair = VM::getOpcodeAndDataWidth(testop);
-  dprintln("8 bit instructions end at " + String(static_cast<uint8_t>(Opcode::END_8)));
+  dprintln("8 bit instructions end at END_8:" + String(static_cast<uint8_t>(Opcode::END_8)));
   dprintln("Test OP = " + String(static_cast<uint8_t>(opPair.c)) + ", Width = " + String(opPair.dw));
 
   vm.writeInstruction(Opcode::BINDAI, static_cast<uint16_t>(VM::DATA_SEG + ANALOG_TEST_INPUT_PIN), ANALOG_TEST_INPUT_PIN);
   vm.writeInstruction(widePush, static_cast<uint16_t>(VM::DATA_SEG));
 
 
-  dprintln("Wide Push = " + String(static_cast<uint8_t>(widePush)));
+  //dprintln("Wide Push = " + String(static_cast<uint8_t>(widePush)));
   vm.writeInstruction(widePush, static_cast<uint16_t>(VM::DATA_SEG + 2));
-  //vm.writeInstruction(Opcode::ADD);
   vm.writeInstruction(VM::getOpcodeByDataWidth (Opcode::POP_REGS_8, 2), 0, regTargets);
-  //vm.writeInstruction(Opcode::DATA_FLOAT);
   vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 22));
   vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 26));
-  //vm.writeInstruction(Opcode::ADD);
   regTargets = 0x89;
   vm.writeInstruction(Opcode::POP_REGS_8, 0, regTargets);
-  //vm.writeInstruction(Opcode::REL_MODE);
-  //vm.writeInstruction(Opcode::DATA_UINT8);
-  //vm.writeInstruction(Opcode::DATA_STRING);
-  vm.writeInstruction(Opcode::ADD_INT_8, 0, static_cast<uint8_t>(0x45));
+  vm.writeInstruction(Opcode::ADD_INT_8, 0, static_cast<uint8_t>(0xef));
+  vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x5));
+  vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x3));
 
 
-  vm.writeInstruction(Opcode::CALL, static_cast<uint16_t>(30));
+  vm.writeInstruction(Opcode::CALL, static_cast<uint16_t>(FUNCTION_START));
 
   // This block of NOOPs is just to mark the end of the program
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
+
+
+
+// This is my test function: pow(x:u8, n:u8)
+// pseudocode is:
+/*
+
+uint8_t i = 0;
+uint8_t retval = 1;
+[LOOP_START]
+if (i == n ) goto [BAILOUT]
+i++;
+retval = retval * x;
+goto [LOOP_START]
+
+[BAILOUT]
+return retval;
+
+*/
+
+  vm._ip16 = FUNCTION_START;
+  vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x0));
+  vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x1));
+  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x1), static_cast<uint8_t>(0x1));
+  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x4), static_cast<uint8_t>(0x4));
+  regTargets = 0x14;
+  vm.writeInstruction(Opcode::CMP_INT_8, 0, regTargets);
+  vm.writeInstruction(Opcode::NOOP); // FIXME: need JEQ [BAILOUT] here
+  vm.writeInstruction(Opcode::INC_SPREL_UINT_8, 0, static_cast<uint8_t>(0x1));
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
+  //vm.writeInstruction(Opcode::CMP_INT_8, 0, regTargets);
 
   vm.writeInstruction(Opcode::RET);
   vm.writeInstruction(Opcode::NOOP);

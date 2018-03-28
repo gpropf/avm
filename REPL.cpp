@@ -197,6 +197,40 @@ void REPL::parseCommand(String s)
   else if (action == "~") {
     _vm->printStatus();
   }
+  else if (action == "c") {
+    // c for "cast"
+    String dm = args[1];
+    uint16_t addr = args[2].toInt();
+    if (dm == "u16") {
+      uint16_t val = _vm->readData<uint16_t>(addr,false);
+      dprintln("_mem[" + String(addr) + "] as uint16_t: " + String(val));
+    }
+    if (dm == "u8") {
+      uint8_t val = _vm->readData<uint8_t>(addr,false);
+      dprintln("_mem[" + String(addr) + "] as uint8_t: " + String(val));
+    }
+    if (dm == "u32") {
+      uint32_t val = _vm->readData<uint32_t>(addr,false);
+      dprintln("_mem[" + String(addr) + "] as uint32_t: " + String(val));
+    }
+    if (dm == "i16") {
+      int16_t val = _vm->readData<int16_t>(addr,false);
+      dprintln("_mem[" + String(addr) + "] as int16_t: " + String(val));
+    }
+    if (dm == "i8") {
+      int8_t val = _vm->readData<int8_t>(addr,false);
+      dprintln("_mem[" + String(addr) + "] as int8_t: " + String(val));
+    }
+    if (dm == "u32") {
+      uint32_t val = _vm->readData<uint32_t>(addr,false);
+      dprintln("_mem[" + String(addr) + "] as uint32_t: " + String(val));
+    }
+    if (dm == "fl") {
+      float val = _vm->readData<float>(addr,false);
+      dprintln("_mem[" + String(addr) + "] as float: " + String(val));
+    }
+   
+  }
 }
 
 

@@ -78,30 +78,14 @@ enum class AddressingMode : uint8_t {
 };
 
 enum class Location : uint8_t {
-  /*
-    R0 = 0,
-    R1 = 1,
-    R2 = 2,
-    R3 = 3,
-    R4 = 4,
-    R5 = 5,
-    R6 = 6,
-    R7 = 7,
-
-    R8 = 8,
-    R9 = 9,
-    R10 = 10,
-    R11 = 11,
-
-    R12 = 12,
-    R13 = 13,
-    R14 = 14,
-    R15 = 15,
-  */
   MEM, SPREL, MEM_IND, SPREL_IND, REG,
 };
 
-
+enum class Comparison : uint8_t {
+  LESS_THAN = 1,
+  GREATER_THAN = 2,
+  EQUAL = 3,
+};
 
 enum class DataMode : uint8_t {
 
@@ -134,10 +118,6 @@ enum class Opcode : uint8_t {
   SHL_8 = MATH_BASE_8 + 7,
   SHR_8 = MATH_BASE_8 + 8,
 
-
-
-
-
   MOV_BASE_8 = MATH_BASE_8 + 9,
   MOV_REG2_MEM_8 = MOV_BASE_8,
   MOV_MEM2_REG_8 = MOV_BASE_8 + 1,
@@ -167,9 +147,15 @@ enum class Opcode : uint8_t {
   CMP_INT_8 = CMP_BASE,
   CMP_UINT_8 = CMP_BASE + 1,
 
-  END_8 = CMP_UINT_8 + 1,
+  INC_BASE = CMP_UINT_8 + 1,
+  INC_SPREL_UINT_8 = INC_BASE + 1,
+  INC_SPREL_INT_8 = INC_BASE + 2,
 
+  INC_END = INC_SPREL_INT_8,
 
+  END_8 = INC_END,
+
+  // **************************************
   // Below this we only need one of each instruction since there are not multiple data widths.
   FIXED_WIDTH_BASE = 200,
   CMP_FLOAT = FIXED_WIDTH_BASE,
@@ -192,8 +178,6 @@ enum class Opcode : uint8_t {
   NOOP,
   CALL = 255, // Takes a uint16_t address of the function to call. Automatically saves return address
   RET = 254, // Uses stored return address and leaves return value on stack
-
-
 
 };
 
@@ -235,12 +219,10 @@ class VM {
 
     PinBinding _pinBindings[NUM_PINS];
     DataMode _dm;
-    //AddressingMode _am;
-    //uint8_t * _stack;
-
     uint8_t * _mem;
-    uint16_t _ip16;
+
     uint16_t _ip16Copy;
+    Comparison _cmpReg;
 
     uint8_t _reg[64];
 
@@ -257,6 +239,8 @@ class VM {
 
 
   public:
+    uint16_t _ip16;
+
     void writeString(char * sptr, uint16_t inAddr = 0, boolean advanceIP = true);
     String getDataTypeAndWidthString(DataMode dm = DataMode::INVALID_MODE);
     static const uint16_t DATA_SEG = 100;
@@ -267,7 +251,6 @@ class VM {
 
 
     void createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr);
-    // void writeByte(uint8_t i32, boolean advanceMemAddr);
     void changeIP(int16_t addressDelta = 0);
     VM(): _ip16(0), _SP(0) , _AP(0) {};
     VM(uint16_t memSize, uint16_t stackSize);
@@ -287,7 +270,6 @@ class VM {
     }
 
     inline void incIP() {
-      //_IP++;
       _ip16++;
     }
 
@@ -301,33 +283,46 @@ class VM {
     void printBindings();
     void reset();
 
-
-
-
-
-
+    template <class datum>
+    void castRegData(datum &value1, datum &value2, RegPair rp) {
+      value1 = *(reinterpret_cast<datum*>(&(_reg[rp.reg1 * 4])));
+      value2 = *(reinterpret_cast<datum*>(&(_reg[rp.reg2 * 4])));
+    }
 
     template <class datum>
-    void writeData(datum d, uint16_t inAddr = 0, boolean advanceIP = true) {
-      if (advanceIP) {
+    void writeData(datum d, uint16_t inAddr = 0, boolean writeAtIP = true, boolean advanceIP = true) {
+      if (writeAtIP) {
         inAddr = _ip16;
-        _ip16 += sizeof(datum);
+
       }
+      if (advanceIP)
+        _ip16 += sizeof(datum);
       datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
       *dptr = d;
     }
 
-    template <class A1 = uint16_t, class A2 = uint8_t, class A3 = int32_t>
+    template <class A1 = uint16_t, class A2 = uint8_t, class A3 = uint8_t>
     void writeInstruction(Opcode c, A1 a1 = 0, A2 a2 = 0, A3 a3 = 0)
     {
-
       writeData(c);
-
       OpcodeAndDataWidth opPair = getOpcodeAndDataWidth(c);
-
 
       // This switch only does something if we have an instruction with an argument
       switch (opPair.c) {
+        case Opcode::INC_SPREL_UINT_8: {
+            writeData(a2, _ip16);
+          }
+        case Opcode::MOV_SPREL2_REG_8: {
+            writeData(a2, _ip16);
+            writeData(a3, _ip16);
+            break;
+          }
+        case Opcode::PUSH_CONST_8:
+          writeData(a2, _ip16);
+          break;
+        case Opcode::CMP_INT_8:
+          writeData(a2, _ip16);
+          break;
         case Opcode::CALL:
           writeData(a1, _ip16);
           break;
@@ -355,16 +350,7 @@ class VM {
             //_ip16 += (sizeof(a2));
           }
           break;
-          /*
-            case Opcode::PUSH:
-            writeData(a1, _ip16);
-            break;
-            case Opcode::POP:
-            writeData(a1, _ip16);
-            break;
-          */
       }
-
     }
 
     template <class datum> datum readData(uint16_t inAddr = 0, boolean advanceIP = true)

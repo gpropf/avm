@@ -166,21 +166,19 @@ void VM::PinBinding::updatePin(VM & vm) {
   if (_ad) {
     switch (_io) {
       case OUTPUT: {
-          //dprint("AnalogWrite to pin #: " + String(_pin) + ", ");
-
-          uint8_t val = vm.readData <uint8_t> (_address);
+          uint16_t val = vm.readData <uint16_t> (_address);
           dprintln("Writing " + String(val) + " to pin " + String(_pin));
           analogWrite(_pin, val);
-          //vm.push(valCell);
-
-          //dprintln("leaving AnalogWrite::exec()--");
           break;
         }
       case INPUT:
         {
           uint16_t val = analogRead(_pin);
           dprintln("Got value " + String(val) + " from pin " + String(_pin));
-          vm._mem[_address] = val;
+          //uint16_t * u16ptr = reinterpret_cast<uint16_t>(&vm._mem[_address]);
+          vm.writeData<uint16_t>(val, _address, false, false);
+          //vm._mem[_address] = val;
+          //*u16ptr = val;
           break;
         }
     }
@@ -201,7 +199,7 @@ void VM::PinBinding::updatePin(VM & vm) {
 void VM::printStatus() {
   //String amString = (_am == AddressingMode::REL) ? "Relative" : "Absolute";
   dprintln("IP:" + String(static_cast<uint16_t>(_ip16)) + ", "
-           + "SP:" + String(_SP)) ;
+           + "SP:" + String(_SP) + " _cmpReg: " + String(static_cast<uint16_t>(_cmpReg)));
 }
 
 
@@ -408,13 +406,96 @@ void VM::exec(Opcode opcode) {
     //uint8_t stackAdjustment = VM::getDataWidth(_dm);
     //if (_am == AddressingMode::REL)
     //  addr = readData <uint16_t> (addr, false);
+
+
+
     switch (opcode) {
+
+      case Opcode::INC_SPREL_UINT_8: {
+          uint8_t sprel = readData <uint8_t> ();
+          srcptr = getPtr(sprel, Location::SPREL);
+          (*srcptr)++;
+          dprintln("INC SPREL:" + String(sprel));
+          //_SP -= opPair.dw;
+          //dprintln("PUSH_MEM_8");
+          //destptr = &_mem[_SP];
+
+          //moveData(srcptr, destptr, opPair.dw);
+          break;
+        }
+
+      case Opcode::CMP_INT_8: {
+          uint8_t targetRegisters = readData <uint8_t> ();
+          RegPair rp = getRegPair(targetRegisters);
+          switch (opPair.dw) {
+            case 1: {
+                int8_t r1;
+                int8_t r2;
+                castRegData(r1, r2, rp);
+                if (r1 < r2) {
+                  dprintln("R1 < R2: " + String(r1) + "," + String(r2));
+                  _cmpReg = Comparison::LESS_THAN;
+                }
+                else if (r1 > r2) {
+                  dprintln("R1 > R2: " + String(r1) + "," + String(r2));
+                  _cmpReg = Comparison::GREATER_THAN;
+                }
+                else {
+                  dprintln("R1 = R2: " + String(r1) + "," + String(r2));
+                  _cmpReg = Comparison::EQUAL;
+                }
+                break;
+              }
+            case 2: {
+                break;
+              }
+            case 4: {
+                break;
+              }
+
+          }
+          dprintln("_ip = " + String(_ip16));
+          break;
+        }
+
+
+
+      case Opcode::MOV_SPREL2_REG_8: {
+          uint8_t sprel = readData <uint8_t> ();
+          uint8_t reg = readData <uint8_t> ();
+
+          srcptr = getPtr(sprel, Location::SPREL);
+          destptr = getPtr(reg, Location::REG);
+          moveData(srcptr, destptr, opPair.dw);
+
+          dprintln("MOV_SPREL2_REG_8 from _sp + " + String(sprel) + " to reg " + String(reg));
+          break;
+        }
+
+
+
+      case Opcode::PUSH_CONST_8: {
+          //uint8_t constVal = readData <uint8_t> ();
+          srcptr = getPtr(_ip16, Location::MEM);
+          dprintln("PUSH const from address:" + String(_ip16));
+          _ip16++;
+
+          _SP -= opPair.dw;
+
+          destptr = &_mem[_SP];
+
+          moveData(srcptr, destptr, opPair.dw);
+          break;
+        }
+
+
+
       case Opcode::PUSH_MEM_8: {
           uint16_t addr = readData <uint16_t> ();
           srcptr = getPtr(addr, Location::MEM);
           dprintln("PUSH from address:" + String(addr));
           _SP -= opPair.dw;
-          dprintln("_SP = :" + String(_SP));
+          dprintln("PUSH_MEM_8");
           destptr = &_mem[_SP];
 
           moveData(srcptr, destptr, opPair.dw);
@@ -450,6 +531,7 @@ void VM::exec(Opcode opcode) {
 
           break;
         }
+        dprintln("_SP = :" + String(_SP));
     }
 
 
@@ -491,7 +573,7 @@ void VM::exec(Opcode opcode) {
       case Opcode::RET: {
           uint16_t * retAddr = reinterpret_cast<uint16_t*>(&_mem[_SP]);
           dprintln("RET! Would jump back to addr: " + String(*retAddr));
-          _SP+=2;
+          _SP += 2;
           _ip16 = *retAddr;
           break;
         }
