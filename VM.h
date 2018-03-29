@@ -1,78 +1,6 @@
 #ifndef VM_h
 #define VM_h
 
-/*
-   Some Notes on Opcodes and Type System
-   --------------------------------------
-
-   Types: uint8, uint16, uint32, int8, int16, int32, float32, string: 3 bits
-   Stack Operations: push, pop (types determined by type field): 1 bit
-
-  Above must be grouped as we must know *what* we are pushing and popping and
-  this information is not stored with the values (unless we implement our typed stack idea)
-
-   Math Operators: add, sub, mul, div: 2 bits
-   Binding Operations: AI, DI, AO, DO, AP, DP: 6 possibilities can be organized by odd/even.
-   Perhaps combine binding ops with push/pop to make a single 3 bit field.
-
-
-   Branching: jne, jeq, jlt, jgt (Jump if not equal, equal, less than, and greater than respectively): 2 bits
-
-  It looks like a single bit could be used to switch between the typed push/pop instructions
-  and the others.
-
-
-*/
-/*
-  enum class stackElementType : uint8_t {
-  // First two bits determines type, uint, int, float, or string
-
-  UINT = 0b0000,
-  INT = 0b0001,
-  FLOAT = 0b0010,
-  STRING = 0b0011,
-
-  // Second two bits determines width, 8, 16, or 32 bits. Strings have varying
-  // length.
-
-  WIDTH8 = 0b0100,
-  WIDTH16 = 0b1000,
-  WIDTH32 = 0b1100,
-
-  // Some common types
-
-  UINT8 = UINT & WIDTH8,
-  UINT16 = UINT & WIDTH16,
-  UINT32 = UINT & WIDTH32,
-
-  INT8 = INT & WIDTH8,
-  INT16 = INT & WIDTH16,
-  INT32 = INT & WIDTH32,
-
-  };
-*/
-/*
-  union stackElementData {
-  uint8_t ui8;
-  uint16_t ui16;
-  uint32_t ui32;
-  int8_t i8;
-  int16_t i16;
-  int32_t i32;
-  char * str;
-  float fl;
-  double dbl;
-  };
-*/
-/*
-  struct stackElement {
-  stackElementType t;
-  stackElementData d;
-
-  //stackElement(stackElementType t, stackElementData d): t(t), d(d) {};
-  };
-*/
-
 enum class AddressingMode : uint8_t {
   REL, ABS
 };
@@ -166,8 +94,9 @@ enum class Opcode : uint8_t {
   JEQ = JUMP_BASE + 1,
   JLT = JUMP_BASE + 2,
   JGT = JUMP_BASE + 3,
+  UJMP = JUMP_BASE + 4, // Unconditional jump
 
-  BIND_BASE = JUMP_BASE + 4,
+  BIND_BASE = JUMP_BASE + 5,
   BINDAI = BIND_BASE, // A16 V8: Bind a mem address (uint16_t) (analog input) to a pin (uint8_t)
   BINDDI = BIND_BASE + 1, // A16 V8: Bind a mem address (uint16_t) (digital input) to a pin (uint8_t)
   BINDAO = BIND_BASE + 2, // A16 V8: Bind a mem address (uint16_t) (analog out) to a pin (uint8_t)
@@ -216,11 +145,9 @@ class VM {
 
   private:
 
-
     PinBinding _pinBindings[NUM_PINS];
-    DataMode _dm;
+    //DataMode _dm;
     uint8_t * _mem;
-
     uint16_t _ip16Copy;
     Comparison _cmpReg;
 
@@ -236,35 +163,39 @@ class VM {
     static const char* _dataModeStrings[8];
     uint8_t * getPtr(uint16_t addr, Location locationType);
     RegPair getRegPair(uint8_t registers);
-
-
-  public:
     uint16_t _ip16;
 
+  public:
+
+    VM(): _ip16(0), _SP(0) , _AP(0) {};
+    VM(uint16_t memSize, uint16_t stackSize);
+
+
+
     void writeString(char * sptr, uint16_t inAddr = 0, boolean advanceIP = true);
-    String getDataTypeAndWidthString(DataMode dm = DataMode::INVALID_MODE);
+
     static const uint16_t DATA_SEG = 100;
     static const uint8_t dataWidth[];
-    static uint8_t getDataWidth(DataMode dm);
+    //  static uint8_t getDataWidth(DataMode dm);
     static OpcodeAndDataWidth getOpcodeAndDataWidth(Opcode c);
     static Opcode getOpcodeByDataWidth(Opcode c, uint8_t dw);
 
-
+    /* ===============================================
+        Pin binding code
+       ===============================================
+    */
     void createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr);
-    void changeIP(int16_t addressDelta = 0);
-    VM(): _ip16(0), _SP(0) , _AP(0) {};
-    VM(uint16_t memSize, uint16_t stackSize);
-    uint8_t readMem(uint16_t i);
-    void step();
-    void printMem(uint16_t startAddr, uint16_t endAddr);
-    void printRegisters();
-    void printStatus();
     void updateBoundData();
-    void transferData(uint16_t addr, uint8_t * buf, DataMode dm, boolean toStack,
-                      boolean adjustSP = true, boolean alterMemory = true);
+    // ************************************************
 
 
     void moveData(uint8_t * srcptr, uint8_t * destptr, uint8_t datumWidth);
+    void changeIP(int16_t addressDelta = 0);
+    inline void setIP(uint16_t newIP) {
+      _ip16 = newIP;
+    }
+
+    void setSP(uint16_t newIP);
     inline uint16_t getIP() {
       return _ip16;
     }
@@ -272,21 +203,40 @@ class VM {
     inline void incIP() {
       _ip16++;
     }
+    void reset();
 
+    uint8_t readMem(uint16_t i);
+    void step();
     void exec(Opcode opcode);
 
-    void setIP(uint16_t newIP);
-
-    void setSP(uint16_t newIP);
-
+    //String getDataTypeAndWidthString(DataMode dm = DataMode::INVALID_MODE);
+    void printMem(uint16_t startAddr, uint16_t endAddr);
+    void printRegisters();
+    void printStatus();
     void printStack();
     void printBindings();
-    void reset();
+
+    /* =================================================
+        Template code for variable type and width data
+       =================================================
+    */
 
     template <class datum>
     void castRegData(datum &value1, datum &value2, RegPair rp) {
       value1 = *(reinterpret_cast<datum*>(&(_reg[rp.reg1 * 4])));
       value2 = *(reinterpret_cast<datum*>(&(_reg[rp.reg2 * 4])));
+    }
+
+    template <class datum> datum readData(uint16_t inAddr = 0, boolean advanceIP = true)
+    {
+      if (advanceIP) {
+        inAddr = _ip16;
+        _ip16 += sizeof(datum);
+      }
+      dprintln("IP = " + String(_ip16));
+      datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
+      datum d = *dptr;
+      return d;
     }
 
     template <class datum>
@@ -311,6 +261,7 @@ class VM {
       switch (opPair.c) {
         case Opcode::INC_SPREL_UINT_8: {
             writeData(a2, _ip16);
+            break;
           }
         case Opcode::MOV_SPREL2_REG_8: {
             writeData(a2, _ip16);
@@ -322,6 +273,12 @@ class VM {
           break;
         case Opcode::CMP_INT_8:
           writeData(a2, _ip16);
+          break;
+        case Opcode::UJMP:
+          writeData(a1, _ip16);
+          break;
+        case Opcode::JEQ:
+          writeData(a1, _ip16);
           break;
         case Opcode::CALL:
           writeData(a1, _ip16);
@@ -352,20 +309,6 @@ class VM {
           break;
       }
     }
-
-    template <class datum> datum readData(uint16_t inAddr = 0, boolean advanceIP = true)
-    {
-      if (advanceIP) {
-        inAddr = _ip16;
-        _ip16 += sizeof(datum);
-      }
-      dprintln("IP = " + String(_ip16));
-      datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
-      datum d = *dptr;
-      return d;
-    }
 };
-
-
 
 #endif

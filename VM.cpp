@@ -14,7 +14,6 @@
     Instruction Families
 
     -- <Math op> <RA:4 bits, RB: 4bits>: ADD, SUB, MUL, DIV, POW, OR, AND, NOT: all use registers only.
-      Data type is set using mode register
 
     -- <Jump> <Addr: 16 bits> <RA:4 bits, RB: 4bits>: JEQ, JNE, JLT, JGT, JGTE, JLTE, JMP: Jump to Addr if registers
       are; equal, not equal, RA < RB, RA > RB, RA >= RB, RA <= RB, any (i.e. unconditional jump).
@@ -31,8 +30,7 @@
 
     PUSHCONST <variable width: 8 - 32 bits>: Push the specified constant onto the stack. Size of constant is
     determined by mode. This is a convenience op to allow one-time-use constants to be inlined instead
-    of storing them somewhere and referencing that address.M
-
+    of storing them somewhere and referencing that address.
 
     PUSHALLREGS <No argument: 0 bits>: Push contents of all registers onto the stack. This is a shortcut
     used to make saving of stack frame state convenient when calling a function within a function.
@@ -41,12 +39,10 @@
     used to make resotation of stack frame state convenient when returning from a called
     function within a function.
 
-    -- CALL <Addr: 16 bits>: pushes the return address onto the stack. This is computed as the instruction
-    directly following CALL.
+    -- CALL <Addr: 16 bits>: pushes the return address onto the stack and jumps to function address.
+    This is computed as the instruction directly following CALL.
 
-    -- <
-
-
+  // ==============================================================
   Example program
 
   func pow(x,n)
@@ -64,8 +60,6 @@
   SP += 3*dm []
   PUSHREG 0 [x^n]
   RET
-
-
 
 */
 
@@ -159,7 +153,6 @@ uint8_t VM::PinBinding::getPin() {
 
 void VM::PinBinding::updatePin(VM & vm) {
   if (_io == NOT_BOUND) {
-    //dprintln("Pin " + String(_pin) + " inactive");
     return;
   }
 
@@ -186,15 +179,7 @@ void VM::PinBinding::updatePin(VM & vm) {
   else {
     // FIXME: need to fill in digital behavior
   }
-  // dprintln("");
 }
-
-/*
-  uint8_t  VM::readMem(uint16_t i) {
-  return _mem[i];
-  }
-*/
-
 
 void VM::printStatus() {
   //String amString = (_am == AddressingMode::REL) ? "Relative" : "Absolute";
@@ -202,18 +187,9 @@ void VM::printStatus() {
            + "SP:" + String(_SP) + " _cmpReg: " + String(static_cast<uint16_t>(_cmpReg)));
 }
 
-
-
-
-void VM::transferData(uint16_t addr, uint8_t * buf, DataMode dm,
-                      boolean toStack, boolean adjustSP,
-                      boolean alterMemory) {
-
-}
-
 VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(stackSize) {
 
-  _dm = DataMode::UINT8;
+  //_dm = DataMode::UINT8;
   //_am = AddressingMode::ABS;
   _mem = new uint8_t[memSize];
   _ip16 = 0;
@@ -236,12 +212,6 @@ void VM::setSP(uint16_t newIP) {
   _SP = newIP;
 }
 
-void VM::setIP(uint16_t newIP) {
-  dprintln("New IP:" + String(newIP));
-  //_IP = newIP;
-  _ip16 = newIP;
-}
-
 int16_t VM::getStringLength(char * startAddr) {
   char * p = startAddr;
   uint16_t i = 0;
@@ -252,20 +222,16 @@ int16_t VM::getStringLength(char * startAddr) {
     dprintln("At index " + String(i) + " char is " + String(*p));
     i++;
     p++;
-
   }
-
 }
 
 //void VM::moveData(uint8_t * srcptr, uint8_t * destptr, DataMode dm) {
 void VM::moveData(uint8_t * srcptr, uint8_t * destptr, uint8_t datumWidth) {
-
   for (uint8_t i = 0; i < datumWidth; i++)
     destptr[i] = srcptr[i];
 }
 
 uint8_t * VM::getPtr(uint16_t addr, Location locationType) {
-
 
   //, SPREL, MEM_IND, SP_IND,
   switch (locationType) {
@@ -286,23 +252,7 @@ uint8_t * VM::getPtr(uint16_t addr, Location locationType) {
     case Location::REG:
       return &_reg[addr * 4];
       break;
-
   }
-}
-
-String VM::getDataTypeAndWidthString(DataMode dm) {
-
-  if (dm == DataMode::INVALID_MODE) {
-    dm = _dm;
-  }
-  uint8_t dmuint = static_cast<uint8_t>(dm);
-  String sdm = String(_dataModeStrings[dmuint]);
-
-  return sdm;
-}
-
-static uint8_t VM::getDataWidth(DataMode dm) {
-  return dataWidth[static_cast<uint8_t>(dm)];
 }
 
 static Opcode VM::getOpcodeByDataWidth(Opcode c, uint8_t dw) {
@@ -322,7 +272,6 @@ static Opcode VM::getOpcodeByDataWidth(Opcode c, uint8_t dw) {
   }
 
 }
-
 
 static OpcodeAndDataWidth VM::getOpcodeAndDataWidth(Opcode c) {
   uint8_t cval = static_cast<uint8_t>(c);
@@ -410,6 +359,7 @@ void VM::exec(Opcode opcode) {
 
 
     switch (opcode) {
+
 
       case Opcode::INC_SPREL_UINT_8: {
           uint8_t sprel = readData <uint8_t> ();
@@ -559,6 +509,24 @@ void VM::exec(Opcode opcode) {
         break;
 
       */
+      case Opcode::UJMP: {
+          dprintln("UJMP");
+          uint16_t addr = readData <uint16_t> ();
+          _ip16 = addr;
+          dprintln("Unconditional jump to addr: " + String(addr));
+          break;
+        }
+      case Opcode::JEQ: {
+          dprintln("JEQ");
+          uint16_t addr = readData <uint16_t> ();
+          if (_cmpReg == Comparison::EQUAL ) {
+            _ip16 = addr;
+            dprintln("Jumping to addr: " + String(addr));
+          } else {
+            dprintln("Comparison Not Equal - no jump to addr: " + String(addr));
+          }
+          break;
+        }
       case Opcode::CALL: {
           uint16_t addr = readData <uint16_t> ();
           //_ip16 += 3; // Skip over CALL and its 16 bit address arg.

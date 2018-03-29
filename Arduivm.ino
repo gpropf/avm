@@ -36,6 +36,8 @@ void setup() {
 
   //dprintln("Numeric value of comparisons 3/4, 4/3, 3/3: " + String (3 > 4) + "," + String (4 > 3) + "," + String (3 == 3));
   //dprintln("END_8 = " + String(static_cast<uint8_t>(Opcode::END_8)));
+
+
   uint8_t regTargets = 0xef;
 
   Opcode testop = static_cast<Opcode>(27);
@@ -71,38 +73,42 @@ void setup() {
 
 
 
-// This is my test function: pow(x:u8, n:u8)
-// pseudocode is:
-/*
+  // This is my test function: pow(x:u8, n:u8)
+  // pseudocode is:
+  /*
 
-uint8_t i = 0;
-uint8_t retval = 1;
-[LOOP_START]
-if (i == n ) goto [BAILOUT]
-i++;
-retval = retval * x;
-goto [LOOP_START]
+    uint8_t i = 0;
+    uint8_t retval = 1;
+    [LOOP_START]
+    if (i == n ) goto [BAILOUT]
+    i++;
+    retval = retval * x;
+    goto [LOOP_START]
 
-[BAILOUT]
-return retval;
+    [BAILOUT]
+    return retval;
 
-*/
-
-  vm._ip16 = FUNCTION_START;
+  */
+  regTargets = 0x89;
+  vm.setIP(FUNCTION_START);
+  //vm._ip16 = FUNCTION_START;
   vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x0));
   vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x1));
   vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x1), static_cast<uint8_t>(0x1));
   vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x4), static_cast<uint8_t>(0x4));
   regTargets = 0x14;
   vm.writeInstruction(Opcode::CMP_INT_8, 0, regTargets);
-  vm.writeInstruction(Opcode::NOOP); // FIXME: need JEQ [BAILOUT] here
+  vm.writeInstruction(Opcode::JEQ, static_cast<uint16_t>(FUNCTION_START + BAILOUT));
+  //vm.writeInstruction(Opcode::NOOP); // FIXME: need JEQ [BAILOUT] here
   vm.writeInstruction(Opcode::INC_SPREL_UINT_8, 0, static_cast<uint8_t>(0x1));
+  vm.writeInstruction(Opcode::UJMP, static_cast<uint16_t>(FUNCTION_START + 4));
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
+
   vm.writeInstruction(Opcode::NOOP);
   //vm.writeInstruction(Opcode::CMP_INT_8, 0, regTargets);
-
+  regTargets = 0x67;
+  vm.writeInstruction(Opcode::POP_REGS_8, 0, regTargets);
   vm.writeInstruction(Opcode::RET);
   vm.writeInstruction(Opcode::NOOP);
 
