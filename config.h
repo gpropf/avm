@@ -12,7 +12,7 @@ const uint16_t VM_MEM_SIZE = 300;
 const uint16_t STACK_TOP = VM_MEM_SIZE;
 const uint16_t VM_STACK_SIZE = 50;
 const uint16_t MAX_STRING_LENGTH = 1024;
-const uint16_t FUNCTION_START = 40;
-const uint16_t BAILOUT = 20;
+const uint16_t FUNCTION_START = 35;
+const uint16_t BAILOUT = 31;
 
 #endif

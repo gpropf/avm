@@ -268,6 +268,11 @@ class VM {
             writeData(a3, _ip16);
             break;
           }
+        case Opcode::MOV_REG2_SPREL_8: {
+            writeData(a2, _ip16);
+            writeData(a3, _ip16);
+            break;
+          }
         case Opcode::PUSH_CONST_8:
           writeData(a2, _ip16);
           break;

@@ -421,6 +421,17 @@ void VM::exec(Opcode opcode) {
           dprintln("MOV_SPREL2_REG_8 from _sp + " + String(sprel) + " to reg " + String(reg));
           break;
         }
+      case Opcode::MOV_REG2_SPREL_8: {
+
+          uint8_t reg = readData <uint8_t> ();
+          uint8_t sprel = readData <uint8_t> ();
+          destptr = getPtr(sprel, Location::SPREL);
+          srcptr = getPtr(reg, Location::REG);
+          moveData(srcptr, destptr, opPair.dw);
+
+          dprintln("MOV_REG2_SPREL_8 from reg " + String(sprel) + " to _sp +  " + String(reg));
+          break;
+        }
 
 
 
@@ -478,6 +489,21 @@ void VM::exec(Opcode opcode) {
           *destreg += *srcreg;
 
           dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg));
+
+          break;
+        }
+      case Opcode::MUL_INT_8: {
+          uint8_t targetRegisters = readData <uint8_t> ();
+          RegPair tr = getRegPair(targetRegisters);
+          srcptr = getPtr(tr.reg1, Location::REG);
+          destptr = getPtr(tr.reg2, Location::REG);
+
+          uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
+          uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
+
+          *destreg *= *srcreg;
+
+          dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg));
 
           break;
         }

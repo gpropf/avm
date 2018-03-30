@@ -32,6 +32,8 @@ void setup() {
   dprintln(F("Arduivm: v0.10.0"));
   dprintln(repeatString("*", 60));
 
+  dprintln("MOV_SPREL2_REG_8:" + static_cast<uint8_t>(Opcode::MOV_SPREL2_REG_8));
+
   flashLEDs();
 
   //dprintln("Numeric value of comparisons 3/4, 4/3, 3/3: " + String (3 > 4) + "," + String (4 > 3) + "," + String (3 == 3));
@@ -40,12 +42,12 @@ void setup() {
 
   uint8_t regTargets = 0xef;
 
-  Opcode testop = static_cast<Opcode>(27);
+  //Opcode testop = static_cast<Opcode>(27);
   Opcode widePush = VM::getOpcodeByDataWidth (Opcode::PUSH_MEM_8, 2);
 
-  OpcodeAndDataWidth opPair = VM::getOpcodeAndDataWidth(testop);
-  dprintln("8 bit instructions end at END_8:" + String(static_cast<uint8_t>(Opcode::END_8)));
-  dprintln("Test OP = " + String(static_cast<uint8_t>(opPair.c)) + ", Width = " + String(opPair.dw));
+  //OpcodeAndDataWidth opPair = VM::getOpcodeAndDataWidth(testop);
+  dprintln("END_8:" + String(static_cast<uint8_t>(Opcode::END_8)));
+  //dprintln("Test OP = " + String(static_cast<uint8_t>(opPair.c)) + ", Width = " + String(opPair.dw));
 
   vm.writeInstruction(Opcode::BINDAI, static_cast<uint16_t>(VM::DATA_SEG + ANALOG_TEST_INPUT_PIN), ANALOG_TEST_INPUT_PIN);
   vm.writeInstruction(widePush, static_cast<uint16_t>(VM::DATA_SEG));
@@ -70,8 +72,6 @@ void setup() {
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
-
-
 
   // This is my test function: pow(x:u8, n:u8)
   // pseudocode is:
@@ -101,6 +101,10 @@ void setup() {
   vm.writeInstruction(Opcode::JEQ, static_cast<uint16_t>(FUNCTION_START + BAILOUT));
   //vm.writeInstruction(Opcode::NOOP); // FIXME: need JEQ [BAILOUT] here
   vm.writeInstruction(Opcode::INC_SPREL_UINT_8, 0, static_cast<uint8_t>(0x1));
+  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x0), static_cast<uint8_t>(0x0));
+  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x5), static_cast<uint8_t>(0x5));
+  vm.writeInstruction(Opcode::MUL_INT_8, 0, static_cast<uint8_t>(0x05));
+  vm.writeInstruction(Opcode::MOV_REG2_SPREL_8, 0, static_cast<uint8_t>(0x0), static_cast<uint8_t>(0x0));
   vm.writeInstruction(Opcode::UJMP, static_cast<uint16_t>(FUNCTION_START + 4));
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
