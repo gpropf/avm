@@ -107,6 +107,7 @@ enum class Opcode : uint8_t {
 
   SP_ADJ = BIND_BASE + 6, // increment the SP without pop. Takes uint8_t as arg.
   NOOP,
+  NOOP_INIT = 250,
   CALL = 255, // Takes a uint16_t address of the function to call. Automatically saves return address
   RET = 254, // Uses stored return address and leaves return value on stack
 
@@ -212,7 +213,7 @@ class VM {
     void exec(Opcode opcode);
 
     //String getDataTypeAndWidthString(DataMode dm = DataMode::INVALID_MODE);
-    void printMem(uint16_t startAddr, uint16_t endAddr);
+    void printMem(uint16_t startAddr, uint16_t endAddr, boolean printAsCArray = false);
     void printRegisters();
     void printStatus();
     void printStack();
@@ -234,7 +235,7 @@ class VM {
       if (advanceIP) {
         inAddr = _ip16;
         _ip16 += sizeof(datum);
-      }      
+      }
       datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
       datum d = *dptr;
       return d;

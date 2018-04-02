@@ -174,7 +174,10 @@ void REPL::parseCommand(String s)
     _vm->printBindings();
   }
   else if (action == "m" || action == "M") {
-    _vm->printMem(args[1].toInt(), args[2].toInt());
+    if (i > 3)
+      _vm->printMem(args[1].toInt(), args[2].toInt(), true);
+    else
+      _vm->printMem(args[1].toInt(), args[2].toInt(), false);
   }
   else if (action == "s" || action == "S") {
     uint16_t steps = 1;
@@ -200,31 +203,31 @@ void REPL::parseCommand(String s)
     uint16_t addr = args[2].toInt();
     if (dm == "u16") {
       uint16_t val = _vm->readData<uint16_t>(addr, false);
-      dprintln(String(addr) + "] as uint16_t: " + String(val),2);
+      dprintln(String(addr) + "] as uint16_t: " + String(val), 2);
     }
     if (dm == "u8") {
       uint8_t val = _vm->readData<uint8_t>(addr, false);
-      dprintln(String(addr) + "] as uint8_t: " + String(val),2);
+      dprintln(String(addr) + "] as uint8_t: " + String(val), 2);
     }
     if (dm == "u32") {
       uint32_t val = _vm->readData<uint32_t>(addr, false);
-      dprintln(String(addr) + "] as uint32_t: " + String(val),2);
+      dprintln(String(addr) + "] as uint32_t: " + String(val), 2);
     }
     if (dm == "i16") {
       int16_t val = _vm->readData<int16_t>(addr, false);
-      dprintln(String(addr) + "] as int16_t: " + String(val),2);
+      dprintln(String(addr) + "] as int16_t: " + String(val), 2);
     }
     if (dm == "i8") {
       int8_t val = _vm->readData<int8_t>(addr, false);
-      dprintln(String(addr) + "] as int8_t: " + String(val),2);
+      dprintln(String(addr) + "] as int8_t: " + String(val), 2);
     }
     if (dm == "i32") {
       int32_t val = _vm->readData<int32_t>(addr, false);
-      dprintln(String(addr) + "] as int32_t: " + String(val),2);
+      dprintln(String(addr) + "] as int32_t: " + String(val), 2);
     }
     if (dm == "fl") {
       float val = _vm->readData<float>(addr, false);
-      dprintln(String(addr) + "] as float: " + String(val),2);
+      dprintln(String(addr) + "] as float: " + String(val), 2);
     }
 
   }

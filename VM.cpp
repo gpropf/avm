@@ -201,10 +201,10 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
   // Fills the memory and stack with some values for now to show that it's working
 
   for (uint16_t i = 0; i < memSize; i++)
-    _mem[i] = i;
+    _mem[i] = static_cast<uint8_t>(Opcode::NOOP_INIT);
 
   for (uint8_t i = 0; i < 16; i++)
-    _reg[i * 4] = i;
+    _reg[i * 4] = 0;
 }
 
 void VM::setSP(uint16_t newIP) {
@@ -292,12 +292,12 @@ static OpcodeAndDataWidth VM::getOpcodeAndDataWidth(Opcode c) {
 }
 
 RegPair VM::getRegPair(uint8_t registers) {
-  dprintln("POP targets = :" + String(registers),2);
+  dprintln("POP targets = :" + String(registers), 2);
   RegPair rp;
   rp.reg1 = registers & 0x0f; // low nibble (4bits)
   rp.reg2 = (registers & 0xf0) >> 4; // high nibble (4bits)
-  dprintln("reg1 = :" + String(rp.reg1),2);
-  dprintln("reg2 = :" + String(rp.reg2),2);
+  dprintln("reg1 = :" + String(rp.reg1), 2);
+  dprintln("reg2 = :" + String(rp.reg2), 2);
   return rp;
 }
 
@@ -321,32 +321,32 @@ void VM::exec(Opcode opcode) {
     boolean ad;
     switch (opcode) {
       case Opcode::BINDAO:
-       dprintln(F("BINDAO"), 1);
+        dprintln(F("BINDAO"), 1);
         ad = true;
         io = OUTPUT;
         break;
       case Opcode::BINDDO:
-      dprintln(F("BINDDO"), 1);
+        dprintln(F("BINDDO"), 1);
         ad = false;
         io = OUTPUT;
         break;
       case Opcode::BINDAI:
-      dprintln(F("BINDAI"), 1);
+        dprintln(F("BINDAI"), 1);
         ad = true;
         io = INPUT;
         break;
       case Opcode::BINDDI:
-      dprintln(F("BINDDI"), 1);
+        dprintln(F("BINDDI"), 1);
         ad = false;
         io = INPUT;
         break;
       case Opcode::BINDAP:
-      dprintln(F("BINDAP"), 1);
+        dprintln(F("BINDAP"), 1);
         ad = true;
         io = INPUT_PULLUP;
         break;
       case Opcode::BINDDP:
-      dprintln(F("BINDDP"), 1);
+        dprintln(F("BINDDP"), 1);
         ad = false;
         io = INPUT_PULLUP;
         break;
@@ -441,13 +441,18 @@ void VM::exec(Opcode opcode) {
           dprintln(F("POP_REGS_8"), 1);
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
+
           srcptr = getPtr(_SP, Location::MEM);
           destptr = getPtr(tr.reg1, Location::REG);
           moveData(srcptr, destptr, opPair.dw);
-          _SP += opPair.dw;
-          srcptr = getPtr(_SP, Location::MEM);
-          destptr = getPtr(tr.reg2, Location::REG);
-          moveData(srcptr, destptr, opPair.dw);
+
+          if (tr.reg1 != tr.reg2) {
+            _SP += opPair.dw;
+            srcptr = getPtr(_SP, Location::MEM);
+            destptr = getPtr(tr.reg2, Location::REG);
+            moveData(srcptr, destptr, opPair.dw);
+
+          }
           _SP += opPair.dw;
           break;
         }
@@ -474,18 +479,19 @@ void VM::exec(Opcode opcode) {
           *destreg *= *srcreg;
           dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg), 2);
           break;
-        }       
+        }
     }
   }
   else {
-    
+
     // Above FIXED_WIDTH_BASE instructions
-    
+
     switch (opcode) {
       case Opcode::SP_ADJ: {
-          dprintln(F("SP_ADJ"), 1);
+          dprint(F("SP_ADJ: SP += "), 1);
           uint8_t adjustment = readData <uint8_t> ();
           _ip16 += adjustment;
+          dprintln(String(adjustment));
           break;
         }
       case Opcode::UJMP: {
@@ -517,9 +523,8 @@ void VM::exec(Opcode opcode) {
           break;
         }
       case Opcode::RET: {
-          uint16_t * retAddr = reinterpret_cast<uint16_t*>(&_mem[_SP]);
-          dprintln("RET to addr: " + String(*retAddr));
-          _SP += 2;
+          uint16_t * retAddr = reinterpret_cast<uint16_t*>(&_reg[0]);
+          dprintln("RET to addr: " + String(*retAddr), 1);
           _ip16 = *retAddr;
           break;
         }
@@ -530,7 +535,7 @@ void VM::exec(Opcode opcode) {
         break;
     }
   }
-   dprintln("After inst (sp,ip) : (" + String(_SP) + "," + String(_ip16) + ")\n");
+  dprintln("After inst (sp,ip) : (" + String(_SP) + "," + String(_ip16) + ")\n");
 }
 
 void VM::step() {
@@ -559,10 +564,32 @@ void VM::printBindings() {
 
 
 
-void VM::printMem(uint16_t startAddr, uint16_t endAddr) {
+void VM::printMem(uint16_t startAddr, uint16_t endAddr, boolean printAsCArray) {
   dprintln(repeatString("M", 20));
-  for (uint16_t i = startAddr; i < endAddr; i++)
-    dprintln(String(i) + ": " + String(static_cast<uint8_t>(_mem[i])));
+
+  String divider = "\n";
+  String preamble = "";
+  String postamble = "";
+  if (printAsCArray) {
+    preamble = "[";
+    postamble = "]\n";
+    divider = ", ";
+  }
+  dprint(preamble);
+  for (uint16_t i = startAddr; i < endAddr; i++) {
+    if (printAsCArray) {
+      if ((i-startAddr+1) % 10 == 0) {
+        dprintln("");
+      }
+      
+    }
+    else {
+      dprint(String(i) + ": ");
+    }
+    dprint(String(static_cast<uint8_t>(_mem[i])) + divider);
+  }
+
+  dprint(postamble);
 }
 
 void VM::printStack() {

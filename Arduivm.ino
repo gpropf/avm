@@ -31,7 +31,7 @@ void testAdd(DataMode dm) {
   const uint8_t regTargets = 0xef;
   Opcode widePush = VM::getOpcodeByDataWidth (Opcode::PUSH_MEM_8, 2);
 
-  
+
   vm.writeInstruction(widePush, static_cast<uint16_t>(VM::DATA_SEG));
   vm.writeInstruction(widePush, static_cast<uint16_t>(VM::DATA_SEG + 2));
   vm.writeInstruction(VM::getOpcodeByDataWidth (Opcode::POP_REGS_8, 2), 0, regTargets);
@@ -58,10 +58,10 @@ void setup() {
 
   uint8_t regTargets = 0xef;
 
-  
+
   vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x5));
   vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x3));
-  
+
   testBind();
 
   vm.writeInstruction(Opcode::CALL, static_cast<uint16_t>(FUNCTION_START));
@@ -90,27 +90,35 @@ void setup() {
 
   */
   vm.setIP(FUNCTION_START);
+  regTargets = 0x00;
+  Opcode popAddr = VM::getOpcodeByDataWidth (Opcode::POP_REGS_8, 2);
+  vm.writeInstruction(popAddr, 0, regTargets);
+
+
 
   vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x0));
   vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x1));
   vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x1), static_cast<uint8_t>(0x1));
-  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x4), static_cast<uint8_t>(0x4));
+  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x2), static_cast<uint8_t>(0x4));
 
   regTargets = 0x14;
   vm.writeInstruction(Opcode::CMP_INT_8, 0, regTargets);
   vm.writeInstruction(Opcode::JEQ, static_cast<uint16_t>(FUNCTION_START + BAILOUT));
   vm.writeInstruction(Opcode::INC_SPREL_UINT_8, 0, static_cast<uint8_t>(0x1));
-  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x0), static_cast<uint8_t>(0x0));
-  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x5), static_cast<uint8_t>(0x5));
-  vm.writeInstruction(Opcode::MUL_UINT_8, 0, static_cast<uint8_t>(0x05));
-  vm.writeInstruction(Opcode::MOV_REG2_SPREL_8, 0, static_cast<uint8_t>(0x0), static_cast<uint8_t>(0x0));
-  vm.writeInstruction(Opcode::UJMP, static_cast<uint16_t>(FUNCTION_START + 4));
-  vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x0), static_cast<uint8_t>(0x2));
+  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x3), static_cast<uint8_t>(0x5));
 
-  regTargets = 0x67;
-  vm.writeInstruction(Opcode::POP_REGS_8, 0, regTargets);
+  regTargets = 0x25;
+  vm.writeInstruction(Opcode::MUL_UINT_8, 0, regTargets);
+  vm.writeInstruction(Opcode::MOV_REG2_SPREL_8, 0, static_cast<uint8_t>(0x2), static_cast<uint8_t>(0x0));
+  vm.writeInstruction(Opcode::UJMP, static_cast<uint16_t>(FUNCTION_START + 6));
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP);
+  vm.writeInstruction(Opcode::NOOP); 
   vm.writeInstruction(Opcode::RET);
   vm.writeInstruction(Opcode::NOOP);
 

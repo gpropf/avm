@@ -13,7 +13,7 @@ const uint16_t STACK_TOP = VM_MEM_SIZE;
 const uint16_t VM_STACK_SIZE = 50;
 const uint16_t MAX_STRING_LENGTH = 1024;
 const uint16_t FUNCTION_START = 35;
-const uint16_t BAILOUT = 31;
+const uint16_t BAILOUT = 35;
 const uint8_t verbosityThreshold = 1; // 0 means ALWAYS print, anything higher has less importance
 
 #endif
