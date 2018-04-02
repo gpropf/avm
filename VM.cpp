@@ -451,8 +451,8 @@ void VM::exec(Opcode opcode) {
           _SP += opPair.dw;
           break;
         }
-      case Opcode::ADD_INT_8: {
-          dprintln(F("ADD_INT_8"), 1);
+      case Opcode::ADD_UINT_8: {
+          dprintln(F("ADD_UINT_8"), 1);
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);
@@ -463,8 +463,8 @@ void VM::exec(Opcode opcode) {
           dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg), 2);
           break;
         }
-      case Opcode::MUL_INT_8: {
-          dprintln(F("MUL_INT_8"), 1);
+      case Opcode::MUL_UINT_8: {
+          dprintln(F("MUL_UINT_8"), 1);
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);

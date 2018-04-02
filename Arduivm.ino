@@ -22,21 +22,26 @@ void flashLEDs () {
   analogWrite(ANALOG_OUT_PIN, 0);
 }
 
+void testBind() {
+  vm.writeInstruction(Opcode::BINDAI, static_cast<uint16_t>(VM::DATA_SEG + ANALOG_TEST_INPUT_PIN), ANALOG_TEST_INPUT_PIN);
+}
+
+
 void testAdd(DataMode dm) {
   const uint8_t regTargets = 0xef;
   Opcode widePush = VM::getOpcodeByDataWidth (Opcode::PUSH_MEM_8, 2);
 
-  vm.writeInstruction(Opcode::BINDAI, static_cast<uint16_t>(VM::DATA_SEG + ANALOG_TEST_INPUT_PIN), ANALOG_TEST_INPUT_PIN);
+  
   vm.writeInstruction(widePush, static_cast<uint16_t>(VM::DATA_SEG));
   vm.writeInstruction(widePush, static_cast<uint16_t>(VM::DATA_SEG + 2));
   vm.writeInstruction(VM::getOpcodeByDataWidth (Opcode::POP_REGS_8, 2), 0, regTargets);
   vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 22));
   vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 26));
 
-  regTargets = 0x89;
+
 
   vm.writeInstruction(Opcode::POP_REGS_8, 0, regTargets);
-  vm.writeInstruction(Opcode::ADD_INT_8, 0, static_cast<uint8_t>(0xef));
+  vm.writeInstruction(Opcode::ADD_UINT_8, 0, static_cast<uint8_t>(regTargets));
 }
 
 
@@ -56,6 +61,8 @@ void setup() {
   
   vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x5));
   vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x3));
+  
+  testBind();
 
   vm.writeInstruction(Opcode::CALL, static_cast<uint16_t>(FUNCTION_START));
 
@@ -64,6 +71,7 @@ void setup() {
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
   vm.writeInstruction(Opcode::NOOP);
+
 
   // This is my test function: pow(x:u8, n:u8)
   // pseudocode is:
@@ -81,7 +89,6 @@ void setup() {
     return retval;
 
   */
-  regTargets = 0x89;
   vm.setIP(FUNCTION_START);
 
   vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x0));
@@ -95,7 +102,7 @@ void setup() {
   vm.writeInstruction(Opcode::INC_SPREL_UINT_8, 0, static_cast<uint8_t>(0x1));
   vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x0), static_cast<uint8_t>(0x0));
   vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x5), static_cast<uint8_t>(0x5));
-  vm.writeInstruction(Opcode::MUL_INT_8, 0, static_cast<uint8_t>(0x05));
+  vm.writeInstruction(Opcode::MUL_UINT_8, 0, static_cast<uint8_t>(0x05));
   vm.writeInstruction(Opcode::MOV_REG2_SPREL_8, 0, static_cast<uint8_t>(0x0), static_cast<uint8_t>(0x0));
   vm.writeInstruction(Opcode::UJMP, static_cast<uint16_t>(FUNCTION_START + 4));
   vm.writeInstruction(Opcode::NOOP);
