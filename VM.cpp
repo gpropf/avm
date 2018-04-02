@@ -292,22 +292,23 @@ static OpcodeAndDataWidth VM::getOpcodeAndDataWidth(Opcode c) {
 }
 
 RegPair VM::getRegPair(uint8_t registers) {
-  dprintln("POP targets = :" + String(registers));
+  dprintln("POP targets = :" + String(registers),2);
   RegPair rp;
   rp.reg1 = registers & 0x0f; // low nibble (4bits)
   rp.reg2 = (registers & 0xf0) >> 4; // high nibble (4bits)
-  dprintln("reg1 = :" + String(rp.reg1));
-  dprintln("reg2 = :" + String(rp.reg2));
+  dprintln("reg1 = :" + String(rp.reg1),2);
+  dprintln("reg2 = :" + String(rp.reg2),2);
   return rp;
 }
 
 void VM::exec(Opcode opcode) {
+  dprintln("Before inst (sp,ip) : (" + String(_SP) + "," + String(_ip16) + ")");
   uint8_t opcodeVal = static_cast<uint8_t>(opcode);
   uint8_t * buf = NULL;
 
   OpcodeAndDataWidth opPair = VM::getOpcodeAndDataWidth(opcode);
-  dprintln("Processed opcode = " + String(static_cast<uint8_t>(opPair.c)));
-  dprintln("Data is " + String(opPair.dw) + " bytes wide");
+  dprint("Opcode : " + String(static_cast<uint8_t>(opPair.c)));
+  dprintln(", Data width : " + String(opPair.dw));
   opcode = opPair.c;
   //uint8_t dw = opPair.dw;
   if (opcode == Opcode::BINDAO || opcode == Opcode::BINDAI ||
@@ -320,26 +321,32 @@ void VM::exec(Opcode opcode) {
     boolean ad;
     switch (opcode) {
       case Opcode::BINDAO:
+       dprintln(F("BINDAO"), 1);
         ad = true;
         io = OUTPUT;
         break;
       case Opcode::BINDDO:
+      dprintln(F("BINDDO"), 1);
         ad = false;
         io = OUTPUT;
         break;
       case Opcode::BINDAI:
+      dprintln(F("BINDAI"), 1);
         ad = true;
         io = INPUT;
         break;
       case Opcode::BINDDI:
+      dprintln(F("BINDDI"), 1);
         ad = false;
         io = INPUT;
         break;
       case Opcode::BINDAP:
+      dprintln(F("BINDAP"), 1);
         ad = true;
         io = INPUT_PULLUP;
         break;
       case Opcode::BINDDP:
+      dprintln(F("BINDDP"), 1);
         ad = false;
         io = INPUT_PULLUP;
         break;
@@ -352,29 +359,17 @@ void VM::exec(Opcode opcode) {
 
     uint8_t * srcptr;
     uint8_t * destptr;
-    //uint8_t stackAdjustment = VM::getDataWidth(_dm);
-    //if (_am == AddressingMode::REL)
-    //  addr = readData <uint16_t> (addr, false);
-
-
-
     switch (opcode) {
-
-
       case Opcode::INC_SPREL_UINT_8: {
+          dprintln(F("INC_SPREL_UINT_8"), 1);
           uint8_t sprel = readData <uint8_t> ();
           srcptr = getPtr(sprel, Location::SPREL);
           (*srcptr)++;
-          dprintln("INC SPREL:" + String(sprel));
-          //_SP -= opPair.dw;
-          //dprintln("PUSH_MEM_8");
-          //destptr = &_mem[_SP];
-
-          //moveData(srcptr, destptr, opPair.dw);
           break;
         }
 
       case Opcode::CMP_INT_8: {
+          dprintln(F("CMP_INT_8"), 1);
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair rp = getRegPair(targetRegisters);
           switch (opPair.dw) {
@@ -383,15 +378,15 @@ void VM::exec(Opcode opcode) {
                 int8_t r2;
                 castRegData(r1, r2, rp);
                 if (r1 < r2) {
-                  dprintln("R1 < R2: " + String(r1) + "," + String(r2));
+                  dprintln("R1 < R2: " + String(r1) + "," + String(r2), 2);
                   _cmpReg = Comparison::LESS_THAN;
                 }
                 else if (r1 > r2) {
-                  dprintln("R1 > R2: " + String(r1) + "," + String(r2));
+                  dprintln("R1 > R2: " + String(r1) + "," + String(r2), 2);
                   _cmpReg = Comparison::GREATER_THAN;
                 }
                 else {
-                  dprintln("R1 = R2: " + String(r1) + "," + String(r2));
+                  dprintln("R1 = R2: " + String(r1) + "," + String(r2), 2);
                   _cmpReg = Comparison::EQUAL;
                 }
                 break;
@@ -404,65 +399,46 @@ void VM::exec(Opcode opcode) {
               }
 
           }
-          dprintln("_ip = " + String(_ip16));
           break;
         }
-
-
-
       case Opcode::MOV_SPREL2_REG_8: {
+          dprintln(F("MOV_SPREL2_REG_8"), 1);
           uint8_t sprel = readData <uint8_t> ();
           uint8_t reg = readData <uint8_t> ();
-
           srcptr = getPtr(sprel, Location::SPREL);
           destptr = getPtr(reg, Location::REG);
           moveData(srcptr, destptr, opPair.dw);
-
-          dprintln("MOV_SPREL2_REG_8 from _sp + " + String(sprel) + " to reg " + String(reg));
           break;
         }
       case Opcode::MOV_REG2_SPREL_8: {
-
+          dprintln(F("MOV_REG2_SPREL_8"), 1);
           uint8_t reg = readData <uint8_t> ();
           uint8_t sprel = readData <uint8_t> ();
           destptr = getPtr(sprel, Location::SPREL);
           srcptr = getPtr(reg, Location::REG);
           moveData(srcptr, destptr, opPair.dw);
-
-          dprintln("MOV_REG2_SPREL_8 from reg " + String(sprel) + " to _sp +  " + String(reg));
           break;
         }
-
-
-
       case Opcode::PUSH_CONST_8: {
-          //uint8_t constVal = readData <uint8_t> ();
+          dprintln(F("PUSH_CONST_8"), 1);
           srcptr = getPtr(_ip16, Location::MEM);
-          dprintln("PUSH const from address:" + String(_ip16));
           _ip16++;
-
           _SP -= opPair.dw;
-
           destptr = &_mem[_SP];
-
           moveData(srcptr, destptr, opPair.dw);
           break;
         }
-
-
-
       case Opcode::PUSH_MEM_8: {
+          dprintln(F("PUSH_MEM_8"), 1);
           uint16_t addr = readData <uint16_t> ();
           srcptr = getPtr(addr, Location::MEM);
-          dprintln("PUSH from address:" + String(addr));
           _SP -= opPair.dw;
-          dprintln("PUSH_MEM_8");
           destptr = &_mem[_SP];
-
           moveData(srcptr, destptr, opPair.dw);
           break;
         }
       case Opcode::POP_REGS_8: {
+          dprintln(F("POP_REGS_8"), 1);
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(_SP, Location::MEM);
@@ -470,80 +446,57 @@ void VM::exec(Opcode opcode) {
           moveData(srcptr, destptr, opPair.dw);
           _SP += opPair.dw;
           srcptr = getPtr(_SP, Location::MEM);
-          dprintln("POP _SP = :" + String(_SP));
           destptr = getPtr(tr.reg2, Location::REG);
           moveData(srcptr, destptr, opPair.dw);
           _SP += opPair.dw;
-          dprintln("POP _SP = :" + String(_SP));
           break;
         }
       case Opcode::ADD_INT_8: {
+          dprintln(F("ADD_INT_8"), 1);
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);
           destptr = getPtr(tr.reg2, Location::REG);
-
           uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
           uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
-
           *destreg += *srcreg;
-
-          dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg));
-
+          dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg), 2);
           break;
         }
       case Opcode::MUL_INT_8: {
+          dprintln(F("MUL_INT_8"), 1);
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);
           destptr = getPtr(tr.reg2, Location::REG);
-
           uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
           uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
-
           *destreg *= *srcreg;
-
-          dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg));
-
+          dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg), 2);
+          break;
+        }       
+    }
+  }
+  else {
+    
+    // Above FIXED_WIDTH_BASE instructions
+    
+    switch (opcode) {
+      case Opcode::SP_ADJ: {
+          dprintln(F("SP_ADJ"), 1);
+          uint8_t adjustment = readData <uint8_t> ();
+          _ip16 += adjustment;
           break;
         }
-        dprintln("_SP = :" + String(_SP));
-    }
-
-
-  }
-
-  else {
-    switch (opcode) {
-      /*
-        case Opcode::DATA_FLOAT:
-        _dm = DataMode::FLOAT;
-        dprintln (F("DataMode::FLOAT;"));
-        break;
-        case Opcode::DATA_UINT8:
-        _dm = DataMode::UINT8;
-        dprintln (F("DataMode::UINT8;"));
-        break;
-        case Opcode::DATA_STRING:
-        _dm = DataMode::STRING;
-        dprintln (F("DataMode::STRING;"));
-        break;
-
-        case Opcode::REL_MODE:
-        _am = AddressingMode::REL;
-        dprintln (F("AddressingMode::REL;"));
-        break;
-
-      */
       case Opcode::UJMP: {
-          dprintln("UJMP");
+          dprintln(F("UJMP"), 1);
           uint16_t addr = readData <uint16_t> ();
           _ip16 = addr;
           dprintln("Unconditional jump to addr: " + String(addr));
           break;
         }
       case Opcode::JEQ: {
-          dprintln("JEQ");
+          dprintln(F("JEQ"), 1);
           uint16_t addr = readData <uint16_t> ();
           if (_cmpReg == Comparison::EQUAL ) {
             _ip16 = addr;
@@ -555,33 +508,30 @@ void VM::exec(Opcode opcode) {
         }
       case Opcode::CALL: {
           uint16_t addr = readData <uint16_t> ();
-          //_ip16 += 3; // Skip over CALL and its 16 bit address arg.
           uint8_t * ipValPtr = reinterpret_cast<uint8_t*>(&_ip16);
           _SP -= 2; // make room on stack for return address
           uint8_t * destptr = &_mem[_SP];
-          dprintln("CALL --- Calling function at addr: " + String(addr) + " and putting " + String(_ip16) + " on the stack");
+          dprintln("CALL: " + String(addr), 1);
           moveData(ipValPtr, destptr, 2);
           _ip16 = addr;
           break;
         }
       case Opcode::RET: {
           uint16_t * retAddr = reinterpret_cast<uint16_t*>(&_mem[_SP]);
-          dprintln("RET! Would jump back to addr: " + String(*retAddr));
+          dprintln("RET to addr: " + String(*retAddr));
           _SP += 2;
           _ip16 = *retAddr;
           break;
         }
       case Opcode::NOOP:
-
-        dprintln (F("NOOP -- Doing nothing!"));
+        dprintln (F("NOOP"), 1);
         break;
       default:
         break;
     }
   }
-  // FIXME: Do the math here
+   dprintln("After inst (sp,ip) : (" + String(_SP) + "," + String(_ip16) + ")\n");
 }
-
 
 void VM::step() {
   updateBoundData();

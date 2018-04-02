@@ -104,6 +104,8 @@ enum class Opcode : uint8_t {
   BINDAP = BIND_BASE + 4, // A16 V8: Bind a mem address (uint16_t) (analog input-pullup) to a pin (uint8_t)
   BINDDP = BIND_BASE + 5, // A16 V8: Bind a mem address (uint16_t) (digital input-pullup) to a pin (uint8_t)
 
+
+  SP_ADJ = BIND_BASE + 6, // increment the SP without pop. Takes uint8_t as arg.
   NOOP,
   CALL = 255, // Takes a uint16_t address of the function to call. Automatically saves return address
   RET = 254, // Uses stored return address and leaves return value on stack
@@ -232,8 +234,7 @@ class VM {
       if (advanceIP) {
         inAddr = _ip16;
         _ip16 += sizeof(datum);
-      }
-      dprintln("IP = " + String(_ip16));
+      }      
       datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
       datum d = *dptr;
       return d;
@@ -259,6 +260,10 @@ class VM {
 
       // This switch only does something if we have an instruction with an argument
       switch (opPair.c) {
+        case Opcode::SP_ADJ: {
+            writeData(a2, _ip16);
+            break;
+          }
         case Opcode::INC_SPREL_UINT_8: {
             writeData(a2, _ip16);
             break;
