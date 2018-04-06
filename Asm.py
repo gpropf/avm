@@ -142,20 +142,23 @@ instructions = {
 
 def chunkifyProgram(filename):
     """ Step 1 in the process is to break the text up into chunks delineated by whitespace """
-    print ("Filename: ", filename)
+    commentRe = re.compile("^\s*#")
+    
+    #print ("Filename: ", filename)
     f = open(filename)
     line = f.readline()
     ip = 0
     program = []
     labelRefs = {}
     while line:
-        opcode = 0
-        lineParts = line.split(' ')
-        lpStripped = list(map (lambda s: s.strip(),lineParts))
-        lpCount = len(lpStripped)
-        for chunk in lpStripped:
-            if chunk != "":
-                program.append(chunk)
+        if not commentRe.match(line):
+            opcode = 0
+            lineParts = line.split(' ')
+            lpStripped = list(map (lambda s: s.strip(),lineParts))
+            lpCount = len(lpStripped)
+            for chunk in lpStripped:
+                if chunk != "":
+                    program.append(chunk)
         line = f.readline()
     f.close()
     return program
@@ -205,10 +208,10 @@ def stage3(program):
         program[i] = code
         if 'formatCode' in code:
             width = dataWidths[code['formatCode']]
-            print(str(code) + " :: IP:" + str(ip) + ", width: " + str(width))
+            #print(str(code) + " :: IP:" + str(ip) + ", width: " + str(width))
             ip = ip + width            
         elif 'reftype' in code and code['reftype'] != 'label':
-            print("IP:" + str(ip) + ", width: 1")
+            #print("IP:" + str(ip) + ", width: 1")
             ip = ip + 1
         i = i + 1
     return program

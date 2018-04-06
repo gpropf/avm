@@ -150,7 +150,7 @@ class VM {
 
     PinBinding _pinBindings[NUM_PINS];
     //DataMode _dm;
-    uint8_t * _mem;
+
     uint16_t _ip16Copy;
     Comparison _cmpReg;
 
@@ -169,7 +169,7 @@ class VM {
     uint16_t _ip16;
 
   public:
-
+    uint8_t * _mem;
     VM(): _ip16(0), _SP(0) , _AP(0) {};
     VM(uint16_t memSize, uint16_t stackSize);
 

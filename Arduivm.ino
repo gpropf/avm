@@ -50,28 +50,23 @@ void setup() {
   Serial.begin(57600);
 
   dprintln(repeatString("*", 60));
-  dprintln(F("Arduivm: v0.10.0"));
+  dprintln(F("Arduivm: v0.11.0"));
   dprintln(repeatString("*", 60));
   dprintln("END_8:" + String(static_cast<uint8_t>(Opcode::END_8)), 1);
 
   flashLEDs();
-
-  uint8_t regTargets = 0xef;
-
-
-  vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x5));
-  vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x3));
-
-  testBind();
-
-  vm.writeInstruction(Opcode::CALL, static_cast<uint16_t>(FUNCTION_START));
-
-  // This block of NOOPs is just to mark the end of the program
-  vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
-
+  /*
+    uint8_t regTargets = 0xef;
+    vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x5));
+    vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x3));
+    testBind();
+    vm.writeInstruction(Opcode::CALL, static_cast<uint16_t>(FUNCTION_START));
+    // This block of NOOPs is just to mark the end of the program
+    vm.writeInstruction(Opcode::NOOP);
+    vm.writeInstruction(Opcode::NOOP);
+    vm.writeInstruction(Opcode::NOOP);
+    vm.writeInstruction(Opcode::NOOP);
+  */
 
   // This is my test function: pow(x:u8, n:u8)
   // pseudocode is:
@@ -89,40 +84,41 @@ void setup() {
     return retval;
 
   */
-  vm.setIP(FUNCTION_START);
-  regTargets = 0x00;
-  Opcode popAddr = VM::getOpcodeByDataWidth (Opcode::POP_REGS_8, 2);
-  vm.writeInstruction(popAddr, 0, regTargets);
-
-
-
-  vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x0));
-  vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x1));
-  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x1), static_cast<uint8_t>(0x1));
-  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x2), static_cast<uint8_t>(0x4));
-
-  regTargets = 0x14;
-  vm.writeInstruction(Opcode::CMP_INT_8, 0, regTargets);
-  vm.writeInstruction(Opcode::JEQ, static_cast<uint16_t>(FUNCTION_START + BAILOUT));
-  vm.writeInstruction(Opcode::INC_SPREL_UINT_8, 0, static_cast<uint8_t>(0x1));
-  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x0), static_cast<uint8_t>(0x2));
-  vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x3), static_cast<uint8_t>(0x5));
-
-  regTargets = 0x25;
-  vm.writeInstruction(Opcode::MUL_UINT_8, 0, regTargets);
-  vm.writeInstruction(Opcode::MOV_REG2_SPREL_8, 0, static_cast<uint8_t>(0x2), static_cast<uint8_t>(0x0));
-  vm.writeInstruction(Opcode::UJMP, static_cast<uint16_t>(FUNCTION_START + 6));
-  vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP);
-  vm.writeInstruction(Opcode::NOOP); 
-  vm.writeInstruction(Opcode::RET);
-  vm.writeInstruction(Opcode::NOOP);
-
   /*
+    vm.setIP(FUNCTION_START);
+    regTargets = 0x00;
+    Opcode popAddr = VM::getOpcodeByDataWidth (Opcode::POP_REGS_8, 2);
+    vm.writeInstruction(popAddr, 0, regTargets);
+
+
+
+    vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x0));
+    vm.writeInstruction(Opcode::PUSH_CONST_8, 0, static_cast<uint8_t>(0x1));
+    vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x1), static_cast<uint8_t>(0x1));
+    vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x2), static_cast<uint8_t>(0x4));
+
+    regTargets = 0x14;
+    vm.writeInstruction(Opcode::CMP_INT_8, 0, regTargets);
+    vm.writeInstruction(Opcode::JEQ, static_cast<uint16_t>(FUNCTION_START + BAILOUT));
+    vm.writeInstruction(Opcode::INC_SPREL_UINT_8, 0, static_cast<uint8_t>(0x1));
+    vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x0), static_cast<uint8_t>(0x2));
+    vm.writeInstruction(Opcode::MOV_SPREL2_REG_8, 0, static_cast<uint8_t>(0x3), static_cast<uint8_t>(0x5));
+
+    regTargets = 0x25;
+    vm.writeInstruction(Opcode::MUL_UINT_8, 0, regTargets);
+    vm.writeInstruction(Opcode::MOV_REG2_SPREL_8, 0, static_cast<uint8_t>(0x2), static_cast<uint8_t>(0x0));
+    vm.writeInstruction(Opcode::UJMP, static_cast<uint16_t>(FUNCTION_START + 6));
+    vm.writeInstruction(Opcode::NOOP);
+    vm.writeInstruction(Opcode::NOOP);
+    vm.writeInstruction(Opcode::NOOP);
+    vm.writeInstruction(Opcode::NOOP);
+    vm.writeInstruction(Opcode::NOOP);
+    vm.writeInstruction(Opcode::NOOP);
+    vm.writeInstruction(Opcode::NOOP);
+    vm.writeInstruction(Opcode::RET);
+    vm.writeInstruction(Opcode::NOOP);
+
+
     vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 60));
     vm.writeInstruction(Opcode::POP_REGS_8, static_cast<uint16_t>(VM::DATA_SEG + 80));
     vm.writeInstruction(Opcode::NOOP);
@@ -132,22 +128,26 @@ void setup() {
     vm.writeInstruction(Opcode::PUSH_MEM_8, static_cast<uint16_t>(VM::DATA_SEG + 30));
     vm.writeInstruction(Opcode::NOOP);
     vm.writeInstruction(Opcode::NOOP);
-  */
 
-  /* **********************************************************************
-      This code writes our initial constants into memory above the program
-   * **********************************************************************
-  */
-  float const fl1 = 1.3;
-  float const fl2 = 3.14159;
-  float sumfls = fl1 + fl2;
-  vm.writeData(fl1, VM::DATA_SEG + 22, false);
-  vm.writeData(fl2, VM::DATA_SEG + 26, false);
-  vm.writeData(sumfls, VM::DATA_SEG + 34, false);
-  vm.writeData(static_cast<uint16_t>(VM::DATA_SEG + 40), VM::DATA_SEG + 30, false);
 
-  // Call changeIP with no args to reset the counter
-  vm.changeIP();
+    float const fl1 = 1.3;
+    float const fl2 = 3.14159;
+    float sumfls = fl1 + fl2;
+    vm.writeData(fl1, VM::DATA_SEG + 22, false);
+    vm.writeData(fl2, VM::DATA_SEG + 26, false);
+    vm.writeData(sumfls, VM::DATA_SEG + 34, false);
+    vm.writeData(static_cast<uint16_t>(VM::DATA_SEG + 40), VM::DATA_SEG + 30, false);
+
+    // Call changeIP with no args to reset the counter
+    vm.changeIP();
+  */
+  const uint8_t program[] = {
+    207, 48, 0, 15, 23, 5, 23, 3, 255, 15, 0, 214, 214, 214, 214, 24, 0, 23, 0,
+    23, 1, 12, 0, 10, 12, 3, 11, 12, 1, 1, 12, 2, 2, 25, 18, 203, 45, 0, 28, 1, 2, 186, 206, 21, 0, 254, 214, 214, 214, 214, 214, 214, 214
+  };
+  uint8_t * srcptr = program;
+  uint8_t * destptr = &vm._mem[0];
+  vm.moveData(srcptr,destptr,sizeof(program));
 }
 
 void loop() {
