@@ -49,9 +49,19 @@ def printStages():
         print(code)
 
 
-print ("\n\nProgram As C-style array:\n=========================\n")
-cFormattedString = ','.join(map(lambda n: str(n), p5))
+#print ("\n\nProgram As C-style array:\n=========================\n")
+
+cstr = ""
+i = 0
+for code in p5:
+    i = i + 1
+    cstr = cstr + str(code) + ","
+    if i % 10 == 0:
+        cstr = cstr + "\n"
+
+#cFormattedString = ','.join(map(lambda n: str(n), p5))
 #    print(str(type(code)))
 
 #printStages()
-print(cFormattedString)
+#print(cFormattedString)
+print(cstr)

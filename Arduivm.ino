@@ -141,13 +141,19 @@ void setup() {
     // Call changeIP with no args to reset the counter
     vm.changeIP();
   */
-  const uint8_t program[] = {
-    207, 48, 0, 15, 23, 5, 23, 3, 255, 15, 0, 214, 214, 214, 214, 24, 0, 23, 0,
-    23, 1, 12, 0, 10, 12, 3, 11, 12, 1, 1, 12, 2, 2, 25, 18, 203, 45, 0, 28, 1, 2, 186, 206, 21, 0, 254, 214, 214, 214, 214, 214, 214, 214
-  };
+  const uint8_t program[] = {207, 51, 0, 15, 23, 5, 23, 3, 255, 15,
+                             0, 214, 214, 214, 214, 53, 0, 23, 0, 23,
+                             1, 12, 0, 10, 12, 3, 11, 12, 1, 1,
+                             12, 2, 2, 25, 18, 203, 48, 0, 28, 1,
+                             2, 171, 11, 10, 0, 206, 21, 0, 254, 214,
+                             214, 214, 214, 214, 214, 214,
+                            };
+
+
+
   uint8_t * srcptr = program;
   uint8_t * destptr = &vm._mem[0];
-  vm.moveData(srcptr,destptr,sizeof(program));
+  vm.moveData(srcptr, destptr, sizeof(program));
 }
 
 void loop() {

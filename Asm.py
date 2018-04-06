@@ -125,6 +125,7 @@ instructions = {
     "PUSH_MEM_8": {'opcode':PUSH_MEM_8, 'argFormats':['H'], 'formatCode':'B'},
     "PUSH_CONST_8":{'opcode':PUSH_CONST_8, 'argFormats':['B'], 'formatCode':'B'},
     "POP_REGS_8": {'opcode':POP_REGS_8, 'argFormats':['B'], 'formatCode':'B'},
+    "POP_REGS_16": {'opcode':POP_REGS_8 + END_8, 'argFormats':['B'], 'formatCode':'B'},
     "UJMP": {'opcode':UJMP, 'argFormats':['H'], 'formatCode':'B'},
     "CALL": {'opcode':CALL, 'argFormats':['H'], 'formatCode':'B'},
     "MOV_SPREL2_REG_8": {'opcode': MOV_SPREL2_REG_8, 'argFormats':['B','B'], 'formatCode':'B'},
