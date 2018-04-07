@@ -136,6 +136,7 @@ instructions = {
     "MUL_UINT_8": {'opcode': MUL_UINT_8, 'argFormats':['B'], 'formatCode':'B'},
     "JEQ": {'opcode': JEQ, 'argFormats':['H'], 'formatCode':'B'},
     "INC_SPREL_UINT_8": {'opcode': INC_SPREL_UINT_8, 'argFormats':['B'], 'formatCode':'B'},
+    "SP_ADJ": {'opcode': SP_ADJ, 'argFormats':['B'], 'formatCode':'B'},
 
     
 }

@@ -490,7 +490,7 @@ void VM::exec(Opcode opcode) {
       case Opcode::SP_ADJ: {
           dprint(F("SP_ADJ: SP += "), 1);
           uint8_t adjustment = readData <uint8_t> ();
-          _ip16 += adjustment;
+          _SP += adjustment;
           dprintln(String(adjustment));
           break;
         }
