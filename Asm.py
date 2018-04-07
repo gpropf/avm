@@ -43,9 +43,9 @@ translator = RefTranslator(ph)
 
 MATH_BASE_8 = 0
 ADD_UINT_8 = MATH_BASE_8
-SUB_INT_8 = MATH_BASE_8 + 1
+SUB_UINT_8 = MATH_BASE_8 + 1
 MUL_UINT_8 = MATH_BASE_8 + 2
-DIV_INT_8 = MATH_BASE_8 + 3
+DIV_UINT_8 = MATH_BASE_8 + 3
 OR_8   = MATH_BASE_8 + 4
 AND_8 = MATH_BASE_8 + 5
 NOT_8 = MATH_BASE_8 + 6
@@ -122,6 +122,7 @@ dataWidths = {'H':2,'h':2,'i':4,'I':4,'f':4,'b':1,'B':1}
 
 instructions = {
     "BINDAI": {'opcode':BINDAI, 'argFormats':['H','B'], 'formatCode':'B'},
+    "BINDDI": {'opcode':BINDDI, 'argFormats':['H','B'], 'formatCode':'B'},
     "PUSH_MEM_8": {'opcode':PUSH_MEM_8, 'argFormats':['H'], 'formatCode':'B'},
     "PUSH_CONST_8":{'opcode':PUSH_CONST_8, 'argFormats':['B'], 'formatCode':'B'},
     "POP_REGS_8": {'opcode':POP_REGS_8, 'argFormats':['B'], 'formatCode':'B'},
@@ -129,11 +130,13 @@ instructions = {
     "UJMP": {'opcode':UJMP, 'argFormats':['H'], 'formatCode':'B'},
     "CALL": {'opcode':CALL, 'argFormats':['H'], 'formatCode':'B'},
     "MOV_SPREL2_REG_8": {'opcode': MOV_SPREL2_REG_8, 'argFormats':['B','B'], 'formatCode':'B'},
+    "MOV_MEM2_REG_16": {'opcode': MOV_MEM2_REG_8 + END_8, 'argFormats':['H','B'], 'formatCode':'B'},  
     "RET": {'opcode': RET, 'argFormats':[], 'formatCode':'B'},
     "NOOP": {'opcode': NOOP, 'argFormats':[], 'formatCode':'B'},
     "MOV_REG2_SPREL_8": {'opcode': MOV_REG2_SPREL_8, 'argFormats':['B','B'], 'formatCode':'B'},
     "CMP_INT_8": {'opcode': CMP_INT_8, 'argFormats':['B'], 'formatCode':'B'},
     "MUL_UINT_8": {'opcode': MUL_UINT_8, 'argFormats':['B'], 'formatCode':'B'},
+    "SUB_UINT_8": {'opcode': SUB_UINT_8, 'argFormats':['B'], 'formatCode':'B'},
     "JEQ": {'opcode': JEQ, 'argFormats':['H'], 'formatCode':'B'},
     "INC_SPREL_UINT_8": {'opcode': INC_SPREL_UINT_8, 'argFormats':['B'], 'formatCode':'B'},
     "SP_ADJ": {'opcode': SP_ADJ, 'argFormats':['B'], 'formatCode':'B'},

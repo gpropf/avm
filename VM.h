@@ -37,9 +37,9 @@ struct RegPair {
 enum class Opcode : uint8_t {
   MATH_BASE_8 = 0,
   ADD_UINT_8 = MATH_BASE_8,
-  SUB_INT_8 = MATH_BASE_8 + 1,
+  SUB_UINT_8 = MATH_BASE_8 + 1,
   MUL_UINT_8 = MATH_BASE_8 + 2,
-  DIV_INT_8 = MATH_BASE_8 + 3,
+  DIV_UINT_8 = MATH_BASE_8 + 3,
   OR_8   = MATH_BASE_8 + 4,
   AND_8 = MATH_BASE_8 + 5,
   NOT_8 = MATH_BASE_8 + 6,
@@ -302,8 +302,8 @@ class VM {
           break;
         case Opcode::ADD_UINT_8:
         case Opcode::MUL_UINT_8:
-        case Opcode::DIV_INT_8:
-        case Opcode::SUB_INT_8:
+        case Opcode::DIV_UINT_8:
+        case Opcode::SUB_UINT_8:
           writeData(a2, _ip16);
           break;
         case Opcode::BINDAO:

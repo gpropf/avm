@@ -160,14 +160,14 @@ void VM::PinBinding::updatePin(VM & vm) {
     switch (_io) {
       case OUTPUT: {
           uint16_t val = vm.readData <uint16_t> (_address);
-          dprintln("Writing " + String(val) + " to pin " + String(_pin));
+          dprintln("Writing Analog Value" + String(val) + " to pin " + String(_pin));
           analogWrite(_pin, val);
           break;
         }
       case INPUT:
         {
           uint16_t val = analogRead(_pin);
-          dprintln("Got value " + String(val) + " from pin " + String(_pin));
+          dprintln("Got analog value " + String(val) + " from pin " + String(_pin));
           //uint16_t * u16ptr = reinterpret_cast<uint16_t>(&vm._mem[_address]);
           vm.writeData<uint16_t>(val, _address, false, false);
           //vm._mem[_address] = val;
@@ -177,7 +177,25 @@ void VM::PinBinding::updatePin(VM & vm) {
     }
   }
   else {
-    // FIXME: need to fill in digital behavior
+    // Digital IO
+    switch (_io) {
+      case OUTPUT: {
+          uint16_t val = vm.readData <uint16_t> (_address);
+          dprintln("Writing Digital Value" + String(val) + " to pin " + String(_pin));
+          digitalWrite(_pin, val);
+          break;
+        }
+      case INPUT:
+        {
+          uint16_t val = digitalRead(_pin);
+          dprintln("Got digital value " + String(val) + " from pin " + String(_pin));
+          //uint16_t * u16ptr = reinterpret_cast<uint16_t>(&vm._mem[_address]);
+          vm.writeData<uint16_t>(val, _address, false, false);
+          //vm._mem[_address] = val;
+          //*u16ptr = val;
+          break;
+        }
+    }
   }
 }
 
@@ -410,7 +428,16 @@ void VM::exec(Opcode opcode) {
           moveData(srcptr, destptr, opPair.dw);
           break;
         }
-      case Opcode::MOV_REG2_SPREL_8: {
+      case Opcode::MOV_MEM2_REG_8: {
+          dprintln(F("MOV_MEM2_REG_8"), 1);
+          uint16_t addr = readData <uint16_t> ();
+          uint8_t reg = readData <uint8_t> ();
+          srcptr = getPtr(addr, Location::MEM);
+          destptr = getPtr(reg, Location::REG);
+          moveData(srcptr, destptr, opPair.dw);
+          break;
+        }
+        case Opcode::MOV_REG2_SPREL_8: {
           dprintln(F("MOV_REG2_SPREL_8"), 1);
           uint8_t reg = readData <uint8_t> ();
           uint8_t sprel = readData <uint8_t> ();
@@ -478,6 +505,30 @@ void VM::exec(Opcode opcode) {
           uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
           *destreg *= *srcreg;
           dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg), 2);
+          break;
+        }
+        case Opcode::SUB_UINT_8: {
+          dprintln(F("SUB_UINT_8"), 1);
+          uint8_t targetRegisters = readData <uint8_t> ();
+          RegPair tr = getRegPair(targetRegisters);
+          srcptr = getPtr(tr.reg1, Location::REG);
+          destptr = getPtr(tr.reg2, Location::REG);
+          uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
+          uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
+          *destreg -= *srcreg;
+          dprintln("Reg1 - Reg2 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg), 2);
+          break;
+        }
+      case Opcode::DIV_UINT_8: {
+          dprintln(F("DIV_UINT_8"), 1);
+          uint8_t targetRegisters = readData <uint8_t> ();
+          RegPair tr = getRegPair(targetRegisters);
+          srcptr = getPtr(tr.reg1, Location::REG);
+          destptr = getPtr(tr.reg2, Location::REG);
+          uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
+          uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
+          *destreg /= *srcreg;
+          dprintln("Reg1 / Reg2 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg), 2);
           break;
         }
     }

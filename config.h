@@ -3,6 +3,7 @@
 
 const uint8_t ANALOG_TEST_INPUT_PIN = A1;
 const uint8_t ANALOG_OUT_PIN = 10;
+const uint8_t BUTTON_INPUT_PIN = 2;
 const uint8_t NUM_PINS = 20;
 
 const uint8_t READ_BUFFER_LENGTH = 5;
