@@ -20,9 +20,10 @@ void flashLEDs () {
   analogWrite(ANALOG_OUT_PIN, 255);
   delay(500);
   analogWrite(ANALOG_OUT_PIN, 0);
-  pinMode(BUTTON_INPUT_PIN, INPUT);
 
-  /*
+/* 
+  pinMode(BUTTON_INPUT_PIN, INPUT);
+ 
     int val = 0;
     while (true) {
       val = digitalRead(BUTTON_INPUT_PIN);

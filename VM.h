@@ -1,10 +1,10 @@
 #ifndef VM_h
 #define VM_h
-
+/*
 enum class AddressingMode : uint8_t {
   REL, ABS
 };
-
+*/
 enum class Location : uint8_t {
   MEM, SPREL, MEM_IND, SPREL_IND, REG,
 };
