@@ -109,8 +109,9 @@ BINDAP = BIND_BASE + 4
 BINDDP = BIND_BASE + 5
 
 
-SP_ADJ = BIND_BASE + 6 
-NOOP = 214
+SP_ADJ = BIND_BASE + 6
+PRINT_AS = BIND_BASE + 7
+NOOP = 249
 NOOP_INIT = 250
 CALL = 255 
 RET = 254
@@ -126,6 +127,7 @@ instructions = {
     "PUSH_MEM_8": {'opcode':PUSH_MEM_8, 'argFormats':['H'], 'formatCode':'B'},
     "PUSH_CONST_8":{'opcode':PUSH_CONST_8, 'argFormats':['B'], 'formatCode':'B'},
     "POP_REGS_8": {'opcode':POP_REGS_8, 'argFormats':['B'], 'formatCode':'B'},
+    "PRINT_AS": {'opcode':PRINT_AS, 'argFormats':['B'], 'formatCode':'B'},
     "POP_REGS_16": {'opcode':POP_REGS_8 + END_8, 'argFormats':['B'], 'formatCode':'B'},
     "UJMP": {'opcode':UJMP, 'argFormats':['H'], 'formatCode':'B'},
     "CALL": {'opcode':CALL, 'argFormats':['H'], 'formatCode':'B'},

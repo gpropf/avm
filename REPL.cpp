@@ -59,7 +59,7 @@ String REPL::getPromptString(String subPrompt) {
 void REPL::loop(String subPrompt) {
 
   while (true) {
-    dprint(getPromptString(subPrompt));
+    dprint(getPromptString(subPrompt), static_cast<uint8_t>(PrintCategory::REPL));
     switch (_runMode) {
       case STEP: {
 
@@ -84,7 +84,7 @@ void REPL::loop(String subPrompt) {
 void REPL::parseCommand(String s)
 {
   /* --------------------------------
-      Commands language is a super simple
+      Command language is a super simple
       Lisp-esque thing. All valid commands
       have the format: Action arg1 arg2 arg3
       where Action is the action name and there
@@ -100,6 +100,7 @@ void REPL::parseCommand(String s)
      S: Step one instruction ahead
      Q: Print the stack
      ~: Print status
+     C: Cast something in memory as one of u8, u16, u32, i8, i16, i32, fl, str
   */
 
   int startIndex = 0;
@@ -146,7 +147,8 @@ void REPL::parseCommand(String s)
         ad = false;
         break;
       default:
-        dprintln(F("ERROR: pin io must be analog ('a') or digital ('d')"));
+        dprintln(F("ERROR: pin io must be analog ('a') or digital ('d')"),
+                 static_cast<uint8_t>(PrintCategory::REPL));
     }
     uint8_t io = 0; // to get rid of annoying compiler warnings about possible undefined value.
     c = args[3].charAt(1);
@@ -162,7 +164,8 @@ void REPL::parseCommand(String s)
         io = INPUT_PULLUP;
         break;
       default:
-        dprintln(F("ERROR: pin io must be input ('a'), input pullup ('p'), or output ('o')"));
+        dprintln(F("ERROR: pin io must be input ('a'), input pullup ('p'), or output ('o')"),
+                 static_cast<uint8_t>(PrintCategory::REPL));
     }
 
 
@@ -170,16 +173,16 @@ void REPL::parseCommand(String s)
     _vm->createBinding(pin, io, ad, addr);
     //_vm->set
   }
-  else if (action == "p" || action == "P") {
+  else if (action == "p") {
     _vm->printBindings();
   }
-  else if (action == "m" || action == "M") {
+  else if (action == "m") {
     if (i > 3)
       _vm->printMem(args[1].toInt(), args[2].toInt(), true);
     else
       _vm->printMem(args[1].toInt(), args[2].toInt(), false);
   }
-  else if (action == "s" || action == "S") {
+  else if (action == "s") {
     uint16_t steps = 1;
     if (i > 1) {
       steps = args[1].toInt();
@@ -187,48 +190,23 @@ void REPL::parseCommand(String s)
     for (uint16_t j = 0; j < steps; j++)
       _vm->step();
   }
-  else if (action == "q" || action == "Q") {
+  else if (action == "q") {
     _vm->printStack();
   }
-  else if (action == "r" || action == "R") {
+  else if (action == "r") {
     _vm->printRegisters();
   }
   else if (action == "~") {
     _vm->printStatus();
   }
   else if (action == "c") {
-    dprint(F("_mem["));
+
     // c for "cast"
     String dm = args[1];
     uint16_t addr = args[2].toInt();
-    if (dm == "u16") {
-      uint16_t val = _vm->readData<uint16_t>(addr, false);
-      dprintln(String(addr) + "] as uint16_t: " + String(val), 2);
-    }
-    if (dm == "u8") {
-      uint8_t val = _vm->readData<uint8_t>(addr, false);
-      dprintln(String(addr) + "] as uint8_t: " + String(val), 2);
-    }
-    if (dm == "u32") {
-      uint32_t val = _vm->readData<uint32_t>(addr, false);
-      dprintln(String(addr) + "] as uint32_t: " + String(val), 2);
-    }
-    if (dm == "i16") {
-      int16_t val = _vm->readData<int16_t>(addr, false);
-      dprintln(String(addr) + "] as int16_t: " + String(val), 2);
-    }
-    if (dm == "i8") {
-      int8_t val = _vm->readData<int8_t>(addr, false);
-      dprintln(String(addr) + "] as int8_t: " + String(val), 2);
-    }
-    if (dm == "i32") {
-      int32_t val = _vm->readData<int32_t>(addr, false);
-      dprintln(String(addr) + "] as int32_t: " + String(val), 2);
-    }
-    if (dm == "fl") {
-      float val = _vm->readData<float>(addr, false);
-      dprintln(String(addr) + "] as float: " + String(val), 2);
-    }
+    dprint(F("mem["));
+    dprint(String(addr) + "] ", static_cast<uint8_t>(PrintCategory::REPL));
+    dprintln("as " + dm + ": " + _vm->getAsString(addr,dm), static_cast<uint8_t>(PrintCategory::REPL));
 
   }
 }

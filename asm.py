@@ -8,7 +8,20 @@ filename = sys.argv[1]
 
 program = chunkifyProgram(filename)
 
+#print ("Program After Chunking:\n=========================\n")
+#for code in program:
+#    print(code)
+
+
+
 p1 = stage1(program)
+
+#print ("Program After Stage 1:\n=========================\n")
+#for code in p1:
+#    print(code)
+
+
+
 p2 = stage2(p1)
 p3 = stage3(p2)
 locateRefs(p3)    
@@ -17,9 +30,9 @@ p5 = stage5(p4)
 
 def printStages():
 
-    print ("Program After Stage 1:\n=========================\n")
-    for code in p1:
-        print(code)
+   
+
+    
 
     print ("\n\nProgram After Stage 2:\n=========================\n")
 

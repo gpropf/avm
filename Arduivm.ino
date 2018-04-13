@@ -1,6 +1,7 @@
 #include "Arduino.h"
 #include "config.h"
 #include "util.h"
+
 #include "VM.h"
 #include "REPL.h"
 
@@ -21,14 +22,14 @@ void flashLEDs () {
   delay(500);
   analogWrite(ANALOG_OUT_PIN, 0);
 
-/* 
-  pinMode(BUTTON_INPUT_PIN, INPUT);
- 
-    int val = 0;
-    while (true) {
-      val = digitalRead(BUTTON_INPUT_PIN);
-      dprintln("Input Pin: " + String(val),1);
-    }
+  /*
+    pinMode(BUTTON_INPUT_PIN, INPUT);
+
+      int val = 0;
+      while (true) {
+        val = digitalRead(BUTTON_INPUT_PIN);
+        dprintln("Input Pin: " + String(val),1);
+      }
   */
 }
 
@@ -59,10 +60,13 @@ void setup() {
 
   Serial.begin(57600);
 
-  dprintln(repeatString("*", 60));
-  dprintln(F("Arduivm: v0.11.0"));
-  dprintln(repeatString("*", 60));
-  dprintln("END_8:" + String(static_cast<uint8_t>(Opcode::END_8)), 1);
+  dprintln(repeatString("*", 60), static_cast<uint8_t>(PrintCategory::REPL));
+  dprintln(F("Arduivm: v0.11.0"), static_cast<uint8_t>(PrintCategory::REPL));
+  dprintln(repeatString("*", 60), static_cast<uint8_t>(PrintCategory::REPL));
+  dprintln("END_8:" + String(static_cast<uint8_t>(Opcode::END_8)),
+           static_cast<uint8_t>(PrintCategory::REPL));
+
+  
 
   flashLEDs();
   /*
@@ -152,31 +156,19 @@ void setup() {
     vm.changeIP();
   */
   const uint8_t program[] = {
-    207, 72, 0, 15, 208, 75, 0, 2, 39, 72,
-    0, 13, 39, 75, 0, 14, 1, 222, 23, 5,
-    23, 3, 255, 31, 0, 214, 206, 0, 0, 214,
-    214, 53, 0, 23, 0, 23, 1, 12, 0, 10,
-    12, 3, 11, 12, 1, 1, 12, 2, 2, 25,
-    18, 203, 64, 0, 28, 1, 2, 171, 11, 10,
-    0, 206, 37, 0, 213, 1, 11, 10, 0, 254,
-    214, 214, 214, 214, 214, 214, 214,
+#include "pow.h"
+71,71,71,71,0,0,0,79,0,0
   };
 
 
 
   uint8_t * srcptr = program;
   uint8_t * destptr = &vm._mem[0];
+  //dprintln("Before program loading :" + String(vm.getIP()) + ")");
   vm.moveData(srcptr, destptr, sizeof(program));
 }
 
 void loop() {
   repl.loop();
-  delay(1000);
-  // put your main code here, to run repeatedly:
-  for (uint16_t i = 0; i < 20; i++)
-    vm.step();
-
-  delay(50000);
-  dprintln("---");
   vm.reset();
 }

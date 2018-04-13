@@ -1,9 +1,9 @@
 #ifndef VM_h
 #define VM_h
 /*
-enum class AddressingMode : uint8_t {
+  enum class AddressingMode : uint8_t {
   REL, ABS
-};
+  };
 */
 enum class Location : uint8_t {
   MEM, SPREL, MEM_IND, SPREL_IND, REG,
@@ -106,7 +106,8 @@ enum class Opcode : uint8_t {
 
 
   SP_ADJ = BIND_BASE + 6, // increment the SP without pop. Takes uint8_t as arg.
-  NOOP,
+  PRINT_AS = BIND_BASE + 7, // Takes an 8 bit operand. First nibble is register to print, 2nd is type to print as.
+  NOOP = 249,
   NOOP_INIT = 250,
   CALL = 255, // Takes a uint16_t address of the function to call. Automatically saves return address
   RET = 254, // Uses stored return address and leaves return value on stack
@@ -175,6 +176,12 @@ class VM {
 
 
 
+    String getAsString(uint8_t* addr8, const DataMode dm);
+    String getAsString(uint16_t addr, const String modeString);
+    String getAsString(uint16_t addr, const DataMode dm);
+    String getAsString(uint8_t regnum, const DataMode dm);
+
+
     void writeString(char * sptr, uint16_t inAddr = 0, boolean advanceIP = true);
 
     static const uint16_t DATA_SEG = 100;
@@ -230,16 +237,31 @@ class VM {
       value2 = *(reinterpret_cast<datum*>(&(_reg[rp.reg2 * 4])));
     }
 
+    template <class datum> datum readDataAtPtr(datum *inAddr)
+    {
+
+      datum * dptr = reinterpret_cast<datum*>(inAddr);
+      datum d = *dptr;
+      return d;
+    }
+
     template <class datum> datum readData(uint16_t inAddr = 0, boolean advanceIP = true)
     {
       if (advanceIP) {
         inAddr = _ip16;
         _ip16 += sizeof(datum);
       }
+      /*
+            datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
+            datum d = *dptr;
+            return d;
+      */
       datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
-      datum d = *dptr;
+      datum d = readDataAtPtr<datum>(dptr);
       return d;
     }
+
+
 
     template <class datum>
     void writeData(datum d, uint16_t inAddr = 0, boolean writeAtIP = true, boolean advanceIP = true) {
