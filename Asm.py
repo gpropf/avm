@@ -17,8 +17,8 @@ class RefTranslator:
         return [byte for byte in bytes]
 
 
-def getNibbles(text,formatCode):
-    na,nb = map(lambda n: int(n), text.split(","))
+def getNibblesFromInts(nibblePair):
+    (na,nb) = nibblePair
     return [na * 16 + nb]
     
 def getFloat(text,formatCode):
@@ -30,11 +30,11 @@ def getInt(text, formatCode):
     return [byte for byte in bytes]
     
 
-pnibbles = re.compile("[0-9]+,[0-9]+")
+#pnibbles = re.compile("[0-9]+,[0-9]+")
 pfloat = re.compile("[0-9]+\.[0-9]*")
 pint = re.compile("[0-9]+")
 
-ph = { pnibbles:getNibbles, pfloat:getFloat, pint:getInt}
+ph = { pfloat:getFloat, pint:getInt}
 
 
 
@@ -118,7 +118,7 @@ RET = 254
 
 
 labelRefs = {}
-dataWidths = {'H':2,'h':2,'i':4,'I':4,'f':4,'b':1,'B':1}
+dataWidths = {'H':2,'h':2,'i':4,'I':4,'f':4,'b':1,'B':1, 'N':'N'}
 
 
 instructions = {
@@ -126,9 +126,9 @@ instructions = {
     "BINDDI": {'opcode':BINDDI, 'argFormats':['H','B'], 'formatCode':'B'},
     "PUSH_MEM_8": {'opcode':PUSH_MEM_8, 'argFormats':['H'], 'formatCode':'B'},
     "PUSH_CONST_8":{'opcode':PUSH_CONST_8, 'argFormats':['B'], 'formatCode':'B'},
-    "POP_REGS_8": {'opcode':POP_REGS_8, 'argFormats':['B'], 'formatCode':'B'},
-    "PRINT_AS": {'opcode':PRINT_AS, 'argFormats':['B'], 'formatCode':'B'},
-    "POP_REGS_16": {'opcode':POP_REGS_8 + END_8, 'argFormats':['B'], 'formatCode':'B'},
+    "POP_REGS_8": {'opcode':POP_REGS_8, 'argFormats':['N','N'], 'formatCode':'B'},
+    "PRINT_AS": {'opcode':PRINT_AS, 'argFormats':['N','N'], 'formatCode':'B'},
+    "POP_REGS_16": {'opcode':POP_REGS_8 + END_8, 'argFormats':['N','N'], 'formatCode':'B'},
     "UJMP": {'opcode':UJMP, 'argFormats':['H'], 'formatCode':'B'},
     "CALL": {'opcode':CALL, 'argFormats':['H'], 'formatCode':'B'},
     "MOV_SPREL2_REG_8": {'opcode': MOV_SPREL2_REG_8, 'argFormats':['B','B'], 'formatCode':'B'},
@@ -136,9 +136,9 @@ instructions = {
     "RET": {'opcode': RET, 'argFormats':[], 'formatCode':'B'},
     "NOOP": {'opcode': NOOP, 'argFormats':[], 'formatCode':'B'},
     "MOV_REG2_SPREL_8": {'opcode': MOV_REG2_SPREL_8, 'argFormats':['B','B'], 'formatCode':'B'},
-    "CMP_INT_8": {'opcode': CMP_INT_8, 'argFormats':['B'], 'formatCode':'B'},
-    "MUL_UINT_8": {'opcode': MUL_UINT_8, 'argFormats':['B'], 'formatCode':'B'},
-    "SUB_UINT_8": {'opcode': SUB_UINT_8, 'argFormats':['B'], 'formatCode':'B'},
+    "CMP_INT_8": {'opcode': CMP_INT_8, 'argFormats':['N','N'], 'formatCode':'B'},
+    "MUL_UINT_8": {'opcode': MUL_UINT_8, 'argFormats':['N','N'], 'formatCode':'B'},
+    "SUB_UINT_8": {'opcode': SUB_UINT_8, 'argFormats':['N','N'], 'formatCode':'B'},
     "JEQ": {'opcode': JEQ, 'argFormats':['H'], 'formatCode':'B'},
     "INC_SPREL_UINT_8": {'opcode': INC_SPREL_UINT_8, 'argFormats':['B'], 'formatCode':'B'},
     "SP_ADJ": {'opcode': SP_ADJ, 'argFormats':['B'], 'formatCode':'B'},
@@ -147,10 +147,11 @@ instructions = {
 }
 
 
-def chunkifyProgram(filename):
+def chunkifyProgram(filename, verbose = False):
     """ Step 1 in the process is to break the text up into chunks delineated by whitespace """
     commentRe = re.compile("^\s*#")
-    
+    if verbose:
+        print("================= chunkifyProgram =================")
     #print ("Filename: ", filename)
     f = open(filename)
     line = f.readline()
@@ -158,38 +159,49 @@ def chunkifyProgram(filename):
     program = []
     labelRefs = {}
     while line:
-        if not commentRe.match(line):
-            opcode = 0
-            lineParts = line.split(' ')
-            lpStripped = list(map (lambda s: s.strip(),lineParts))
-            lpCount = len(lpStripped)
-            for chunk in lpStripped:
-                if chunk != "":
-                    program.append(chunk)
+        line = line.split('#')[0]
+        opcode = 0
+        lineParts = line.split(' ')
+        lpStripped = list(map (lambda s: s.strip(),lineParts))
+        lpStripped = list(filter(lambda x: x != "", lpStripped))
+        lpCount = len(lpStripped)
+        for chunk in lpStripped:
+            commaDelimitedChunks = chunk.split(',')
+            commaDelimitedChunks = list(filter(lambda x: x != "", commaDelimitedChunks))
+            for cdc in commaDelimitedChunks:
+                program.append(cdc)
+                if verbose:
+                    print (cdc)
         line = f.readline()
     f.close()
     return program
 
-def stage1(program):    
+def stage1(program, verbose = False):    
     """ Look up each chunk and replace with annotated metadata if it's an instruction mnemonic """ 
     i = 0
+    if verbose:
+        print("================= stage1 =================")
     for code in program:
         if code in instructions:
             codeData = instructions[code]
             codeData['mnemonic'] = code
             program[i] = codeData.copy()
         #else:
+        if verbose:
+            print (program[i])
         #    instructions[code] = code
         i = i + 1
     return program
 
 
-def stage2(program):
+def stage2(program, verbose = False):
     """Reverse the program to turn it into a stack. Pop chunks off the
 stack and look at them. If a chunk is an instruction, look at its
 metadata and pop the following chunks which represent its arguments
 and annotate them as well. If a chunk is neither an instruction or an
 argument to one, it is a label."""
+    if verbose:
+        print("================= stage2 =================")
     programRev = program
     programRev.reverse()
     outputProgram = []
@@ -197,57 +209,107 @@ argument to one, it is a label."""
         code = programRev.pop()
         if type(code) == dict:
             outputProgram.append(code)
+            if verbose:
+                print(code)
             if 'argFormats' in code:
                 for argFormat in code['argFormats']:
                     codearg = programRev.pop()
-                    outputProgram.append({'reftext':codearg, 'formatCode':argFormat})            
+                    codeHash = {'reftext':codearg, 'formatCode':argFormat}
+                    outputProgram.append(codeHash)
+                    if verbose:
+                        print(codeHash)
         else:
             # it's not a recognized instruction or argument so it must
-            # be a label.
-            outputProgram.append({'reftext':code, 'reftype':'label'})
+            # be a label.            
+            codeHash = {'reftext':code, 'reftype':'label'}
+            outputProgram.append(codeHash)
+            if verbose:
+                print(codeHash)
+
     return outputProgram
 
 
-def stage3(program):
+def stage3(program, verbose = False):
+
+    if verbose:
+        print("================= stage3 =================")
     ip = i = 0
+    nibbleFound = False
     for code in program:
+
         code['location'] = ip
         program[i] = code
         if 'formatCode' in code:
             width = dataWidths[code['formatCode']]
+            if width == 'N':                
+                if nibbleFound:
+                    width = 1
+                    nibbleFound = False
+                else:
+                    width = 0
+                    nibbleFound = True
+                    
             #print(str(code) + " :: IP:" + str(ip) + ", width: " + str(width))
             ip = ip + width            
         elif 'reftype' in code and code['reftype'] != 'label':
             #print("IP:" + str(ip) + ", width: 1")
             ip = ip + 1
+        if verbose:
+            print(code)
         i = i + 1
     return program
 
 
-def stage4(program):
+def stage4(program, verbose = False):
+    if verbose:
+        print("================= stage4 =================")
     i = 0
     for code in program:
         if type(code) == dict and 'opcode' in code:
             code = [code['opcode']]
         program[i] = code
+        if verbose:
+            print(code)
         i = i + 1
     return program
 
 
-def stage5(program):
+def stage5(program, verbose = False):
     #print("PROGRAM is TYPE :" + str(type(program)))
+    if verbose:
+        print("================= stage5 =================")
     ip = i = 0
     outputProgram = []
+    currentNibbles = []
     for code in program:
         if type(code) == dict:
             if 'reftext' in code and 'formatCode' in code:
-                outputProgram.append(translator.translate(code['reftext'],code['formatCode']))
+                if code['formatCode'] == 'N':
+                    nibbleVal = int(code['reftext'])
+                    currentNibbles.append(nibbleVal)
+                    if verbose:
+                        print("NIBBLES!!!: " + str(currentNibbles))
+                    if len(currentNibbles) > 1:
+                        byteVal = getNibblesFromInts(currentNibbles)
+                        outputProgram.append(byteVal)
+                        if verbose:
+                            print("BYTE VAL COMPLETE ~~~ : " + str(byteVal))
+                        currentNibbles = []
+                else:
+                    codeToAppend = translator.translate(code['reftext'],code['formatCode'])
+                    outputProgram.append(codeToAppend)
+                    if verbose:
+                        print(codeToAppend)
         elif type(code) == list:
+            if verbose:
+                print(code)
             outputProgram.append(code)
         i = i + 1
     return list(itertools.chain.from_iterable(outputProgram))
 
-def locateRefs(program):
+def locateRefs(program, verbose = False):
+    if verbose:
+        print("================= locateRefs =================")
     for code in program:
         if 'reftext' in code and 'reftype' in code and code['reftype'] == 'label':
             reftext = code['reftext']

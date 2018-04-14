@@ -87,7 +87,7 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) {
     case DataMode::UINT16: {
         return String(*reinterpret_cast<uint16_t*>(addr8));
       }
-    case DataMode::UINT32: {        
+    case DataMode::UINT32: {
         return String(*reinterpret_cast<uint32_t*>(addr8));
         //return String(readData<uint32_t>(addr8, false));
       }
@@ -108,6 +108,12 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) {
         //  return String(readData<float>(addr8, false));
       }
     case DataMode::STRING: {
+        /*
+            This one is different. We interpret the value at addr8 as a uint16_t
+            VM memory address so if the thing at addr8 is 84 then we actually look
+            at _mem[84] for the start of the null-terminated string.
+        */
+
         uint16_t memAddr = *reinterpret_cast<uint16_t*>(addr8);
         //dprintln("String addr = " + String(memAddr), static_cast<uint8_t>(PrintCategory::STATUS));
         char currentChar = 39;

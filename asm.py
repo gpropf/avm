@@ -6,15 +6,17 @@ from Asm import *
 
 filename = sys.argv[1]
 
-program = chunkifyProgram(filename)
+verbosity = True
+verbosity = False
 
+program = chunkifyProgram(filename, verbose = verbosity)
 #print ("Program After Chunking:\n=========================\n")
 #for code in program:
 #    print(code)
 
 
 
-p1 = stage1(program)
+p1 = stage1(program, verbose = verbosity)
 
 #print ("Program After Stage 1:\n=========================\n")
 #for code in p1:
@@ -22,11 +24,11 @@ p1 = stage1(program)
 
 
 
-p2 = stage2(p1)
-p3 = stage3(p2)
-locateRefs(p3)    
-p4 = stage4(p3)
-p5 = stage5(p4)
+p2 = stage2(p1, verbose = verbosity)
+p3 = stage3(p2, verbose = verbosity)
+locateRefs(p3, verbose = verbosity)    
+p4 = stage4(p3, verbose = verbosity)
+p5 = stage5(p4, verbose = verbosity)
 
 def printStages():
 
