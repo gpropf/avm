@@ -20,6 +20,8 @@ NOOP
 UJMP START:
 NOOP
 NOOP
+u8 foo bar
+
 
 POW:
 POP_REGS_16 0,0

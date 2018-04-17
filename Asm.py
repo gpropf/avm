@@ -140,8 +140,12 @@ instructions = {
     "JEQ": {'opcode': JEQ, 'argFormats':['H'], 'formatCode':'B'},
     "INC_SPREL_UINT_8": {'opcode': INC_SPREL_UINT_8, 'argFormats':['B'], 'formatCode':'B'},
     "SP_ADJ": {'opcode': SP_ADJ, 'argFormats':['B'], 'formatCode':'B'},
+    
 }
 
+pseudoInstructions = {
+    "u8": { 'args': ["NAME","VAL"], 'localCode': ["PUSH_CONST_8","VAL"]}
+}
 
 def chunkifyProgram(filename, verbose = False):
     """ Step 1 in the process is to break the text up into chunks delineated by whitespace """
@@ -172,6 +176,36 @@ def chunkifyProgram(filename, verbose = False):
     f.close()
     return program
 
+pseudoCodeRefs = {}
+
+def addRef(name="", refType = "", refVal = ""):
+    if name not in pseudoCodeRefs:
+        pseudoCodeRefs[name] = {}
+    if refType:
+        pseudoCodeRefs[name]['type'] = refType
+    if refVal:
+        pseudoCodeRefs[name]['val'] = refVal
+    
+
+def processPseudoCode(chunks):
+
+    chunksRev = chunks.copy()
+    chunksRev.reverse()
+    #chunksRev = chunksRevTmp.copy()
+    #print(chunksRev)
+    while chunksRev:
+        chunk = chunksRev.pop()
+        #print(chunk)
+        if chunk in pseudoInstructions:
+            refName = ""
+            for arg in pseudoInstructions[chunk]['args']:
+                argVal = chunksRev.pop()
+                if arg == "NAME":
+                    refName = argVal
+                    addRef(name = refName, refType = chunk)
+                elif arg == "VAL":
+                    addRef(name = refName, refVal = argVal)
+                print (chunk + " ARG:" + arg + " = " + argVal)
 
 def stage1(program, verbose = False):    
     """ Look up each chunk and replace with annotated metadata if it's an instruction mnemonic """ 
