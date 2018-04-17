@@ -108,7 +108,6 @@ BINDDO = BIND_BASE + 3
 BINDAP = BIND_BASE + 4
 BINDDP = BIND_BASE + 5
 
-
 SP_ADJ = BIND_BASE + 6
 PRINT_AS = BIND_BASE + 7
 NOOP = 249
@@ -119,7 +118,6 @@ RET = 254
 
 labelRefs = {}
 dataWidths = {'H':2,'h':2,'i':4,'I':4,'f':4,'b':1,'B':1, 'N':'N'}
-
 
 instructions = {
     "BINDAI": {'opcode':BINDAI, 'argFormats':['H','B'], 'formatCode':'B'},
@@ -142,8 +140,6 @@ instructions = {
     "JEQ": {'opcode': JEQ, 'argFormats':['H'], 'formatCode':'B'},
     "INC_SPREL_UINT_8": {'opcode': INC_SPREL_UINT_8, 'argFormats':['B'], 'formatCode':'B'},
     "SP_ADJ": {'opcode': SP_ADJ, 'argFormats':['B'], 'formatCode':'B'},
-
-    
 }
 
 
@@ -175,6 +171,7 @@ def chunkifyProgram(filename, verbose = False):
         line = f.readline()
     f.close()
     return program
+
 
 def stage1(program, verbose = False):    
     """ Look up each chunk and replace with annotated metadata if it's an instruction mnemonic """ 
@@ -307,6 +304,7 @@ def stage5(program, verbose = False):
         i = i + 1
     return list(itertools.chain.from_iterable(outputProgram))
 
+
 def locateRefs(program, verbose = False):
     if verbose:
         print("================= locateRefs =================")
@@ -316,20 +314,19 @@ def locateRefs(program, verbose = False):
             if re.match('[a-zA-Z_]',reftext):
                 # ref starts with a letter or underscore
                 labelRefs[code['reftext']] = code['location']
-            
 
-            
+                
+def printAsCStr(program):
+    """print program As C-style uint8_t array:"""
+    cstr = ""
+    i = 0
+    for code in program:
+        i = i + 1
+        cstr = cstr + str(code) + ","
+        if i % 10 == 0:
+            cstr = cstr + "\n"
 
-
-
-# #print(getNibbles("1,4"))
-# print(translator.translate("84",'H'))
-# print(translator.translate("84.5",'f'))
-# print(translator.translate("84",'b'))
-# print(translator.translate("84",'B'))
-# print(translator.translate("84",'i'))
-# print(translator.translate("84",'I'))
-# print(translator.translate("1,4",'B'))
-
+    print(cstr)
+  
 
 
