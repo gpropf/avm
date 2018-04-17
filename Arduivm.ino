@@ -157,7 +157,7 @@ void setup() {
   */
   const uint8_t program[] = {
 #include "pow.h"
-71,71,71,71,0,0,0,79,0,0
+65,86,77,10,0,0,0,79,0,0
   };
 
 

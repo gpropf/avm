@@ -29,6 +29,7 @@ const uint16_t MAX_STRING_LENGTH = 1024;
 const uint16_t FUNCTION_START = 35;
 const uint16_t BAILOUT = 35;
 
+/*
 
 const uint8_t categoriesToPrint = static_cast<uint8_t>(PrintCategory::POP) | static_cast<uint8_t>(PrintCategory::REG) |
                                   static_cast<uint8_t>(PrintCategory::REPL) | static_cast<uint8_t>(PrintCategory::STATUS) |
@@ -36,6 +37,6 @@ const uint8_t categoriesToPrint = static_cast<uint8_t>(PrintCategory::POP) | sta
                                   static_cast<uint8_t>(PrintCategory::MATH) | static_cast<uint8_t>(PrintCategory::PRINT);
 
 
-
-//const uint8_t categoriesToPrint = static_cast<uint8_t>(PrintCategory::REPL);
+*/
+const uint8_t categoriesToPrint = static_cast<uint8_t>(PrintCategory::REPL) | static_cast<uint8_t>(PrintCategory::PRINT);
 #endif

@@ -120,12 +120,14 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) {
         // 39 is the code for "'". It's a cute way to have currentChar be non-zero
         // at the start and as a way to start the single-quoted string.
         String s = "";
-
+        boolean firstChar = true;
         while (memAddr < VM_MEM_SIZE && currentChar != 0) {
-          s += currentChar;
+          if (!firstChar && currentChar != 0)
+            s += currentChar;
+          firstChar = false;
           currentChar = readData<char>(memAddr++, false);
         }
-        return s + "'";
+        return s;
       }
     default:
       return "";
@@ -680,6 +682,7 @@ void VM::exec(Opcode opcode) {
           String s = getAsString(static_cast<uint8_t*>(&_reg[tr.reg2 * 4]), static_cast<DataMode>(tr.reg1));
           dprintln("Reg " + String(tr.reg2) + ", as " + VM::_dataModeStrings[tr.reg1] + " is " + s,
                    static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(s, static_cast<uint8_t>(PrintCategory::PRINT));
 
           break;
         }
@@ -756,7 +759,7 @@ void VM::printBindings() {
 
 
 void VM::printMem(uint16_t startAddr, uint16_t endAddr, boolean printAsCArray) {
-  dprintln(repeatString("M", 20));
+  dprintln(repeatString("M", 20), static_cast<uint8_t>(PrintCategory::REPL));
 
   String divider = "\n";
   String preamble = "";
@@ -784,17 +787,17 @@ void VM::printMem(uint16_t startAddr, uint16_t endAddr, boolean printAsCArray) {
 }
 
 void VM::printStack() {
-  dprintln(repeatString("S", 20));
+  dprintln(repeatString("S", 20), static_cast<uint8_t>(PrintCategory::REPL));
   for (uint16_t i = STACK_TOP - 1; i > STACK_TOP - _stackSize; i--) {
-    dprintln(String(i) + ": " + String(static_cast<uint8_t>(_mem[i])));
+    dprintln(String(i) + ": " + String(static_cast<uint8_t>(_mem[i])), static_cast<uint8_t>(PrintCategory::REPL));
   }
 }
 
 void VM::printRegisters() {
-  dprintln(repeatString("R", 20));
+  dprintln(repeatString("R", 20), static_cast<uint8_t>(PrintCategory::REPL));
   for (uint8_t i = 0; i < 16 ; i++) {
     uint32_t * regptr32 = reinterpret_cast<uint32_t*>(&_reg[i * 4]);
-    dprintln("Reg " + String(i) + ": " + String(*regptr32));
+    dprintln("Reg " + String(i) + ": " + String(*regptr32), static_cast<uint8_t>(PrintCategory::REPL));
   }
 }
 
