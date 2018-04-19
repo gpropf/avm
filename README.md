@@ -20,7 +20,7 @@ a simple high level language that targeted an equally simple virtual machine wit
 of the Arduino's basic IO and configuration tasks. The idea was that the machine would implement a very simple "operation
 system" in the form of round-robin processing. Each virtual task runs for a bit, then another, then another, etc... So
 maybe I should take the quotes off the OS since we have the basic notion of time slicing and hardware abstraction and management here.
-Usually though an OS is written *in* an assembly langauge (or C) whereas this was sort of an "implicit" OS built
+Usually though, an OS is written *in* an assembly langauge (or C) whereas this was sort of an "implicit" OS built
 into the VM. So whatever you call it, it's definitely a VM.
 
 ### This Idea is Impossible and Stupid! 
