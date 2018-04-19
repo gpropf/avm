@@ -38,7 +38,7 @@ out of writing machine code.
 3) The high level language (which I haven't written yet) will be written in Haskell and is mainly designed to help me learn more about that langauge
 and use its powerful Parsec parsing library. None of that runs on the 'Duino. It just targets the VM. I also have some
 vague ideas about writing a Haskell program to run on Linux and do code transforms on the fly since...
-4) There will be some sort-of cool features like hot-loading of code over the serial line without re-burning the SRAM
+4) There will be some sort-of cool features like hot-loading of code over the serial line without re-burning the Flash RAM
 5) I might also wrap the code up as a CMake project to run on Linux or other larger computers if I think it
 would be fun.
 
