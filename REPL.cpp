@@ -89,8 +89,6 @@ void REPL::parseCommand(String s)
       have the format: Action arg1 arg2 arg3
       where Action is the action name and there
       are 3 optional arguments
-
-
   */
 
   /*
@@ -122,11 +120,7 @@ void REPL::parseCommand(String s)
     //dprintln("s:" + s);
     i++;
   }
-  /*
-    for (uint8_t j = 0; j < i; j++) {
-      dprintln("Arg " + String(j) + ": " + args[j]);
-    }
-  */
+  
   String &action = args[0];
   if (action == "b" || action == "B") {
     // Bind command syntax is "[bB] pin address <AO|AI|DO|DI>"
@@ -168,7 +162,6 @@ void REPL::parseCommand(String s)
                  static_cast<uint8_t>(PrintCategory::REPL));
     }
 
-
     uint16_t addr = args[2].toInt();
     _vm->createBinding(pin, io, ad, addr);
     //_vm->set
@@ -200,7 +193,6 @@ void REPL::parseCommand(String s)
     _vm->printStatus();
   }
   else if (action == "c") {
-
     // c for "cast"
     String dm = args[1];
     uint16_t addr = args[2].toInt();

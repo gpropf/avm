@@ -7,13 +7,13 @@ from Asm import *
 filename = sys.argv[1]
 
 verbosity = True
-verbosity = False
+#verbosity = False
 
-program = chunkifyProgram(filename, verbose = verbosity)
+program = chunker(filename, verbose = verbosity)
 
-processPseudoCode(program)
+#processPseudoCode(program)
 print("========================")
-print(pseudoCodeRefs)
+#print(pseudoCodeRefs)
 
 # p1 = stage1(program, verbose = verbosity)
 # p2 = stage2(p1, verbose = verbosity)

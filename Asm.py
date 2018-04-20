@@ -143,9 +143,6 @@ instructions = {
     
 }
 
-pseudoInstructions = {
-    "u8": { 'args': ["NAME","VAL"], 'localCode': ["PUSH_CONST_8","VAL"]}
-}
 
 def chunkifyProgram(filename, verbose = False):
     """ Step 1 in the process is to break the text up into chunks delineated by whitespace """
@@ -178,9 +175,48 @@ def chunkifyProgram(filename, verbose = False):
 
 pseudoCodeRefs = {}
 
-def addRef(name="", refType = "", refVal = ""):
-    if name not in pseudoCodeRefs:
-        pseudoCodeRefs[name] = {}
+
+#call FUNCNAME (arg1,arg2,arg3...)
+
+#func FUNCNAME (t1 arg1,t2 arg2,t3 arg3...)
+
+
+def chunker(filename, verbose = False):
+    commentRe = re.compile(r'\w+|\W+')
+    chunks = []
+    if verbose:
+        print("================= chunker =================")
+    #print ("Filename: ", filename)
+    f = open(filename)
+    line = f.readline()
+    ip = 0
+    program = []
+    labelRefs = {}
+    while line:
+        line = re.findall(r'\w+|\W+', line)
+        line = list(map (lambda s: s.strip(),line))
+        line = list(filter(lambda x: x != "", line))
+        for chunk in line:
+            chunks.append(chunk)
+        if verbose:
+            print (chunk)
+        
+        line = f.readline()
+        
+    f.close()
+    if verbose:
+        print ("---------------- All Chunks ----------------")
+        print (chunks)
+
+pseudoInstructions = {
+    "u8": { 'args': ["NAME","VAL"], 'localCode': ["PUSH_CONST_8","VAL"]},
+   # "call": {'args': 
+}
+
+def addRef(name="", refType = "", refVal = "", scope = "local"):
+
+    if name not in pseudoCodeRefs:        
+        pseudoCodeRefs[name] = {'scope':scope}
     if refType:
         pseudoCodeRefs[name]['type'] = refType
     if refVal:
@@ -193,6 +229,7 @@ def processPseudoCode(chunks):
     chunksRev.reverse()
     #chunksRev = chunksRevTmp.copy()
     #print(chunksRev)
+    insideFunction = False
     while chunksRev:
         chunk = chunksRev.pop()
         #print(chunk)
@@ -202,10 +239,19 @@ def processPseudoCode(chunks):
                 argVal = chunksRev.pop()
                 if arg == "NAME":
                     refName = argVal
-                    addRef(name = refName, refType = chunk)
+                    if insideFunction:
+                        scope = "local"
+                    else:
+                        scope = "global"
+                        
+                    addRef(name = refName, refType = chunk, scope = scope)
                 elif arg == "VAL":
                     addRef(name = refName, refVal = argVal)
                 print (chunk + " ARG:" + arg + " = " + argVal)
+        elif chunk == "func":
+            insideFunction = True
+        elif chunk == "RET":
+            insideFunction = False
 
 def stage1(program, verbose = False):    
     """ Look up each chunk and replace with annotated metadata if it's an instruction mnemonic """ 
