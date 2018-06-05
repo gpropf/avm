@@ -399,6 +399,7 @@ uint8_t * VM::getPtr(uint16_t addr, Location locationType) {
 }
 
 static Opcode VM::getOpcodeByDataWidth(Opcode c, uint8_t dw) {
+ /* This is the inverse of the VM::getOpcodeAndDataWidth(Opcode c) method */
   uint8_t cval = static_cast<uint8_t>(c);
   switch (dw) {
     case 1:
@@ -417,6 +418,10 @@ static Opcode VM::getOpcodeByDataWidth(Opcode c, uint8_t dw) {
 }
 
 static OpcodeAndDataWidth VM::getOpcodeAndDataWidth(Opcode c) {
+ /* This function translates a raw opcode into its equivalent
+  *  8 bit code and a data width value in bytes. The data width value ("dw") 
+  *  is used to determine which actual operation to perfom.
+  */
   uint8_t cval = static_cast<uint8_t>(c);
   const uint8_t widths[] = {1, 2, 4};
   OpcodeAndDataWidth opcodeAndWidth;
@@ -499,6 +504,17 @@ void VM::exec(Opcode opcode) {
     createBinding(pin, io, ad, addr);
   }
   else if (opcode < Opcode::FIXED_WIDTH_BASE) {
+/* These instructions mostly end in "_8". This implies that their data substrate is 8 bit.
+ *  However, the code is written so that these instructions are repeated in 16 and 32 bit forms
+ *  directly above the 8 bit ones in numeric order in the instruction set (as interpreted as unsigned
+ *  8 bit ints). The code can distiguish these instructions and apply the operation to the correct
+ *  data width. This makes use of the special OpcodeAndDataWidth data structure and the function
+ *  VM::getOpcodeAndDataWidth(opcode). This function translates a raw opcode into its equivalent
+ *  8 bit code and a data width value in bytes. The data width value ("dw") is used to determine which
+ *  actual operation to perfom.
+ *  
+ */
+
 
     uint8_t * srcptr;
     uint8_t * destptr;
@@ -665,7 +681,11 @@ void VM::exec(Opcode opcode) {
   }
   else {
 
-    // Above FIXED_WIDTH_BASE instructions
+    /*  Above FIXED_WIDTH_BASE instructions. These instructions do not
+        exist in more than one form (i.e. the data they operate on, if any,
+        is of a single fixed width so they have a numeric value above that of
+        FIXED_WIDTH_BASE, at least at present.
+    */
 
     switch (opcode) {
       case Opcode::SP_ADJ: {
@@ -755,8 +775,6 @@ void VM::printBindings() {
   for (uint8_t i = 0; i < NUM_PINS; i++)
     _pinBindings[i].print();
 }
-
-
 
 void VM::printMem(uint16_t startAddr, uint16_t endAddr, boolean printAsCArray) {
   dprintln(repeatString("M", 20), static_cast<uint8_t>(PrintCategory::REPL));
