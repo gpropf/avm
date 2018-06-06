@@ -25,4 +25,6 @@ def emitCode(instructions, codeType = "C++"):
 with open("instruction_set.json", "r") as read_file:
     data = json.load(read_file)
     emitCode(data["instructions"]["multiWidth"])
+    print()
+    emitCode(data["instructions"]["fixedWidth"])
 

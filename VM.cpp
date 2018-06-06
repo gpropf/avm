@@ -399,7 +399,7 @@ uint8_t * VM::getPtr(uint16_t addr, Location locationType) {
 }
 
 static Opcode VM::getOpcodeByDataWidth(Opcode c, uint8_t dw) {
- /* This is the inverse of the VM::getOpcodeAndDataWidth(Opcode c) method */
+  /* This is the inverse of the VM::getOpcodeAndDataWidth(Opcode c) method */
   uint8_t cval = static_cast<uint8_t>(c);
   switch (dw) {
     case 1:
@@ -418,9 +418,9 @@ static Opcode VM::getOpcodeByDataWidth(Opcode c, uint8_t dw) {
 }
 
 static OpcodeAndDataWidth VM::getOpcodeAndDataWidth(Opcode c) {
- /* This function translates a raw opcode into its equivalent
-  *  8 bit code and a data width value in bytes. The data width value ("dw") 
-  *  is used to determine which actual operation to perfom.
+  /* This function translates a raw opcode into its equivalent
+      8 bit code and a data width value in bytes. The data width value ("dw")
+      is used to determine which actual operation to perfom.
   */
   uint8_t cval = static_cast<uint8_t>(c);
   const uint8_t widths[] = {1, 2, 4};
@@ -504,16 +504,16 @@ void VM::exec(Opcode opcode) {
     createBinding(pin, io, ad, addr);
   }
   else if (opcode < Opcode::FIXED_WIDTH_BASE) {
-/* These instructions mostly end in "_8". This implies that their data substrate is 8 bit.
- *  However, the code is written so that these instructions are repeated in 16 and 32 bit forms
- *  directly above the 8 bit ones in numeric order in the instruction set (as interpreted as unsigned
- *  8 bit ints). The code can distiguish these instructions and apply the operation to the correct
- *  data width. This makes use of the special OpcodeAndDataWidth data structure and the function
- *  VM::getOpcodeAndDataWidth(opcode). This function translates a raw opcode into its equivalent
- *  8 bit code and a data width value in bytes. The data width value ("dw") is used to determine which
- *  actual operation to perfom.
- *  
- */
+    /* These instructions mostly end in "_8". This implies that their data substrate is 8 bit.
+        However, the code is written so that these instructions are repeated in 16 and 32 bit forms
+        directly above the 8 bit ones in numeric order in the instruction set (as interpreted as unsigned
+        8 bit ints). The code can distiguish these instructions and apply the operation to the correct
+        data width. This makes use of the special OpcodeAndDataWidth data structure and the function
+        VM::getOpcodeAndDataWidth(opcode). This function translates a raw opcode into its equivalent
+        8 bit code and a data width value in bytes. The data width value ("dw") is used to determine which
+        actual operation to perfom.
+
+    */
 
 
     uint8_t * srcptr;
@@ -532,7 +532,30 @@ void VM::exec(Opcode opcode) {
           dprintln(F("CMP_INT_8"), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair rp = getRegPair(targetRegisters);
-          switch (opPair.dw) {
+
+          /*
+             To save SRAM I got rid of the "correct code" in the commented out
+             switch block and do all comparisons with 32 bit data.
+          */
+
+          int32_t r1;
+          int32_t r2;
+          castRegData(r1, r2, rp);
+          if (r1 < r2) {
+            dprintln("R1 < R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
+            _cmpReg = Comparison::LESS_THAN;
+          }
+          else if (r1 > r2) {
+            dprintln("R1 > R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
+            _cmpReg = Comparison::GREATER_THAN;
+          }
+          else {
+            dprintln("R1 = R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
+            _cmpReg = Comparison::EQUAL;
+          }
+
+          /*
+            switch (opPair.dw) {
             case 1: {
                 int8_t r1;
                 int8_t r2;
@@ -552,13 +575,43 @@ void VM::exec(Opcode opcode) {
                 break;
               }
             case 2: {
+                int16_t r1;
+                int16_t r2;
+                castRegData(r1, r2, rp);
+                if (r1 < r2) {
+                  dprintln("R1 < R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
+                  _cmpReg = Comparison::LESS_THAN;
+                }
+                else if (r1 > r2) {
+                  dprintln("R1 > R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
+                  _cmpReg = Comparison::GREATER_THAN;
+                }
+                else {
+                  dprintln("R1 = R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
+                  _cmpReg = Comparison::EQUAL;
+                }
                 break;
               }
             case 4: {
+                int32_t r1;
+                int32_t r2;
+                castRegData(r1, r2, rp);
+                if (r1 < r2) {
+                  dprintln("R1 < R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
+                  _cmpReg = Comparison::LESS_THAN;
+                }
+                else if (r1 > r2) {
+                  dprintln("R1 > R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
+                  _cmpReg = Comparison::GREATER_THAN;
+                }
+                else {
+                  dprintln("R1 = R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
+                  _cmpReg = Comparison::EQUAL;
+                }
                 break;
               }
 
-          }
+            } */
           break;
         }
       case Opcode::MOV_SPREL2_REG_8: {
