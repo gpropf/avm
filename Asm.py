@@ -1,4 +1,5 @@
 
+
 import re
 
 import struct, itertools, json
@@ -120,8 +121,17 @@ RET = 254
 
 """
 
+NO_OPCODE_YET = -100000
+
+
 labelRefs = {}
 dataWidths = {'H':2,'h':2,'i':4,'I':4,'f':4,'b':1,'B':1, 'N':'N'}
+
+## For argFormats and formatCode below the codes are as follows:
+## ====================================================================
+## H: 16 bits, typically an address
+## B: 8 bits, usually a data constant or stack offset
+## N: a "nibble", 4 bits. Used to pack 2 register indices into a single byte.
 
 instructions = {
     "BINDAI": {'opcode':BINDAI, 'argFormats':['H','B'], 'formatCode':'B'},
@@ -145,6 +155,8 @@ instructions = {
     "INC_SPREL_UINT_8": {'opcode': INC_SPREL_UINT_8, 'argFormats':['B'], 'formatCode':'B'},
     "SP_ADJ": {'opcode': SP_ADJ, 'argFormats':['B'], 'formatCode':'B'},
 }
+
+instructions = { **instructions, **mdFixedWidth, **mdMultiWidth }
 
 
 def chunkifyProgram(filename, verbose = False):
@@ -345,17 +357,33 @@ def printAsHexString(program):
     print(hexstr)
     
 
+def makeMetadataForOpcode(mnemonic, argFormats, formatCode):
+    try:
+        opcode = eval(mnemonic)
+    except:
+        opcode = NO_OPCODE_YET
+        
+    md = {'opcode': opcode, 'argFormats':argFormats, 'formatCode':formatCode}
+    return md
+
+    
 def emitCode(instructions, outf, codeType = "C++"):
     currentBase = ""
     singleLineCommentStart = "// "
     offset = 0
     comma = ", "
+    metadata = {}
     if codeType != "C++":
         singleLineCommentStart = "## "
         comma = " "
 
     for instr in instructions:
+        mnemonic = instr["mnemonic"]
         comments = ""
+        if "argFormats" in instr and "formatCode" in instr and codeType != "C++":
+            argFormats = instr["argFormats"]
+            formatCode = instr["formatCode"]
+            metadata[mnemonic] = makeMetadataForOpcode(mnemonic, argFormats, formatCode)
         if "comments" in instr:
             comments = singleLineCommentStart + instr["comments"]
         base = instr["base"]
@@ -365,6 +393,7 @@ def emitCode(instructions, outf, codeType = "C++"):
         else:
             offset = offset + 1
         outf.write (instr["mnemonic"] + " = " + base + " + " + str(offset) + comma + comments + "\n")
+    return metadata
     
 
 
@@ -386,8 +415,16 @@ def buildPythonConstants(filename):
         data = json.load(read_file)
         outf.write ("###### Python Instruction Codes Constant Block ######\n")
         outf.write("\n## ----------------------------------- \tVARIABLE DATA WIDTH INSTRUCTIONS \t\n")
-        emitCode(data["instructions"]["multiWidth"], outf, "Python")
+        mdMultiWidth = emitCode(data["instructions"]["multiWidth"], outf, "Python")
         outf.write("\n## ----------------------------------- \tFIXED DATA WIDTH INSTRUCTIONS \t\n")
-        emitCode(data["instructions"]["fixedWidth"], outf, "Python")
+        mdFixedWidth = emitCode(data["instructions"]["fixedWidth"], outf, "Python")
         outf.write ("### END Python Constants ###\n")
+        outf.write ("\n\n### Begin Python Metadata ###\n")
+        outf.write("\n## ----------------------------------- \tVARIABLE DATA WIDTH INSTRUCTIONS \t\n")
+        outf.write("mdFixedWidth = " + str(mdFixedWidth))
+        outf.write("\n## ----------------------------------- \tFIXED DATA WIDTH INSTRUCTIONS \t\n")
+        outf.write("mdMultiWidth = " + str(mdMultiWidth))
+        outf.write ("\n\n### End Python Metadata ###\n")
+        
         outf.close()
+        return (mdMultiWidth,mdFixedWidth)

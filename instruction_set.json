@@ -66,11 +66,10 @@
 	    { "mnemonic" : "BIND_BASE", "base" : "JUMP_BASE", "offset" : "5", "comments" : "Bind Operations Base" },
 	    { "mnemonic" : "BINDAI", "base" : "BIND_BASE", "comments" : "A16 V8: Bind a mem address (uint16_t) (analog input) to a pin (uint8_t)" },
 	    { "mnemonic" : "BINDDI", "base" : "BIND_BASE", "offset" : "1", "comments" : "A16 V8: Bind a mem address (uint16_t) (digital input) to a pin (uint8_t)" },
-	    { "mnemonic" : "BINDAO", "base" : "BIND_BASE", "offset" : "2", "comments" : "A16 V8: Bind a mem address (uint16_t) (analog out) to a pin (uint8_t)" },
+	    { "mnemonic" : "BINDAO", "base" : "BIND_BASE", "argFormats":["H","B"], "formatCode":"B", "comments" : "A16 V8: Bind a mem address (uint16_t) (analog out) to a pin (uint8_t)" },
 	    { "mnemonic" : "BINDDO", "base" : "BIND_BASE", "offset" : "3", "comments" : "A16 V8: Bind a mem address (uint16_t) (digital output) to a pin (uint8_t)" },
 	    { "mnemonic" : "BINDAP", "base" : "BIND_BASE", "offset" : "4", "comments" : "A16 V8: Bind a mem address (uint16_t) (analog input-pullup) to a pin (uint8_t)" },
 	    { "mnemonic" : "BINDDP", "base" : "BIND_BASE", "offset" : "5", "comments" : "A16 V8: Bind a mem address (uint16_t) (digital input-pullup) to a pin (uint8_t)" },
-
 
 	    { "mnemonic" : "SP_ADJ", "base" : "BIND_BASE", "offset" : "6", "comments" : " increment the SP without pop. Takes uint8_t as arg." },
 	    { "mnemonic" : "PRINT_AS", "base" : "BIND_BASE", "offset" : "7", "comments" : " Takes an 8 bit operand. First nibble is register to print, 2nd is type to print as." },
