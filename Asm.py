@@ -333,6 +333,17 @@ def printAsCStr(program):
     print(cstr)
   
 
+def printAsHexString(program):
+    """print program a block of hex characters:"""
+    hexstr = ""
+    for code in program:
+        hexDigits = hex(code)[2:]
+        if len(hexDigits) == 1:
+            hexDigits = "0" + hexDigits
+        hexstr = hexstr + hexDigits
+        print(hexstr + ":" + str(code))
+    print(hexstr)
+    
 
 def emitCode(instructions, outf, codeType = "C++"):
     currentBase = ""

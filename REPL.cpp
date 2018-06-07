@@ -80,6 +80,24 @@ void REPL::loop(String subPrompt) {
   }
 }
 
+uint8_t REPL::hexToDec(char hex) {
+  if (hex < 65)
+    return hex - 48;
+  return hex - 87;
+}
+
+void REPL::loadProgram(String programStr, uint16_t addr) {
+
+  for (uint16_t i = 0; i < programStr.length(); i += 2) {
+    uint8_t lowByte = programStr.charAt(i + 1);
+    uint8_t highByte = programStr.charAt(i);
+    lowByte = hexToDec(lowByte);
+    highByte = hexToDec(highByte);
+    highByte = highByte * 16 + lowByte;
+    dprint(String(lowByte) + ":" + String(highByte) + "\n", static_cast<uint8_t>(PrintCategory::REPL));
+    _vm->_mem[addr++] = highByte;
+  }
+}
 
 void REPL::parseCommand(String s)
 {
@@ -101,6 +119,7 @@ void REPL::parseCommand(String s)
      Q: Print the stack
      ~: Print status
      C: Cast something in memory as one of u8, u16, u32, i8, i16, i32, fl, str
+     L: Load progran in args[2] into address specified in args[1]
   */
 
   int startIndex = 0;
@@ -206,8 +225,15 @@ void REPL::parseCommand(String s)
     uint16_t addr = args[2].toInt();
     dprint(F("mem["));
     dprint(String(addr) + "] ", static_cast<uint8_t>(PrintCategory::REPL));
-    dprintln("as " + dm + ": " + _vm->getAsString(addr,dm), static_cast<uint8_t>(PrintCategory::REPL));
+    dprintln("as " + dm + ": " + _vm->getAsString(addr, dm), static_cast<uint8_t>(PrintCategory::REPL));
 
+  }
+  else if (action == "l") {
+    uint16_t addr = args[1].toInt();
+    String programStr = args[2];
+    dprint(F("LOADING @ mem["));
+    dprint(String(addr) + "] " + programStr + "\n", static_cast<uint8_t>(PrintCategory::REPL));
+    loadProgram(programStr, addr);
   }
 }
 

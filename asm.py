@@ -18,3 +18,5 @@ p4 = stage4(p3, verbose = verbosity)
 p5 = stage5(p4, verbose = verbosity)
 
 printAsCStr(p5)
+print()
+printAsHexString(p5)

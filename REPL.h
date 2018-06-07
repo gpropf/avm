@@ -2,11 +2,11 @@
 #define REPL_h
 
 /* **************************************************
- *  REPL: This is meant to be a fairly generic REPL for any Arduino project
- *  where there might be a need for interaction with the project during its
- *  runtime.
+    REPL: This is meant to be a fairly generic REPL for any Arduino project
+    where there might be a need for interaction with the project during its
+    runtime.
  *  *************************************************
- */
+*/
 
 class REPL {
 
@@ -17,7 +17,7 @@ class REPL {
       RUN = 1
     };
 
-    enum Cmd: uint8_t {
+    enum Cmd : uint8_t {
       NOCMD = 0,
       BINDPIN = 1,
       PRINTMEM = 2,
@@ -43,8 +43,8 @@ class REPL {
     void loop(String subPrompt = "");
     VM * bindVM(VM * vm);
     void toggleStepping();
-    void parseCommand(String s); 
-    
+    void parseCommand(String s);
+
   private:
     RunMode _runMode = STEP;
     boolean _steppingMode = true;
@@ -52,6 +52,10 @@ class REPL {
     uint16_t cmdCount = 0;
     uint16_t _eptr = 0;
     VM *_vm;
+
+    void loadProgram(String programStr, uint16_t addr);
+    
+    uint8_t hexToDec(char hex);
 };
 
 
