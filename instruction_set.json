@@ -27,7 +27,6 @@
 	    { "mnemonic" : "MOV_REG2_REG_8", "base" : "MOV_BASE_8", "offset" : "9" },
 
 	    { "mnemonic" : "PUSH_BASE_8", "base" : "MOV_BASE_8", "offset" : "10", "comments" : "Push Operations Base" },
-	    { "mnemonic" : "PP_START_8", "base" : "PUSH_BASE_8" },
 	    { "mnemonic" : "PUSH_MEM_8", "base" : "PUSH_BASE_8" },
 	    { "mnemonic" : "PUSH_SPREL_8", "base" : "PUSH_BASE_8", "offset" : "1" },
 	    { "mnemonic" : "PUSH_REGS_8", "base" : "PUSH_BASE_8", "offset" : "2", "comments" : " push one or two registers [R4,R4], if both are the same register then push only that one." },
@@ -36,13 +35,13 @@
 
 	    { "mnemonic" : "POP_BASE_8", "base" : "PUSH_BASE_8", "offset" : "5", "comments" : "Pop Operations Base" },
 	    { "mnemonic" : "POP_REGS_8", "base" : "POP_BASE_8", "comments" : "Same as push, if there are two differe nt regs this pops 2 values." },
-	    { "mnemonic" : "PP_END_8", "base" : "POP_REGS_8" },
 
-	    { "mnemonic" : "CMP_BASE", "base" : "PP_END_8", "offset" : "1", "comments" : "Comparison Operations Base" },
+	    { "mnemonic" : "CMP_BASE", "base" : "POP_BASE_8", "offset" : "1", "comments" : "Comparison Operations Base" },
 	    { "mnemonic" : "CMP_INT_8", "base" : "CMP_BASE" },
 	    { "mnemonic" : "CMP_UINT_8", "base" : "CMP_BASE", "offset" : "1" },
 
-	    { "mnemonic" : "INC_BASE", "base" : "CMP_UINT_8", "offset" : "1", "comments" : "Inc Operations Base" },
+	    { "mnemonic" : "INC_BASE_spacer", "base" : "CMP_BASE", "offset" : "1", "comments" : "Inc Operations Base" },
+	    { "mnemonic" : "INC_BASE", "base" : "CMP_BASE", "offset" : "1", "comments" : "Inc Operations Base" },
 	    { "mnemonic" : "INC_SPREL_UINT_8", "base" : "INC_BASE", "offset" : "1" },
 	    { "mnemonic" : "INC_SPREL_INT_8", "base" : "INC_BASE", "offset" : "2" },
 
@@ -75,10 +74,11 @@
 
 	    { "mnemonic" : "SP_ADJ", "base" : "BIND_BASE", "offset" : "6", "comments" : " increment the SP without pop. Takes uint8_t as arg." },
 	    { "mnemonic" : "PRINT_AS", "base" : "BIND_BASE", "offset" : "7", "comments" : " Takes an 8 bit operand. First nibble is register to print, 2nd is type to print as." },
-	    { "mnemonic" : "NOOP", "base" : "0", "offset" : "249", "comments" : "Top Operations Base" },
-	    { "mnemonic" : "NOOP_INIT", "base" : "0", "offset" : "250" },
-	    { "mnemonic" : "CALL", "base" : "0", "offset" : "255", "comments" : " Takes a uint16_t address of the function to call. Automatically saves return address" },
-	    { "mnemonic" : "RET", "base" : "0", "offset" : "254", "comments" : " Uses stored return address and leaves return value on stack" }
+	     { "mnemonic" : "TOP_BASE", "base" : "249", "offset" : "5", "comments" : "Bind Operations Base" },
+	    { "mnemonic" : "NOOP", "base" : "TOP_BASE", "offset" : "249", "comments" : "Top Operations Base" },
+	    { "mnemonic" : "NOOP_INIT", "base" : "TOP_BASE", "offset" : "250" },
+	    { "mnemonic" : "CALL", "base" : "255", "offset" : "255", "comments" : " Takes a uint16_t address of the function to call. Automatically saves return address" },
+	    { "mnemonic" : "RET", "base" : "254", "offset" : "254", "comments" : " Uses stored return address and leaves return value on stack" }
 	]
     }
 }

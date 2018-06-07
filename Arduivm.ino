@@ -61,7 +61,7 @@ void setup() {
   Serial.begin(57600);
 
   dprintln(repeatString("*", 60), static_cast<uint8_t>(PrintCategory::REPL));
-  dprintln(F("Arduivm: v0.11-cmake.0"), static_cast<uint8_t>(PrintCategory::REPL));
+  dprintln(F("Arduivm: v0.12-cmake.0"), static_cast<uint8_t>(PrintCategory::REPL));
   dprintln(repeatString("*", 60), static_cast<uint8_t>(PrintCategory::REPL));
   dprintln("END_8:" + String(static_cast<uint8_t>(Opcode::END_8)),
            static_cast<uint8_t>(PrintCategory::REPL));

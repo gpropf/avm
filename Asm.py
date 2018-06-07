@@ -357,4 +357,4 @@ def buildCHeader(filename):
         emitCode(data["instructions"]["multiWidth"])
         print("\n// ----------------------------------- \tFIXED DATA WIDTH INSTRUCTIONS \t\n")
         emitCode(data["instructions"]["fixedWidth"])
-        print ("}")
+        print ("};")

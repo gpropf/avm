@@ -1,5 +1,6 @@
 #ifndef VM_h
 #define VM_h
+
 /*
   enum class AddressingMode : uint8_t {
   REL, ABS
@@ -34,6 +35,9 @@ struct RegPair {
   uint8_t reg2;
 };
 
+
+#include "instruction_set.h"
+/*
 enum class Opcode : uint8_t {
   MATH_BASE_8 = 0,
   ADD_UINT_8 = MATH_BASE_8,
@@ -60,7 +64,7 @@ enum class Opcode : uint8_t {
   MOV_REG2_REG_8 = MOV_BASE_8 + 9,
 
   PUSH_BASE_8 = MOV_BASE_8 + 10,
-  PP_START_8 = PUSH_BASE_8,
+ // PP_START_8 = PUSH_BASE_8,
   PUSH_MEM_8 = PUSH_BASE_8,
   PUSH_SPREL_8 = PUSH_BASE_8 + 1,
   PUSH_REGS_8 = PUSH_BASE_8 + 2, // push one or two registers [R4,R4], if both are the same register then push only that one.
@@ -69,20 +73,24 @@ enum class Opcode : uint8_t {
 
   POP_BASE_8 = PUSH_BASE_8 + 5,
   POP_REGS_8 = POP_BASE_8, // Same as push, if there are two differe nt regs this pops 2 values.
-  PP_END_8 = POP_REGS_8,
+  //PP_END_8 = POP_REGS_8,
 
-  CMP_BASE = PP_END_8 + 1,
+  CMP_BASE = POP_BASE_8 + 1,
   CMP_INT_8 = CMP_BASE,
   CMP_UINT_8 = CMP_BASE + 1,
 
-  INC_BASE = CMP_UINT_8 + 1,
+  INC_BASE = CMP_BASE + 2,
   INC_SPREL_UINT_8 = INC_BASE + 1,
   INC_SPREL_INT_8 = INC_BASE + 2,
 
-  INC_END = INC_SPREL_INT_8,
+  //INC_END = INC_SPREL_INT_8,
 
-  END_8 = INC_END,
+  END_8 = INC_SPREL_INT_8,
 
+
+
+
+  
   // **************************************
   // Below this we only need one of each instruction since there are not multiple data widths.
   FIXED_WIDTH_BASE = 200,
@@ -112,8 +120,10 @@ enum class Opcode : uint8_t {
   CALL = 255, // Takes a uint16_t address of the function to call. Automatically saves return address
   RET = 254, // Uses stored return address and leaves return value on stack
 
+ 
+ 
 };
-
+*/
 
 struct OpcodeAndDataWidth {
   Opcode c;
