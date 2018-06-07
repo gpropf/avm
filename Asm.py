@@ -1,7 +1,7 @@
 
 import re
 
-import struct, itertools
+import struct, itertools, json
 
 class RefTranslator:
     def __init__(self, patternHash):
@@ -330,3 +330,31 @@ def printAsCStr(program):
   
 
 
+def emitCode(instructions, codeType = "C++"):
+    currentBase = ""
+    singleLineCommentStart = "// "
+    offset = 0
+
+    for instr in instructions:
+        comments = ""
+        if "comments" in instr:
+            comments = singleLineCommentStart + instr["comments"]
+        base = instr["base"]
+        if base != currentBase:
+            currentBase = base
+            offset = 0
+        else:
+            offset = offset + 1
+        print (instr["mnemonic"] + " = " + base + " + " + str(offset) + ", " + comments)
+    
+
+
+def buildCHeader(filename):
+    with open(filename, "r") as read_file:
+        data = json.load(read_file)
+        print ("enum class Opcode : uint8_t {")
+        print("\n// ----------------------------------- \tVARIABLE DATA WIDTH INSTRUCTIONS \t\n")
+        emitCode(data["instructions"]["multiWidth"])
+        print("\n// ----------------------------------- \tFIXED DATA WIDTH INSTRUCTIONS \t\n")
+        emitCode(data["instructions"]["fixedWidth"])
+        print ("}")

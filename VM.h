@@ -166,6 +166,7 @@ class VM {
     //static const String dwStrings[3] = {"8", "16", "32"};
     static const char* _dataModeStrings[8];
     uint8_t * getPtr(uint16_t addr, Location locationType);
+    void loadRegWithConst(uint8_t reg, uint32_t c = 0); 
     RegPair getRegPair(uint8_t registers);
     uint16_t _ip16;
 
@@ -200,7 +201,10 @@ class VM {
 
 
     void moveData(uint8_t * srcptr, uint8_t * destptr, uint8_t datumWidth);
-    void changeIP(int16_t addressDelta = 0);
+    
+    // The zero in changeIP acts as a semaphor value causing the address to reset to its original value.
+    void changeIP(int16_t addressDelta = 0); 
+    
     inline void setIP(uint16_t newIP) {
       _ip16 = newIP;
     }

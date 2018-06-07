@@ -7,24 +7,10 @@
 # for the C++ source code.
 
 import json
+from Asm import *
 
-def emitCode(instructions, codeType = "C++"):
-    currentBase = ""
-    offset = 0
-    for instr in instructions:
-        base = instr["base"]
-        if base != currentBase:
-            currentBase = base
-            offset = 0
-        else:
-            offset = offset + 1
-        print (instr["mnemonic"] + " = " + base + " + " + str(offset) + ",")
-    
+def main():
+    buildCHeader("instruction_set.json")
 
 
-with open("instruction_set.json", "r") as read_file:
-    data = json.load(read_file)
-    emitCode(data["instructions"]["multiWidth"])
-    print()
-    emitCode(data["instructions"]["fixedWidth"])
-
+main()
