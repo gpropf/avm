@@ -3,6 +3,8 @@ import re
 
 import struct, itertools, json
 
+from instruction_set import *
+
 class RefTranslator:
     def __init__(self, patternHash):
         self.patternHash = patternHash
@@ -40,6 +42,7 @@ ph = { pfloat:getFloat, pint:getInt}
 
 translator = RefTranslator(ph)
 
+"""
 
 MATH_BASE_8 = 0
 ADD_UINT_8 = MATH_BASE_8
@@ -115,6 +118,7 @@ NOOP_INIT = 250
 CALL = 255 
 RET = 254
 
+"""
 
 labelRefs = {}
 dataWidths = {'H':2,'h':2,'i':4,'I':4,'f':4,'b':1,'B':1, 'N':'N'}
@@ -330,10 +334,14 @@ def printAsCStr(program):
   
 
 
-def emitCode(instructions, codeType = "C++"):
+def emitCode(instructions, outf, codeType = "C++"):
     currentBase = ""
     singleLineCommentStart = "// "
     offset = 0
+    comma = ", "
+    if codeType != "C++":
+        singleLineCommentStart = "## "
+        comma = " "
 
     for instr in instructions:
         comments = ""
@@ -345,16 +353,30 @@ def emitCode(instructions, codeType = "C++"):
             offset = 0
         else:
             offset = offset + 1
-        print (instr["mnemonic"] + " = " + base + " + " + str(offset) + ", " + comments)
+        outf.write (instr["mnemonic"] + " = " + base + " + " + str(offset) + comma + comments + "\n")
     
 
 
 def buildCHeader(filename):
-    with open(filename, "r") as read_file:
+    outf = open(filename + ".h", "w")
+    with open(filename + ".json", "r") as read_file:
         data = json.load(read_file)
-        print ("enum class Opcode : uint8_t {")
-        print("\n// ----------------------------------- \tVARIABLE DATA WIDTH INSTRUCTIONS \t\n")
-        emitCode(data["instructions"]["multiWidth"])
-        print("\n// ----------------------------------- \tFIXED DATA WIDTH INSTRUCTIONS \t\n")
-        emitCode(data["instructions"]["fixedWidth"])
-        print ("};")
+        outf.write ("enum class Opcode : uint8_t {\n")
+        outf.write("\n// ----------------------------------- \tVARIABLE DATA WIDTH INSTRUCTIONS \t\n")
+        emitCode(data["instructions"]["multiWidth"], outf)
+        outf.write("\n// ----------------------------------- \tFIXED DATA WIDTH INSTRUCTIONS \t\n")
+        emitCode(data["instructions"]["fixedWidth"], outf)
+        outf.write ("};\n")
+        outf.close()
+
+def buildPythonConstants(filename):
+    outf = open(filename + ".py", "w")
+    with open(filename + ".json", "r") as read_file:
+        data = json.load(read_file)
+        outf.write ("###### Python Instruction Codes Constant Block ######\n")
+        outf.write("\n## ----------------------------------- \tVARIABLE DATA WIDTH INSTRUCTIONS \t\n")
+        emitCode(data["instructions"]["multiWidth"], outf, "Python")
+        outf.write("\n## ----------------------------------- \tFIXED DATA WIDTH INSTRUCTIONS \t\n")
+        emitCode(data["instructions"]["fixedWidth"], outf, "Python")
+        outf.write ("### END Python Constants ###\n")
+        outf.close()

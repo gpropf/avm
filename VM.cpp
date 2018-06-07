@@ -121,12 +121,15 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) {
         // at the start and as a way to start the single-quoted string.
         String s = "";
         boolean firstChar = true;
+       // dprintln("memAddr:" + String(memAddr), static_cast<uint8_t>(PrintCategory::REPL));
         while (memAddr < VM_MEM_SIZE && currentChar != 0) {
           if (!firstChar && currentChar != 0)
             s += currentChar;
           firstChar = false;
           currentChar = readData<char>(memAddr++, false);
         }
+       // dprintln("STRING:" + s, static_cast<uint8_t>(PrintCategory::REPL));
+
         return s;
       }
     default:

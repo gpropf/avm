@@ -10,7 +10,8 @@ import json
 from Asm import *
 
 def main():
-    buildCHeader("instruction_set.json")
+    buildCHeader("instruction_set")
+    buildPythonConstants("instruction_set")
 
 
 main()
