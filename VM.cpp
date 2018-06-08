@@ -280,7 +280,7 @@ uint8_t VM::PinBinding::getPin() {
 }
 
 void VM::PinBinding::updatePin(VM & vm) {
-  
+
   if (_io == NOT_BOUND) {
     return;
   }
@@ -289,12 +289,12 @@ void VM::PinBinding::updatePin(VM & vm) {
     switch (_io) {
       case OUTPUT: {
           uint8_t val = vm.readData <uint8_t> (_address, false);
-  // We MUST set the flag that advances the IP to false if reading from a 
-  // specific address. This probably can be coded as policy into readDate()
-  // without problems but that needs to be tested.
+          // We MUST set the flag that advances the IP to false if reading from a
+          // specific address. This probably can be coded as policy into readDate()
+          // without problems but that needs to be tested.
           dprintln("Writing Analog Value: " + String(val) + " to pin " + String(_pin));
           analogWrite(_pin, val);
-          
+
           break;
         }
       case INPUT:
@@ -330,7 +330,7 @@ void VM::PinBinding::updatePin(VM & vm) {
         }
     }
   }
-  
+
 }
 
 void VM::printStatus() {
@@ -470,6 +470,11 @@ RegPair VM::getRegPair(uint8_t registers) {
   return rp;
 }
 
+String VM::OpcodeWithWidth2String(OpcodeAndDataWidth opdw) {
+  return String(opdw.dw * 8);
+}
+
+
 void VM::exec(Opcode opcode) {
   //dprintln("sp: " + String(_SP) + ",ip: " + String(_ip16), static_cast<uint8_t>(PrintCategory::REPL));
   uint8_t opcodeVal = static_cast<uint8_t>(opcode);
@@ -477,7 +482,7 @@ void VM::exec(Opcode opcode) {
 
   OpcodeAndDataWidth opPair = VM::getOpcodeAndDataWidth(opcode);
   dprint("Opcode: " + String(static_cast<uint8_t>(opPair.c)), static_cast<uint8_t>(PrintCategory::STATUS));
-  dprintln(", Data width : " + String(opPair.dw), static_cast<uint8_t>(PrintCategory::STATUS));
+  dprintln(", Data width : " + OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
   opcode = opPair.c;
   //uint8_t dw = opPair.dw;
   if (opcode == Opcode::BINDAO || opcode == Opcode::BINDAI ||
@@ -536,13 +541,14 @@ void VM::exec(Opcode opcode) {
 
     */
 
-   // dprintln("BELOW FIXED WIDTH BASE: IP = " + String(_ip16), static_cast<uint8_t>(PrintCategory::STATUS));
+    // dprintln("BELOW FIXED WIDTH BASE: IP = " + String(_ip16), static_cast<uint8_t>(PrintCategory::STATUS));
     uint8_t * srcptr;
     uint8_t * destptr;
     switch (opcode) {
       case Opcode::INC_SPREL_UINT_8: {
-          dprintln(F("INC_SPREL_UINT_8"), static_cast<uint8_t>(PrintCategory::STATUS)
+          dprint(F("INC_SPREL_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS)
                    & static_cast<uint8_t>(PrintCategory::MATH));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t sprel = readData <uint8_t> ();
           srcptr = getPtr(sprel, Location::SPREL);
           (*srcptr)++;
@@ -550,7 +556,8 @@ void VM::exec(Opcode opcode) {
         }
 
       case Opcode::CMP_INT_8: {
-          dprintln(F("CMP_INT_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("CMP_INT:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair rp = getRegPair(targetRegisters);
 
@@ -637,7 +644,8 @@ void VM::exec(Opcode opcode) {
           break;
         }
       case Opcode::MOV_SPREL2_REG_8: {
-          dprintln(F("MOV_SPREL2_REG_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("MOV_SPREL2_REG:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t sprel = readData <uint8_t> ();
           uint8_t reg = readData <uint8_t> ();
           /*  Zero the register first to clear out junk from high bytes
@@ -654,7 +662,8 @@ void VM::exec(Opcode opcode) {
           break;
         }
       case Opcode::MOV_MEM2_REG_8: {
-          dprintln(F("MOV_MEM2_REG_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("MOV_MEM2_REG:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint16_t addr = readData <uint16_t> ();
           uint8_t reg = readData <uint8_t> ();
           loadRegWithConst(reg);
@@ -664,7 +673,8 @@ void VM::exec(Opcode opcode) {
           break;
         }
       case Opcode::MOV_REG2_SPREL_8: {
-          dprintln(F("MOV_REG2_SPREL_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("MOV_REG2_SPREL:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t reg = readData <uint8_t> ();
           uint8_t sprel = readData <uint8_t> ();
           destptr = getPtr(sprel, Location::SPREL);
@@ -673,7 +683,8 @@ void VM::exec(Opcode opcode) {
           break;
         }
       case Opcode::MOV_REG2_MEM_8: {
-          dprintln(F("MOV_REG2_MEM_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("MOV_REG2_MEM:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t reg = readData <uint8_t> ();
           uint16_t mem = readData <uint16_t> ();
           destptr = getPtr(mem, Location::MEM);
@@ -682,7 +693,8 @@ void VM::exec(Opcode opcode) {
           break;
         }
       case Opcode::PUSH_CONST_8: {
-          dprintln(F("PUSH_CONST_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("PUSH_CONST:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           srcptr = getPtr(_ip16, Location::MEM);
           _ip16++;
           _SP -= opPair.dw;
@@ -691,7 +703,8 @@ void VM::exec(Opcode opcode) {
           break;
         }
       case Opcode::PUSH_MEM_8: {
-          dprintln(F("PUSH_MEM_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("PUSH_MEM:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint16_t addr = readData <uint16_t> ();
           srcptr = getPtr(addr, Location::MEM);
           _SP -= opPair.dw;
@@ -700,7 +713,8 @@ void VM::exec(Opcode opcode) {
           break;
         }
       case Opcode::POP_REGS_8: {
-          dprintln(F("POP_REGS_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("POP_REGS:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
 
@@ -720,7 +734,8 @@ void VM::exec(Opcode opcode) {
         }
       case Opcode::ADD_UINT_8: {
           // Add srcreg to destreg and leave the result in destreg
-          dprintln(F("WTF?!? ADD_UINT_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("WTF?!? ADD_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);
@@ -734,7 +749,8 @@ void VM::exec(Opcode opcode) {
         }
       case Opcode::MUL_UINT_8: {
           // Multiply srcreg and destreg and leave the result in destreg
-          dprintln(F("MUL_UINT_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("MUL_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);
@@ -748,7 +764,8 @@ void VM::exec(Opcode opcode) {
         }
       case Opcode::SUB_UINT_8: {
           // Substract srcreg from destreg and leave the result in destreg
-          dprintln(F("SUB_UINT_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("SUB_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);
@@ -770,7 +787,8 @@ void VM::exec(Opcode opcode) {
              and destreg with 2. Dividing now leaves you with srcreg = 16, destreg = 8.
              The system is thus not set up to divide again by the same value but its cofactor.
           */
-          dprintln(F("DIV_UINT_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("DIV_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);

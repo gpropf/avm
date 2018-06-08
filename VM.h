@@ -179,6 +179,7 @@ class VM {
     void loadRegWithConst(uint8_t reg, uint32_t c = 0); 
     RegPair getRegPair(uint8_t registers);
     uint16_t _ip16;
+    String OpcodeWithWidth2String(OpcodeAndDataWidth opdw); // Might not do this after all.
 
   public:
     uint8_t * _mem;
