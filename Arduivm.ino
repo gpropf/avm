@@ -52,7 +52,7 @@ void setup() {
   flashLEDs();
 
   const uint8_t program[] = {
-#include "pow.h"
+#include "read-and-blink.h"
     65, 86, 77, 10, 0, 0, 0, 79, 0, 0, 84, 0
   };
   uint8_t * srcptr = program;

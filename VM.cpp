@@ -121,14 +121,14 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) {
         // at the start and as a way to start the single-quoted string.
         String s = "";
         boolean firstChar = true;
-       // dprintln("memAddr:" + String(memAddr), static_cast<uint8_t>(PrintCategory::REPL));
+        // dprintln("memAddr:" + String(memAddr), static_cast<uint8_t>(PrintCategory::REPL));
         while (memAddr < VM_MEM_SIZE && currentChar != 0) {
           if (!firstChar && currentChar != 0)
             s += currentChar;
           firstChar = false;
           currentChar = readData<char>(memAddr++, false);
         }
-       // dprintln("STRING:" + s, static_cast<uint8_t>(PrintCategory::REPL));
+        // dprintln("STRING:" + s, static_cast<uint8_t>(PrintCategory::REPL));
 
         return s;
       }
@@ -280,6 +280,7 @@ uint8_t VM::PinBinding::getPin() {
 }
 
 void VM::PinBinding::updatePin(VM & vm) {
+  
   if (_io == NOT_BOUND) {
     return;
   }
@@ -287,9 +288,13 @@ void VM::PinBinding::updatePin(VM & vm) {
   if (_ad) {
     switch (_io) {
       case OUTPUT: {
-          uint16_t val = vm.readData <uint16_t> (_address);
-          dprintln("Writing Analog Value" + String(val) + " to pin " + String(_pin));
+          uint8_t val = vm.readData <uint8_t> (_address, false);
+  // We MUST set the flag that advances the IP to false if reading from a 
+  // specific address. This probably can be coded as policy into readDate()
+  // without problems but that needs to be tested.
+          dprintln("Writing Analog Value: " + String(val) + " to pin " + String(_pin));
           analogWrite(_pin, val);
+          
           break;
         }
       case INPUT:
@@ -308,7 +313,7 @@ void VM::PinBinding::updatePin(VM & vm) {
     // Digital IO
     switch (_io) {
       case OUTPUT: {
-          uint16_t val = vm.readData <uint16_t> (_address);
+          uint16_t val = vm.readData <uint16_t> (_address, false);
           dprintln("Writing Digital Value" + String(val) + " to pin " + String(_pin));
           digitalWrite(_pin, val);
           break;
@@ -325,6 +330,7 @@ void VM::PinBinding::updatePin(VM & vm) {
         }
     }
   }
+  
 }
 
 void VM::printStatus() {
@@ -530,7 +536,7 @@ void VM::exec(Opcode opcode) {
 
     */
 
-
+   // dprintln("BELOW FIXED WIDTH BASE: IP = " + String(_ip16), static_cast<uint8_t>(PrintCategory::STATUS));
     uint8_t * srcptr;
     uint8_t * destptr;
     switch (opcode) {
@@ -666,6 +672,15 @@ void VM::exec(Opcode opcode) {
           moveData(srcptr, destptr, opPair.dw);
           break;
         }
+      case Opcode::MOV_REG2_MEM_8: {
+          dprintln(F("MOV_REG2_MEM_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          uint8_t reg = readData <uint8_t> ();
+          uint16_t mem = readData <uint16_t> ();
+          destptr = getPtr(mem, Location::MEM);
+          srcptr = getPtr(reg, Location::REG);
+          moveData(srcptr, destptr, opPair.dw);
+          break;
+        }
       case Opcode::PUSH_CONST_8: {
           dprintln(F("PUSH_CONST_8"), static_cast<uint8_t>(PrintCategory::STATUS));
           srcptr = getPtr(_ip16, Location::MEM);
@@ -705,7 +720,7 @@ void VM::exec(Opcode opcode) {
         }
       case Opcode::ADD_UINT_8: {
           // Add srcreg to destreg and leave the result in destreg
-          dprintln(F("ADD_UINT_8"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(F("WTF?!? ADD_UINT_8"), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);

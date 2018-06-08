@@ -14,7 +14,7 @@
 	    { "mnemonic" : "SHR_8", "base" : "MATH_BASE_8", "offset" : "8" },
 	    
 	    { "mnemonic" : "MOV_BASE_8", "base" : "MATH_BASE_8", "offset" : "9", "comments" : "Move Operations Base" },
-	    { "mnemonic" : "MOV_REG2_MEM_8", "base" : "MOV_BASE_8" },
+	    { "mnemonic" : "MOV_REG2_MEM_8", "base" : "MOV_BASE_8", "argFormats":["B","H"], "formatCode":"B"  },
 	    { "mnemonic" : "MOV_MEM2_REG_8", "base" : "MOV_BASE_8", "offset" : "1" },
 	    { "mnemonic" : "MOV_REG2_SPREL_8", "base" : "MOV_BASE_8", "offset" : "2" },
 	    { "mnemonic" : "MOV_SPREL2_REG_8", "base" : "MOV_BASE_8", "offset" : "3" },
