@@ -345,15 +345,21 @@ def printAsCStr(program):
     print(cstr)
   
 
-def printAsHexString(program):
-    """print program a block of hex characters:"""
+def printAsHexString(program, addr = 0):
+    """print program as block of hex characters:"""
+    commandPrefix = "l "
     hexstr = ""
+    i = 0
     for code in program:
+        if i % 20 == 0:
+            hexstr = hexstr + "\n" + commandPrefix + str(addr) + " "
         hexDigits = hex(code)[2:]
         if len(hexDigits) == 1:
             hexDigits = "0" + hexDigits
         hexstr = hexstr + hexDigits
-        print(hexstr + ":" + str(code))
+        addr = addr + 1
+        i = i + 1
+        #print(hexstr)
     print(hexstr)
     
 

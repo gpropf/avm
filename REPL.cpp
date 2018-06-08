@@ -119,7 +119,8 @@ void REPL::parseCommand(String s)
      Q: Print the stack
      ~: Print status
      C: Cast something in memory as one of u8, u16, u32, i8, i16, i32, fl, str
-     L: Load progran in args[2] into address specified in args[1]
+     L: Load program in args[2] into address specified in args[1]
+     I: Set IP to the value in args[1]
   */
 
   int startIndex = 0;
@@ -234,6 +235,12 @@ void REPL::parseCommand(String s)
     dprint(F("LOADING @ mem["));
     dprint(String(addr) + "] " + programStr + "\n", static_cast<uint8_t>(PrintCategory::REPL));
     loadProgram(programStr, addr);
+  }
+  else if (action == "i") {
+    uint16_t newIP = args[1].toInt();    
+    _vm->setIP(newIP);    
+    dprint(F("IP = "));
+    dprint(String(newIP), static_cast<uint8_t>(PrintCategory::REPL));    
   }
 }
 
