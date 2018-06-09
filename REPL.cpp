@@ -97,6 +97,7 @@ void REPL::loadProgram(String programStr, uint16_t addr) {
     dprint(String(lowByte) + ":" + String(highByte) + "\n", static_cast<uint8_t>(PrintCategory::REPL));
     _vm->_mem[addr++] = highByte;
   }
+  //dprint("=======ENDENDEND\r\n\r\n\r\n", static_cast<uint8_t>(PrintCategory::REPL));
 }
 
 void REPL::parseCommand(String s)
