@@ -734,7 +734,7 @@ void VM::exec(Opcode opcode) {
         }
       case Opcode::ADD_UINT_8: {
           // Add srcreg to destreg and leave the result in destreg
-          dprint(F("WTF?!? ADD_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("ADD_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
