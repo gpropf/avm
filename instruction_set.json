@@ -3,7 +3,7 @@
 	"multiWidth": 
 	[
 	    { "mnemonic" : "MATH_BASE_8", "base" : "0", "comments" : "Math Operations Base" },
-	    { "mnemonic" : "ADD_UINT_8", "base" : "MATH_BASE_8" },
+	    { "mnemonic" : "ADD_UINT_8", "base" : "MATH_BASE_8", "argFormats":["N","N"], "formatCode":"B" },
 	    { "mnemonic" : "SUB_UINT_8", "base" : "MATH_BASE_8", "offset" : "1" },
 	    { "mnemonic" : "MUL_UINT_8", "base" : "MATH_BASE_8", "offset" : "2" },
 	    { "mnemonic" : "DIV_UINT_8", "base" : "MATH_BASE_8", "offset" : "3" },

@@ -858,8 +858,15 @@ void VM::exec(Opcode opcode) {
           break;
         }
       case Opcode::RET: {
+        /*
+         * SUPER IMPORTANT!!!!
+         * ==============================================================
+         * Return bounces you back to the address stored in reg0. Reg0 is special
+         * Don't put garbage there!!!!          
+         * ==============================================================
+         */
           uint16_t * retAddr = reinterpret_cast<uint16_t*>(&_reg[0]);
-          dprintln("RET to addr: " + String(*retAddr), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln("RET to addr in Reg0: " + String(*retAddr), static_cast<uint8_t>(PrintCategory::STATUS));
           _ip16 = *retAddr;
           break;
         }

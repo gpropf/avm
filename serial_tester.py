@@ -47,7 +47,7 @@ def main():
     print("Sleeping for 2...")
     time.sleep(2)
     
-    ser.write(b'l 20 09031a00fef9f9f9f9f9f9\n')
+    ser.write(b'l 20 090323000c0004004209042500fef9f9f9f9f9f9\n')
     print("============================== After Writing =========================")
     response = 1
     i = 0
@@ -60,17 +60,7 @@ def main():
 
 
     
-    print("Reading it back...")
     
-    ser.write(b'm 0 80\n')
-    time.sleep(1)
-    print("============================== After Writing =========================")
-    response = 1
-    i = 0
-    while response:
-        i = i + 1
-        response = ser.readline()
-        print(str(i) + ":" + response.decode(), end='')
 
     ser.write(b's 50\n')
     time.sleep(1)
@@ -92,7 +82,19 @@ def main():
         i = i + 1
         response = ser.readline()
         print(str(i) + ":" + response.decode(), end='')
-        
+
+
+    print("Reading Memory...")
+    
+    ser.write(b'm 0 40\n')
+    time.sleep(1)
+    print("============================== After Writing =========================")
+    response = 1
+    i = 0
+    while response:
+        i = i + 1
+        response = ser.readline()
+        print(str(i) + ":" + response.decode(), end='')
         #        print(response.decode())
    # ser.write(b'm 0 100\n')
    # response = ser.read(10)

@@ -196,7 +196,13 @@ def stage1(program, verbose = False):
         print("================= stage1 =================")
     for code in program:
         if code in instructions:
+                
             codeData = instructions[code]
+            
+            byteWidth = code[code.rfind("_")+1:]
+            if byteWidth in ["8","16","32"]:
+                byteWidth = int(byteWidth) // 8
+                codeData['byteWidth'] = byteWidth
             codeData['mnemonic'] = code
             program[i] = codeData.copy()
         #else:
@@ -280,6 +286,9 @@ def stage4(program, verbose = False):
     for code in program:
         if type(code) == dict and 'opcode' in code:
             code = [code['opcode']]
+            if 'byteWidth' in code:
+                code = code + END_8 * (byteWidth - 1)
+
         program[i] = code
         if verbose:
             print(code)
