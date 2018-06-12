@@ -7,7 +7,7 @@ from Asm import *
 filename = sys.argv[1]
 
 verbosity = True
-verbosity = False
+#verbosity = False
 
 program = chunkifyProgram(filename, verbose = verbosity)
 p1 = stage1(program, verbose = verbosity)

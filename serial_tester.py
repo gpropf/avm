@@ -35,7 +35,7 @@ def main():
     print("Sleeping for 2...")
     time.sleep(2)
     print("Loading data...")
-    ser.write(b'l 0 ff0600ce00003500170317110c00020c01030223\n')
+    ser.write(b'l 0 ff0600ce00001800178217110c00020c0203fef9\n')
  
     print("============================== After Writing =========================")
     response = 1
@@ -47,7 +47,7 @@ def main():
     print("Sleeping for 2...")
     time.sleep(2)
     
-    ser.write(b'l 20 090323000c0004004209042500fef9f9f9f9f9f9\n')
+    ser.write(b'l 20 f9f9f9f9f9\n')
     print("============================== After Writing =========================")
     response = 1
     i = 0
@@ -85,8 +85,9 @@ def main():
 
 
     print("Reading Memory...")
-    
-    ser.write(b'm 0 40\n')
+
+    ser.write(b'q\n')
+#    ser.write(b'm 0 40\n')
     time.sleep(1)
     print("============================== After Writing =========================")
     response = 1

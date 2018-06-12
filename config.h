@@ -35,8 +35,8 @@ const uint8_t categoriesToPrint = static_cast<uint8_t>(PrintCategory::POP) | sta
                                   static_cast<uint8_t>(PrintCategory::REPL) | static_cast<uint8_t>(PrintCategory::STATUS) |
                                   static_cast<uint8_t>(PrintCategory::MEM) | static_cast<uint8_t>(PrintCategory::PUSH) |
                                   static_cast<uint8_t>(PrintCategory::MATH) | static_cast<uint8_t>(PrintCategory::PRINT);
-*/
 
+*/
 
 const uint8_t categoriesToPrint = static_cast<uint8_t>(PrintCategory::REPL) | static_cast<uint8_t>(PrintCategory::PRINT);
 #endif

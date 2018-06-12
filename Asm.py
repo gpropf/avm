@@ -158,6 +158,69 @@ instructions = {
 
 instructions = { **instructions, **mdFixedWidth, **mdMultiWidth }
 
+operators = {':','label-marker',
+             ',',',',
+             '.',(lambda x,y: float(str(x) + '.' +str(y))),
+             '+',(lambda x,y: x + y),
+             '-',(lambda x,y: x - y),
+             '*',(lambda x,y: x * y),
+             '/',(lambda x,y: x / y)}
+
+def annotateInstruction(chunk):
+   
+                 
+    byteWidthIntval = 1
+    #chunkBaseName = chunk
+    lastUnderscoreIndex = chunk.rfind("_")
+    if lastUnderscoreIndex != -1: 
+        chunkBaseName = chunk[:lastUnderscoreIndex]
+        byteWidth = chunk[lastUnderscoreIndex + 1:]
+
+        if byteWidth in ["8","16","32"]:
+            byteWidthIntval = int(byteWidth) // 8
+            chunk = chunkBaseName + "_8"             
+        print("Annotated:" + chunk)
+    if chunk in instructions:
+        chunk = {'text':chunk, 'type':'instruction', 'byteWidth':byteWidthIntval}
+    elif chunk in operators:
+        chunk = {'text':chunk, 'type':'operator'}
+    elif chunk.isdigit():
+        chunk = {'text': chunk, 'type':'digit'}
+    else:
+        chunk = {'text':chunk, 'type':'label'}
+    return chunk
+
+
+def chunkAndClassify(filename, verbose = False):
+    commentRe = re.compile("^\s*#")
+    if verbose:
+        print("================= chunkifyProgram =================")
+    #print ("Filename: ", filename)
+    f = open(filename)
+    line = f.readline()
+    ip = 0
+    program = []
+    labelRefs = {}
+    while line:
+        line = line.split('#')[0]
+        opcode = 0
+        lineParts = re.findall(r'\w+|\W+', line)
+        lpStripped = list(map (lambda s: s.strip(),lineParts))
+        lpStripped = list(filter(lambda x: x != "", lpStripped))
+        lpCount = len(lpStripped)
+        program.append(lpStripped)
+        line = f.readline()
+    f.close()
+    pNonBlankLines = list(filter(lambda line: line != [],program))
+    pChunks = []
+    for line in pNonBlankLines:
+        for chunk in line:
+            chunk = annotateInstruction(chunk)
+            pChunks.append(chunk)
+    return pChunks
+
+    
+
 
 def chunkifyProgram(filename, verbose = False):
     """ Step 1 in the process is to break the text up into chunks delineated by whitespace """
@@ -188,22 +251,28 @@ def chunkifyProgram(filename, verbose = False):
     f.close()
     return program
 
-
 def stage1(program, verbose = False):    
     """ Look up each chunk and replace with annotated metadata if it's an instruction mnemonic """ 
     i = 0
     if verbose:
         print("================= stage1 =================")
     for code in program:
+        print("CODE=" + code)
+        lastUnderscoreIndex = code.rfind("_")
+        codeBaseName = code[:lastUnderscoreIndex]
+        byteWidth = code[lastUnderscoreIndex + 1:]
+        byteWidthIntval = 1
+        if byteWidth in ["8","16","32"]:
+            byteWidthIntval = int(byteWidth) // 8
+            code = codeBaseName + "_8"             
+            print("ByteWidth = " + str(byteWidthIntval) + ":" + code)
+
+
         if code in instructions:
                 
             codeData = instructions[code]
-            
-            byteWidth = code[code.rfind("_")+1:]
-            if byteWidth in ["8","16","32"]:
-                byteWidth = int(byteWidth) // 8
-                codeData['byteWidth'] = byteWidth
             codeData['mnemonic'] = code
+            codeData['byteWidthIntval'] = byteWidthIntval
             program[i] = codeData.copy()
         #else:
         if verbose:
@@ -285,13 +354,17 @@ def stage4(program, verbose = False):
     i = 0
     for code in program:
         if type(code) == dict and 'opcode' in code:
-            code = [code['opcode']]
-            if 'byteWidth' in code:
-                code = code + END_8 * (byteWidth - 1)
+            opcode = code['opcode']
+            #print(opcode)
+            if 'byteWidthIntval' in code:
+                opcode = opcode + END_8 * (code['byteWidthIntval'] - 1)
+                program[i] = opcode
+                print(str(opcode))
+        #else:
+        #    program[i] = code
 
-        program[i] = code
         if verbose:
-            print(code)
+            print(program[i])
         i = i + 1
     return program
 

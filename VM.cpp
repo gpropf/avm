@@ -391,8 +391,16 @@ void VM::loadRegWithConst(uint8_t reg, uint32_t c) {
       everything in triplicate (1,2,4 byte operations requiring different pointer
       type).
   */
-  uint32_t reg32ptr = reinterpret_cast<uint32_t*>(&_reg);
-  reg32ptr = c;
+  
+  //reg = reg * 4;
+  //uint32_t * reg32ptr = reinterpret_cast<uint32_t*>(&_reg);
+  //reg32ptr = c;
+  uint8_t * cPtr = reinterpret_cast<uint8_t*>(&c);
+  for (uint8_t i = 0; i < 4; i++) {
+
+    uint8_t * regbytePtr = &_reg[reg*4+i];
+    *regbytePtr = *cPtr++;
+  }
 }
 
 uint8_t * VM::getPtr(uint16_t addr, Location locationType) {
@@ -547,7 +555,7 @@ void VM::exec(Opcode opcode) {
     switch (opcode) {
       case Opcode::INC_SPREL_UINT_8: {
           dprint(F("INC_SPREL_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS)
-                   & static_cast<uint8_t>(PrintCategory::MATH));
+                 & static_cast<uint8_t>(PrintCategory::MATH));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t sprel = readData <uint8_t> ();
           srcptr = getPtr(sprel, Location::SPREL);
@@ -858,13 +866,13 @@ void VM::exec(Opcode opcode) {
           break;
         }
       case Opcode::RET: {
-        /*
-         * SUPER IMPORTANT!!!!
-         * ==============================================================
-         * Return bounces you back to the address stored in reg0. Reg0 is special
-         * Don't put garbage there!!!!          
-         * ==============================================================
-         */
+          /*
+             SUPER IMPORTANT!!!!
+             ==============================================================
+             Return bounces you back to the address stored in reg0. Reg0 is special
+             Don't put garbage there!!!!
+             ==============================================================
+          */
           uint16_t * retAddr = reinterpret_cast<uint16_t*>(&_reg[0]);
           dprintln("RET to addr in Reg0: " + String(*retAddr), static_cast<uint8_t>(PrintCategory::STATUS));
           _ip16 = *retAddr;
