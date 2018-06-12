@@ -158,15 +158,28 @@ instructions = {
 
 instructions = { **instructions, **mdFixedWidth, **mdMultiWidth }
 
-operators = {':','label-marker',
-             ',',',',
-             '.',(lambda x,y: float(str(x) + '.' +str(y))),
-             '+',(lambda x,y: x + y),
-             '-',(lambda x,y: x - y),
-             '*',(lambda x,y: x * y),
-             '/',(lambda x,y: x / y)}
+operators = {':': {'stage':'sx','comments':'label-marker'},
+             ',': {'stage':'s1','combinator':(lambda x,y: [x,y])},
+             '.': {'stage':'s1','combinator':(lambda x,y: float(str(x['text']) + '.' +str(y['text'])))},
+             '+': {'stage':'sx','combinator':(lambda x,y: x + y)},
+             '-': {'stage':'sx','combinator':(lambda x,y: x - y)},
+             '*': {'stage':'sx','combinator':(lambda x,y: x * y)},
+             '/': {'stage':'sx','combinator':(lambda x,y: x / y)},
+             '//': {'stage':'sx','combinator':(lambda x,y: x // y)},
+             '$': {'stage':'s1','combinator':(lambda x,y: { **y, **{'type':'variable', 'byteWidth': int(x['text'])}})},
+             '=': {'stage':'sx','combinator':(lambda x,y: y)}
+}
 
-def annotateInstruction(chunk):
+grouping = {'(':'open-parenz',
+            ')':'close-parenz',
+            '[':'open-square-bracket',
+            ']':'close-square-bracket',
+            '{':'open-curly-bracket',
+            '}':'close-curly-bracket'}
+
+            
+
+def annotateChunk(chunk):
    
                  
     byteWidthIntval = 1
@@ -184,11 +197,39 @@ def annotateInstruction(chunk):
         chunk = {'text':chunk, 'type':'instruction', 'byteWidth':byteWidthIntval}
     elif chunk in operators:
         chunk = {'text':chunk, 'type':'operator'}
+    elif chunk in grouping:
+        chunk = {'text':chunk, 'type': grouping[chunk]}
     elif chunk.isdigit():
         chunk = {'text': chunk, 'type':'digit'}
     else:
         chunk = {'text':chunk, 'type':'label'}
     return chunk
+
+
+def s1(program):
+    #outputChunks = []
+    plen = len(program)
+    killNextChunk = False
+    for i in range(len(program)):
+        if killNextChunk:
+            program[i] = ""
+            killNextChunk = False
+            continue
+        chunk = program[i]
+        #print(chunk)
+        ctype = chunk['type']
+        #print(ctype)
+
+        if chunk['type'] == 'operator':
+            op = operators[chunk['text']]
+            print(op)
+            if op['stage'] == 's1':
+                combo = op['combinator']
+                program[i] = combo(program[i-1],program[i+1])
+                program[i-1] = ""
+                killNextChunk = True
+#                program[i+1] = ""
+    return list(filter(lambda x: x != "", program))
 
 
 def chunkAndClassify(filename, verbose = False):
@@ -204,7 +245,7 @@ def chunkAndClassify(filename, verbose = False):
     while line:
         line = line.split('#')[0]
         opcode = 0
-        lineParts = re.findall(r'\w+|\W+', line)
+        lineParts = re.findall(r'\w+|:+|\(+|\)+|\++|,+|/+|\.+|\$+', line)
         lpStripped = list(map (lambda s: s.strip(),lineParts))
         lpStripped = list(filter(lambda x: x != "", lpStripped))
         lpCount = len(lpStripped)
@@ -215,11 +256,12 @@ def chunkAndClassify(filename, verbose = False):
     pChunks = []
     for line in pNonBlankLines:
         for chunk in line:
-            chunk = annotateInstruction(chunk)
+            chunk = annotateChunk(chunk)
             pChunks.append(chunk)
     return pChunks
 
-    
+
+            
 
 
 def chunkifyProgram(filename, verbose = False):
