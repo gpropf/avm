@@ -207,7 +207,7 @@ def annotateChunk(chunk):
 
 
 def s1(program):
-    #outputChunks = []
+### Basic grouping of things like floating point numbers
     plen = len(program)
     killNextChunk = False
     for i in range(len(program)):
@@ -232,27 +232,75 @@ def s1(program):
     return list(filter(lambda x: x != "", program))
 
 
-def chunkAndClassify(filename, verbose = False):
-    commentRe = re.compile("^\s*#")
+
+def s2(program):
+    #outputChunks = []
+    plen = len(program)
+    killNextChunk = False
+    for i in range(len(program)):
+        pass
+    
+def stripComments(filename, verbose = False):
     if verbose:
-        print("================= chunkifyProgram =================")
-    #print ("Filename: ", filename)
+        print("================= stripComments =================")
     f = open(filename)
     line = f.readline()
-    ip = 0
     program = []
-    labelRefs = {}
     while line:
         line = line.split('#')[0]
-        opcode = 0
-        lineParts = re.findall(r'\w+|:+|\(+|\)+|\++|,+|/+|\.+|\$+', line)
-        lpStripped = list(map (lambda s: s.strip(),lineParts))
-        lpStripped = list(filter(lambda x: x != "", lpStripped))
-        lpCount = len(lpStripped)
-        program.append(lpStripped)
+        program = program + [line]
         line = f.readline()
-    f.close()
-    pNonBlankLines = list(filter(lambda line: line != [],program))
+    return program
+ 
+
+def chunkOnDblQuotes(program, verbose = False):
+    if verbose:
+        print("================= chunkOnQuotes =================")
+    outProgram = []
+    for line in program:
+
+        chunks = line.split("\"")
+        numChunks = len(chunks)
+        for i in range(numChunks):
+            if i % 2 == 1:
+                chunks[i] = {'text':chunks[i], 'type':'DblQuotedChunk'}
+        outProgram = outProgram + chunks
+    return outProgram
+
+def chunkOnSpaces(program, verbose = False):
+    if verbose:
+        print("================= chunkOnSpaces =================")
+    outProgram = []
+    for line in program:
+        if type(line) != dict:
+            chunks = re.split('([ \n]+)',line)
+            chunks = list(filter(lambda c: c.strip() != "", chunks))
+            outProgram = outProgram + chunks
+        else:
+            outProgram = outProgram + [line]
+
+    return outProgram
+
+        
+def chunkAndClassify(program, verbose = False):
+    
+    if verbose:
+        print("================= chunkAndClassify =================")
+    #print ("Filename: ", filename)
+    ip = 0
+    labelRefs = {}
+    outProgram = []
+    for line in program:
+        if type(line) != dict:
+            opcode = 0
+            lineParts = re.findall(r'\w+|:+|\(+|\)+|\++|,+|/+|\.+|\$+', line)
+            lpStripped = list(map (lambda s: s.strip(),lineParts))
+            lpStripped = list(filter(lambda x: x != "", lpStripped))
+            lpCount = len(lpStripped)
+            outProgram.append(lpStripped)
+        else:
+            outProgram.append(line)
+        pNonBlankLines = list(filter(lambda line: line != [],outProgram))
     pChunks = []
     for line in pNonBlankLines:
         for chunk in line:
