@@ -3,6 +3,7 @@
 import re
 
 import struct, itertools, json
+import collections as cl
 
 from instruction_set import *
 
@@ -125,7 +126,8 @@ NO_OPCODE_YET = -100000
 
 
 labelRefs = {}
-dataWidths = {'H':2,'h':2,'i':4,'I':4,'f':4,'b':1,'B':1, 'N':'N'}
+dataWidths = {'H':2,'h':2,'i':4,'I':4,'f':4,'b':1,'B':1, 'N':0.5}
+dataBitWidths = {'H':16,'h':16,'i':32,'I':32,'f':32,'b':8,'B':8, 'N':4}
 
 ## For argFormats and formatCode below the codes are as follows:
 ## ====================================================================
@@ -137,7 +139,7 @@ instructions = {
     "BINDAI": {'opcode':BINDAI, 'argFormats':['H','B'], 'formatCode':'B'},
     "BINDDI": {'opcode':BINDDI, 'argFormats':['H','B'], 'formatCode':'B'},
     "PUSH_MEM_8": {'opcode':PUSH_MEM_8, 'argFormats':['H'], 'formatCode':'B'},
-    "PUSH_CONST_8":{'opcode':PUSH_CONST_8, 'argFormats':['B'], 'formatCode':'B'},
+    "PUSH_CONST_8":{'opcode':PUSH_CONST_8, 'argFormats':['V'], 'formatCode':'B'},
     "POP_REGS_8": {'opcode':POP_REGS_8, 'argFormats':['N','N'], 'formatCode':'B'},
     "PRINT_AS": {'opcode':PRINT_AS, 'argFormats':['N','N'], 'formatCode':'B'},
     "POP_REGS_16": {'opcode':POP_REGS_8 + END_8, 'argFormats':['N','N'], 'formatCode':'B'},
@@ -158,15 +160,16 @@ instructions = {
 
 instructions = { **instructions, **mdFixedWidth, **mdMultiWidth }
 
+
 operators = {':': {'stage':'sx','comments':'label-marker'},
-             ',': {'stage':'s1','combinator':(lambda x,y: [x,y])},
+             ',': {'stage':'s1','combinator':(lambda x,y: y)},
              '.': {'stage':'s1','combinator':(lambda x,y: float(str(x['text']) + '.' +str(y['text'])))},
              '+': {'stage':'sx','combinator':(lambda x,y: x + y)},
              '-': {'stage':'sx','combinator':(lambda x,y: x - y)},
              '*': {'stage':'sx','combinator':(lambda x,y: x * y)},
              '/': {'stage':'sx','combinator':(lambda x,y: x / y)},
              '//': {'stage':'sx','combinator':(lambda x,y: x // y)},
-             '$': {'stage':'s1','combinator':(lambda x,y: { **y, **{'type':'variable', 'byteWidth': int(x['text'])}})},
+             '$': {'stage':'s1','combinator':(lambda x,y: { **y, **{'type':'variable', 'bitWidth': int(x['text']) * 8}})},
              '=': {'stage':'sx','combinator':(lambda x,y: y)}
 }
 
@@ -184,6 +187,7 @@ def annotateChunk(chunk):
                  
     byteWidthIntval = 1
     #chunkBaseName = chunk
+   
     lastUnderscoreIndex = chunk.rfind("_")
     if lastUnderscoreIndex != -1: 
         chunkBaseName = chunk[:lastUnderscoreIndex]
@@ -194,15 +198,18 @@ def annotateChunk(chunk):
             chunk = chunkBaseName + "_8"             
         print("Annotated:" + chunk)
     if chunk in instructions:
-        chunk = {'text':chunk, 'type':'instruction', 'byteWidth':byteWidthIntval}
+        if instructions[chunk]['opcode'] <= END_8:
+            chunk = {'text':chunk, 'type':'instruction', 'instructionEchelon':byteWidthIntval}
+        else:
+            chunk = {'text':chunk, 'type':'instruction'}
     elif chunk in operators:
         chunk = {'text':chunk, 'type':'operator'}
     elif chunk in grouping:
         chunk = {'text':chunk, 'type': grouping[chunk]}
     elif chunk.isdigit():
-        chunk = {'text': chunk, 'type':'digit'}
+        chunk = {'text': chunk, 'type':'digit', 'value': int(chunk)}
     else:
-        chunk = {'text':chunk, 'type':'label'}
+        chunk = {'text':chunk, 'type':'label', 'bitWidth': 0}
     return chunk
 
 
@@ -290,26 +297,75 @@ def chunkAndClassify(program, verbose = False):
     ip = 0
     labelRefs = {}
     outProgram = []
-    for line in program:
-        if type(line) != dict:
-            opcode = 0
-            lineParts = re.findall(r'\w+|:+|\(+|\)+|\++|,+|/+|\.+|\$+', line)
-            lpStripped = list(map (lambda s: s.strip(),lineParts))
-            lpStripped = list(filter(lambda x: x != "", lpStripped))
-            lpCount = len(lpStripped)
-            outProgram.append(lpStripped)
+    for chunk in program:
+        
+        if type(chunk) == str:
+            if re.match("^\d+?\.\d+?$", chunk): # Chunk is a floating point value
+                chunk = {'text':chunk, 'value': float(chunk), 'type':'float', 'bitWidth':32}
+                # Floats are always going to take up 4 bytes.
+                outProgram.append(chunk)
+                # No need to classify further, we're done.
+                continue
+            #opcode = 0
+            chunkParts = re.findall(r'\w+|:+|\(+|\)+|\++|,+|/+|\$+', chunk)
+            chunkParts = list(map (lambda c: c.strip(),chunkParts))
+            chunkParts = list(filter(lambda c: c != "" and c != ",", chunkParts))
+            chunkParts = list(map (lambda c: annotateChunk(c),chunkParts))
+            #cpCount = len(cpStripped)
+            outProgram = outProgram + chunkParts
         else:
-            outProgram.append(line)
-        pNonBlankLines = list(filter(lambda line: line != [],outProgram))
-    pChunks = []
-    for line in pNonBlankLines:
-        for chunk in line:
-            chunk = annotateChunk(chunk)
-            pChunks.append(chunk)
-    return pChunks
+            outProgram.append(chunk)
+        outProgram = list(filter(lambda c: c != [],outProgram))
+    return outProgram
 
 
+#argFormatBitWidths = { 'H': 16, 'B': 8, 'N': 4, 
+
+def captureIntructionArgs(program, verbose = False):
+    
+    if verbose:
+        print("================= captureIntructionArgs =================")
+    for i in range(len(program)):
+        chunk = program[i]
+        if chunk['type'] == 'instruction':
+            instructionPrototype = instructions[chunk['text']]
+            for argFormat in instructionPrototype['argFormats']:
+                i = i + 1
+                if argFormat == 'V':
+                    program[i]['bitWidth'] = chunk['instructionEchelon'] * 8
+                else:
+                    program[i]['bitWidth'] = dataBitWidths[argFormat]
+    return program
+
+
+def buildExpressionTree(program):
+    dp = cl.deque(program)
+    outList = cl.deque()
+    while dp:
+        outChunk = dp.popleft()
+        print("CHUNK:" + str(outChunk))
+        if type(outChunk) == dict:
+            print("CHUNK TEXT:" + outChunk['text'])
+            if outChunk['type'] == "open-parenz":
+                print("open-parenz ------------------------------------------")
+                outChunk = buildExpressionTree(dp)
+            elif outChunk['type'] == "close-parenz":
+                print("close-parenz ------------------------------------------")
+                return outList
+        outList.append(outChunk)
+    return outList
             
+
+
+def test():
+    p = stripComments("test-math.avm")
+    p = chunkOnDblQuotes(p)
+    p = chunkOnSpaces(p)
+    p = chunkAndClassify(p)
+    p = s1(p)
+    for c in p:
+        print(c)
+
 
 
 def chunkifyProgram(filename, verbose = False):
