@@ -363,6 +363,7 @@ def test():
     p = chunkOnSpaces(p)
     p = chunkAndClassify(p)
     p = s1(p)
+    p = captureIntructionArgs(p)
     for c in p:
         print(c)
 
