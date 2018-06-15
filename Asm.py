@@ -160,8 +160,15 @@ instructions = {
 
 instructions = { **instructions, **mdFixedWidth, **mdMultiWidth }
 
+def leftUnary(leftArg, op):
+    """ Process left unary operators. Currently only handles the declaration operator ":". The value of 'op' is ignored."""
+    if leftArg['type'] == 'variable' or leftArg['type'] == 'label':
+        return {**leftArg, **{'declaration': True}}
+    else:
+        return leftArg # Really this is an error but I'm not adding the exceptions yet.
+        
 
-operators = {':': {'stage':'sx','comments':'label-marker'},
+operators = {':': {'stage':'leftUnary','combinator': leftUnary},
              ',': {'stage':'s1','combinator':(lambda x,y: y)},
              '.': {'stage':'s1','combinator':(lambda x,y: float(str(x['text']) + '.' +str(y['text'])))},
              '+': {'stage':'sx','combinator':(lambda x,y: x + y)},
@@ -214,7 +221,7 @@ def annotateChunk(chunk):
 
 
 def s1(program):
-### Basic grouping of things like floating point numbers
+    """ Early stage operators processed """
     plen = len(program)
     killNextChunk = False
     for i in range(len(program)):
@@ -240,12 +247,27 @@ def s1(program):
 
 
 
-def s2(program):
-    #outputChunks = []
+def processUnaryOps(program):
+    """ Unary operators processed """
     plen = len(program)
     killNextChunk = False
     for i in range(len(program)):
-        pass
+        chunk = program[i]
+        #print(chunk)
+        ctype = chunk['type']
+        #print(ctype)
+
+        if ctype == 'operator':
+            op = operators[chunk['text']]
+            print(op)
+            if op['stage'] == 'leftUnary':
+                combo = op['combinator']
+                program[i] = combo(program[i-1],program[i])
+                program[i-1] = ""
+                
+#                program[i+1] = ""
+    return list(filter(lambda x: x != "", program))
+
     
 def stripComments(filename, verbose = False):
     if verbose:
@@ -307,7 +329,7 @@ def chunkAndClassify(program, verbose = False):
                 # No need to classify further, we're done.
                 continue
             #opcode = 0
-            chunkParts = re.findall(r'\w+|:+|\(+|\)+|\++|,+|/+|\$+', chunk)
+            chunkParts = re.findall(r'\w+|:+|\(|\)|\++|,+|/+|\*+|\-+|\$+', chunk)
             chunkParts = list(map (lambda c: c.strip(),chunkParts))
             chunkParts = list(filter(lambda c: c != "" and c != ",", chunkParts))
             chunkParts = list(map (lambda c: annotateChunk(c),chunkParts))
@@ -338,22 +360,22 @@ def captureIntructionArgs(program, verbose = False):
     return program
 
 
-def buildExpressionTree(program):
+def buildExpressionTree(program, r = 0):
     dp = cl.deque(program)
     outList = cl.deque()
     while dp:
         outChunk = dp.popleft()
-        print("CHUNK:" + str(outChunk))
+        print("r = " + str(r) + ", CHUNK:" + str(outChunk))
         if type(outChunk) == dict:
             print("CHUNK TEXT:" + outChunk['text'])
             if outChunk['type'] == "open-parenz":
                 print("open-parenz ------------------------------------------")
-                outChunk = buildExpressionTree(dp)
+                (dp, outChunk) = buildExpressionTree(dp, r + 1)
             elif outChunk['type'] == "close-parenz":
                 print("close-parenz ------------------------------------------")
-                return outList
+                return (dp, outList)
         outList.append(outChunk)
-    return outList
+    return (dp, outList)
             
 
 
@@ -363,9 +385,12 @@ def test():
     p = chunkOnSpaces(p)
     p = chunkAndClassify(p)
     p = s1(p)
+    p = processUnaryOps(p)
     p = captureIntructionArgs(p)
+    (dp,p) = buildExpressionTree(p)
     for c in p:
         print(c)
+    return p
 
 
 

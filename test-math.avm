@@ -5,7 +5,7 @@ BINDAO 2$N3 10
 (3+2)
 
 
-CALL ADD2:
+CALL ADD2
 UJMP START: # I'm a comment with a single quote!!!
 2$N8 "  "  ### More crazy comments
 ADD2:
@@ -32,4 +32,6 @@ NOOP N4: "addf"
 NOOP N5:
 NOOP N6:
 
-(56+22)
+(56+22 -(4 // 2$N1))
+
+FOO:
