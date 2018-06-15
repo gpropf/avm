@@ -1,6 +1,6 @@
 START:
 BINDAI 2$N1 15
-BINDAO 2$N3 10
+BINDAO 2$N3 (7 + 3 )
 
 (3+2)
 

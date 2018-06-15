@@ -359,6 +359,16 @@ def captureIntructionArgs(program, verbose = False):
                     program[i]['bitWidth'] = dataBitWidths[argFormat]
     return program
 
+def buildExpressionText(expList):
+    expTexts = []
+    for expDict in expList:
+        if type(expDict) == dict:
+            expTexts.append(expDict['text'])
+        else:
+            expTexts.append("(")
+            expTexts.append(buildExpressionText(expDict))
+            expTexts.append(")")
+    return (" ").join(expTexts)
 
 def buildExpressionTree(program, r = 0):
     dp = cl.deque(program)
@@ -373,10 +383,34 @@ def buildExpressionTree(program, r = 0):
                 (dp, outChunk) = buildExpressionTree(dp, r + 1)
             elif outChunk['type'] == "close-parenz":
                 print("close-parenz ------------------------------------------")
+                if r == 1:
+                    print("r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1")
+                    outList = {'text':buildExpressionText(outList), 'type':'expression', 'expressionTree': outList}
                 return (dp, outList)
+            
         outList.append(outChunk)
     return (dp, outList)
             
+def indexProgram(program):
+    needNibble = False
+    byteCount = 0
+    for chunk in program:
+        bits = 0
+        if chunk['type'] == 'instruction':
+            bits = 8
+        elif 'bitWidth' in chunk:
+            bits = chunk['bitWidth']
+            if bits == 4:
+                if needNibble:
+                    bits = 8
+                    needNibble = False
+                else:
+                    needNibble = True
+                    bits = 0
+        byteCount = byteCount + bits // 8
+        chunk['byteIndex'] = byteCount
+    return program
+
 
 
 def test():
@@ -386,8 +420,9 @@ def test():
     p = chunkAndClassify(p)
     p = s1(p)
     p = processUnaryOps(p)
-    p = captureIntructionArgs(p)
+    
     (dp,p) = buildExpressionTree(p)
+    p = captureIntructionArgs(p)
     for c in p:
         print(c)
     return p
