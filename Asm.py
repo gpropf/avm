@@ -7,120 +7,10 @@ import collections as cl
 
 from instruction_set import *
 
-class RefTranslator:
-    def __init__(self, patternHash):
-        self.patternHash = patternHash
-
-
-    def translate(self,reftext,formatCode):
-        for pattern,conversionFunc in self.patternHash.items():
-            if pattern.match(reftext):
-                return self.patternHash[pattern](reftext,formatCode)
-        refval = labelRefs[reftext]
-        bytes = struct.pack(formatCode,refval)
-        return [byte for byte in bytes]
-
-
-def getNibblesFromInts(nibblePair):
-    (na,nb) = nibblePair
-    return [na * 16 + nb]
-    
-def getFloat(text,formatCode):
-    bytes = struct.pack(formatCode,float(text))
-    return [byte for byte in bytes]
-
-def getInt(text, formatCode):
-    bytes = struct.pack(formatCode,int(text))
-    return [byte for byte in bytes]
-    
 
 #pnibbles = re.compile("[0-9]+,[0-9]+")
 pfloat = re.compile("[0-9]+\.[0-9]*")
 pint = re.compile("[0-9]+")
-
-ph = { pfloat:getFloat, pint:getInt}
-
-
-
-translator = RefTranslator(ph)
-
-"""
-
-MATH_BASE_8 = 0
-ADD_UINT_8 = MATH_BASE_8
-SUB_UINT_8 = MATH_BASE_8 + 1
-MUL_UINT_8 = MATH_BASE_8 + 2
-DIV_UINT_8 = MATH_BASE_8 + 3
-OR_8   = MATH_BASE_8 + 4
-AND_8 = MATH_BASE_8 + 5
-NOT_8 = MATH_BASE_8 + 6
-SHL_8 = MATH_BASE_8 + 7
-SHR_8 = MATH_BASE_8 + 8
-
-MOV_BASE_8 = MATH_BASE_8 + 9
-MOV_REG2_MEM_8 = MOV_BASE_8
-MOV_MEM2_REG_8 = MOV_BASE_8 + 1
-MOV_REG2_SPREL_8 = MOV_BASE_8 + 2
-MOV_SPREL2_REG_8 = MOV_BASE_8 + 3
-MOV_REG_IND2_SPREL_8 = MOV_BASE_8 + 4
-MOV_SPREL_IND2_REG_8 = MOV_BASE_8 + 5
-
-MOV_REG_IND2_REG_8 = MOV_BASE_8 + 6
-MOV_REG_IND2_REG_IND_8 = MOV_BASE_8 + 7
-MOV_REG2_REG_IND_8 = MOV_BASE_8 + 8
-MOV_REG2_REG_8 = MOV_BASE_8 + 9
-
-PUSH_BASE_8 = MOV_BASE_8 + 10
-PP_START_8 = PUSH_BASE_8
-PUSH_MEM_8 = PUSH_BASE_8
-PUSH_SPREL_8 = PUSH_BASE_8 + 1
-PUSH_REGS_8 = PUSH_BASE_8 + 2 
-PUSH_REGS_IND_8 = PUSH_BASE_8 + 3
-PUSH_CONST_8 = PUSH_BASE_8 + 4
-
-POP_BASE_8 = PUSH_BASE_8 + 5
-POP_REGS_8 = POP_BASE_8 
-PP_END_8 = POP_REGS_8
-
-CMP_BASE = PP_END_8 + 1
-CMP_INT_8 = CMP_BASE
-CMP_UINT_8 = CMP_BASE + 1
-
-INC_BASE = CMP_UINT_8 + 1
-INC_SPREL_UINT_8 = INC_BASE + 1
-INC_SPREL_INT_8 = INC_BASE + 2
-
-INC_END = INC_SPREL_INT_8
-
-END_8 = INC_END
-
-FIXED_WIDTH_BASE = 200
-CMP_FLOAT = FIXED_WIDTH_BASE
-CMP_STRING = FIXED_WIDTH_BASE + 1
-
-JUMP_BASE = FIXED_WIDTH_BASE + 2
-JNE = JUMP_BASE
-JEQ = JUMP_BASE + 1
-JLT = JUMP_BASE + 2
-JGT = JUMP_BASE + 3
-UJMP = JUMP_BASE + 4
-
-BIND_BASE = JUMP_BASE + 5
-BINDAI = BIND_BASE
-BINDDI = BIND_BASE + 1
-BINDAO = BIND_BASE + 2
-BINDDO = BIND_BASE + 3
-BINDAP = BIND_BASE + 4
-BINDDP = BIND_BASE + 5
-
-SP_ADJ = BIND_BASE + 6
-PRINT_AS = BIND_BASE + 7
-NOOP = 249
-NOOP_INIT = 250
-CALL = 255 
-RET = 254
-
-"""
 
 NO_OPCODE_YET = -100000
 
@@ -363,7 +253,7 @@ def captureIntructionArgs(program, verbose = False):
                     if 'bitWidth' in program[i]:
                         existingBitWidth = program[i]['bitWidth']
                         if desiredBitWidth != existingBitWidth:
-                            print("WARNING: in " + chunk['text'])
+                            print("WARNING: in " + program[i]['text'])
                             print("WARNING: bit width mismatch, expecting "
                                   + str(desiredBitWidth) + " bits, found " + str(existingBitWidth) + " bits.")
 
@@ -520,196 +410,6 @@ def test():
 
 
 
-def chunkifyProgram(filename, verbose = False):
-    """ Step 1 in the process is to break the text up into chunks delineated by whitespace """
-    commentRe = re.compile("^\s*#")
-    if verbose:
-        print("================= chunkifyProgram =================")
-    #print ("Filename: ", filename)
-    f = open(filename)
-    line = f.readline()
-    ip = 0
-    program = []
-    labelRefs = {}
-    while line:
-        line = line.split('#')[0]
-        opcode = 0
-        lineParts = line.split(' ')
-        lpStripped = list(map (lambda s: s.strip(),lineParts))
-        lpStripped = list(filter(lambda x: x != "", lpStripped))
-        lpCount = len(lpStripped)
-        for chunk in lpStripped:
-            commaDelimitedChunks = chunk.split(',')
-            commaDelimitedChunks = list(filter(lambda x: x != "", commaDelimitedChunks))
-            for cdc in commaDelimitedChunks:
-                program.append(cdc)
-                if verbose:
-                    print (cdc)
-        line = f.readline()
-    f.close()
-    return program
-
-def stage1(program, verbose = False):    
-    """ Look up each chunk and replace with annotated metadata if it's an instruction mnemonic """ 
-    i = 0
-    if verbose:
-        print("================= stage1 =================")
-    for code in program:
-        print("CODE=" + code)
-        lastUnderscoreIndex = code.rfind("_")
-        codeBaseName = code[:lastUnderscoreIndex]
-        byteWidth = code[lastUnderscoreIndex + 1:]
-        byteWidthIntval = 1
-        if byteWidth in ["8","16","32"]:
-            byteWidthIntval = int(byteWidth) // 8
-            code = codeBaseName + "_8"             
-            print("ByteWidth = " + str(byteWidthIntval) + ":" + code)
-
-
-        if code in instructions:
-                
-            codeData = instructions[code]
-            codeData['mnemonic'] = code
-            codeData['byteWidthIntval'] = byteWidthIntval
-            program[i] = codeData.copy()
-        #else:
-        if verbose:
-            print (program[i])
-        #    instructions[code] = code
-        i = i + 1
-    return program
-
-
-def stage2(program, verbose = False):
-    """Reverse the program to turn it into a stack. Pop chunks off the
-stack and look at them. If a chunk is an instruction, look at its
-metadata and pop the following chunks which represent its arguments
-and annotate them as well. If a chunk is neither an instruction or an
-argument to one, it is a label."""
-    if verbose:
-        print("================= stage2 =================")
-    programRev = program
-    programRev.reverse()
-    outputProgram = []
-    while programRev:
-        code = programRev.pop()
-        if type(code) == dict:
-            outputProgram.append(code)
-            if verbose:
-                print(code)
-            if 'argFormats' in code:
-                for argFormat in code['argFormats']:
-                    codearg = programRev.pop()
-                    codeHash = {'reftext':codearg, 'formatCode':argFormat}
-                    outputProgram.append(codeHash)
-                    if verbose:
-                        print(codeHash)
-        else:
-            # it's not a recognized instruction or argument so it must
-            # be a label.            
-            codeHash = {'reftext':code, 'reftype':'label'}
-            outputProgram.append(codeHash)
-            if verbose:
-                print(codeHash)
-
-    return outputProgram
-
-
-def stage3(program, verbose = False):
-
-    if verbose:
-        print("================= stage3 =================")
-    ip = i = 0
-    nibbleFound = False
-    for code in program:
-
-        code['location'] = ip
-        program[i] = code
-        if 'formatCode' in code:
-            width = dataWidths[code['formatCode']]
-            if width == 'N':                
-                if nibbleFound:
-                    width = 1
-                    nibbleFound = False
-                else:
-                    width = 0
-                    nibbleFound = True
-                    
-            #print(str(code) + " :: IP:" + str(ip) + ", width: " + str(width))
-            ip = ip + width            
-        elif 'reftype' in code and code['reftype'] != 'label':
-            #print("IP:" + str(ip) + ", width: 1")
-            ip = ip + 1
-        if verbose:
-            print(code)
-        i = i + 1
-    return program
-
-
-def stage4(program, verbose = False):
-    if verbose:
-        print("================= stage4 =================")
-    i = 0
-    for code in program:
-        if type(code) == dict and 'opcode' in code:
-            opcode = code['opcode']
-            #print(opcode)
-            if 'byteWidthIntval' in code:
-                opcode = opcode + END_8 * (code['byteWidthIntval'] - 1)
-                program[i] = opcode
-                print(str(opcode))
-        #else:
-        #    program[i] = code
-
-        if verbose:
-            print(program[i])
-        i = i + 1
-    return program
-
-
-def stage5(program, verbose = False):
-    #print("PROGRAM is TYPE :" + str(type(program)))
-    if verbose:
-        print("================= stage5 =================")
-    ip = i = 0
-    outputProgram = []
-    currentNibbles = []
-    for code in program:
-        if type(code) == dict:
-            if 'reftext' in code and 'formatCode' in code:
-                if code['formatCode'] == 'N':
-                    nibbleVal = int(code['reftext'])
-                    currentNibbles.append(nibbleVal)
-                    if verbose:
-                        print("NIBBLES!!!: " + str(currentNibbles))
-                    if len(currentNibbles) > 1:
-                        byteVal = getNibblesFromInts(currentNibbles)
-                        outputProgram.append(byteVal)
-                        if verbose:
-                            print("BYTE VAL COMPLETE ~~~ : " + str(byteVal))
-                        currentNibbles = []
-                else:
-                    codeToAppend = translator.translate(code['reftext'],code['formatCode'])
-                    outputProgram.append(codeToAppend)
-                    if verbose:
-                        print(codeToAppend)
-        elif type(code) == list:
-            if verbose:
-                print(code)
-            outputProgram.append(code)
-        i = i + 1
-    return list(itertools.chain.from_iterable(outputProgram))
-
-
-def locateRefs(program, verbose = False):
-    if verbose:
-        print("================= locateRefs =================")
-    for code in program:
-        if 'reftext' in code and 'reftype' in code and code['reftype'] == 'label':
-            reftext = code['reftext']
-            if re.match('[a-zA-Z_]',reftext):
-                # ref starts with a letter or underscore
-                labelRefs[code['reftext']] = code['location']
 
                 
 def printAsCStr(program):
@@ -754,6 +454,7 @@ def makeMetadataForOpcode(mnemonic, argFormats, formatCode):
 
     
 def emitCode(instructions, outf, codeType = "C++"):
+    """ Creates the enum and python code for the instruction set from the JSON file."""
     currentBase = ""
     singleLineCommentStart = "// "
     offset = 0
@@ -784,6 +485,7 @@ def emitCode(instructions, outf, codeType = "C++"):
 
 
 def buildCHeader(filename):
+    """ Creates the C++ header file containing the enum with all the instruction constants."""
     outf = open(filename + ".h", "w")
     with open(filename + ".json", "r") as read_file:
         data = json.load(read_file)
@@ -796,6 +498,7 @@ def buildCHeader(filename):
         outf.close()
 
 def buildPythonConstants(filename):
+    """ Creates the Python file containing the instruction metadata."""
     outf = open(filename + ".py", "w")
     with open(filename + ".json", "r") as read_file:
         data = json.load(read_file)
