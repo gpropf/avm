@@ -381,6 +381,7 @@ int16_t VM::getStringLength(char * startAddr) {
 void VM::moveData(uint8_t * srcptr, uint8_t * destptr, uint8_t datumWidth) {
   for (uint8_t i = 0; i < datumWidth; i++)
     destptr[i] = srcptr[i];
+
 }
 
 void VM::loadRegWithConst(uint8_t reg, uint32_t c) {
@@ -787,7 +788,7 @@ void VM::exec(Opcode opcode) {
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
           break;
         }
-      case Opcode::DIV_INT_8: {
+      case Opcode::DIV_UINT_8: {
           /*
              Divide destreg by srcreg and leave the result in destreg. This
              allows for repeated division without reloading the srcreg.
@@ -812,14 +813,14 @@ void VM::exec(Opcode opcode) {
         }
       case Opcode::ADD_INT_8: {
           // Add srcreg to destreg and leave the result in destreg
-          dprint(F("ADD_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("ADD_INT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);
           destptr = getPtr(tr.reg2, Location::REG);
-          uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
-          uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
+          int32_t * srcreg = reinterpret_cast<int32_t*>(srcptr);
+          int32_t * destreg = reinterpret_cast<int32_t*>(destptr);
           *destreg += *srcreg;
           dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
@@ -827,14 +828,14 @@ void VM::exec(Opcode opcode) {
         }
       case Opcode::MUL_INT_8: {
           // Multiply srcreg and destreg and leave the result in destreg
-          dprint(F("MUL_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("MUL_INT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);
           destptr = getPtr(tr.reg2, Location::REG);
-          uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
-          uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
+          int32_t * srcreg = reinterpret_cast<int32_t*>(srcptr);
+          int32_t * destreg = reinterpret_cast<int32_t*>(destptr);
           *destreg *= *srcreg;
           dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
@@ -842,20 +843,101 @@ void VM::exec(Opcode opcode) {
         }
       case Opcode::SUB_INT_8: {
           // Substract srcreg from destreg and leave the result in destreg
+          dprint(F("SUB_INT:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
+          uint8_t targetRegisters = readData <uint8_t> ();
+          RegPair tr = getRegPair(targetRegisters);
+          srcptr = getPtr(tr.reg1, Location::REG);
+          destptr = getPtr(tr.reg2, Location::REG);
+          int32_t * srcreg = reinterpret_cast<int32_t*>(srcptr);
+          int32_t * destreg = reinterpret_cast<int32_t*>(destptr);
+          *destreg -= *srcreg;
+          dprintln("Reg2 - Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+                   static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          break;
+        }
+      case Opcode::DIV_INT_8: {
+          /*
+             Divide destreg by srcreg and leave the result in destreg. This
+             allows for repeated division without reloading the srcreg.
+             Example: Load srcreg with 2 and destreg with 16, divide once and you
+             have srcreg = 2, destreg = 8. You can now divide again by 2 without changing
+             the 2. If the operation worked the other way you would load srcreg with 16,
+             and destreg with 2. Dividing now leaves you with srcreg = 16, destreg = 8.
+             The system is thus not set up to divide again by the same value but its cofactor.
+          */
+          dprint(F("DIV_INT:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
+          uint8_t targetRegisters = readData <uint8_t> ();
+          RegPair tr = getRegPair(targetRegisters);
+          srcptr = getPtr(tr.reg1, Location::REG);
+          destptr = getPtr(tr.reg2, Location::REG);
+          int32_t * srcreg = reinterpret_cast<int32_t*>(srcptr);
+          int32_t * destreg = reinterpret_cast<int32_t*>(destptr);
+          *destreg /= *srcreg;
+          dprintln("Reg2 / Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+                   static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          break;
+        }
+    }
+  }
+  else {
+
+    /*  Above FIXED_WIDTH_BASE instructions. These instructions do not
+        exist in more than one form (i.e. the data they operate on, if any,
+        is of a single fixed width so they have a numeric value above that of
+        FIXED_WIDTH_BASE, at least at present.
+    */
+    uint8_t * srcptr;
+    uint8_t * destptr;
+    switch (opcode) {
+
+      case Opcode::ADD_FL: {
+          // Add srcreg to destreg and leave the result in destreg
+          dprint(F("ADD_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
+          uint8_t targetRegisters = readData <uint8_t> ();
+          RegPair tr = getRegPair(targetRegisters);
+          srcptr = getPtr(tr.reg1, Location::REG);
+          destptr = getPtr(tr.reg2, Location::REG);
+          float * srcreg = reinterpret_cast<float*>(srcptr);
+          float * destreg = reinterpret_cast<float*>(destptr);
+          *destreg += *srcreg;
+          dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+                   static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          break;
+        }
+      case Opcode::MUL_FL: {
+          // Multiply srcreg and destreg and leave the result in destreg
+          dprint(F("MUL_FL:"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
+          uint8_t targetRegisters = readData <uint8_t> ();
+          RegPair tr = getRegPair(targetRegisters);
+          srcptr = getPtr(tr.reg1, Location::REG);
+          destptr = getPtr(tr.reg2, Location::REG);
+          float * srcreg = reinterpret_cast<float*>(srcptr);
+          float * destreg = reinterpret_cast<float*>(destptr);
+          *destreg *= *srcreg;
+          dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+                   static_cast<uint8_t>(PrintCategory::MATH));
+          break;
+        }
+      case Opcode::SUB_FL: {
+          // Substract srcreg from destreg and leave the result in destreg
           dprint(F("SUB_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);
           destptr = getPtr(tr.reg2, Location::REG);
-          uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
-          uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
+          float * srcreg = reinterpret_cast<float*>(srcptr);
+          float * destreg = reinterpret_cast<float*>(destptr);
           *destreg -= *srcreg;
           dprintln("Reg2 - Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
           break;
         }
-      case Opcode::DIV_UINT_8: {
+      case Opcode::DIV_FL: {
           /*
              Divide destreg by srcreg and leave the result in destreg. This
              allows for repeated division without reloading the srcreg.
@@ -871,24 +953,26 @@ void VM::exec(Opcode opcode) {
           RegPair tr = getRegPair(targetRegisters);
           srcptr = getPtr(tr.reg1, Location::REG);
           destptr = getPtr(tr.reg2, Location::REG);
-          uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
-          uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
+          float * srcreg = reinterpret_cast<float*>(srcptr);
+          float * destreg = reinterpret_cast<float*>(destptr);
           *destreg /= *srcreg;
           dprintln("Reg2 / Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
           break;
         }
-    }
-  }
-  else {
 
-    /*  Above FIXED_WIDTH_BASE instructions. These instructions do not
-        exist in more than one form (i.e. the data they operate on, if any,
-        is of a single fixed width so they have a numeric value above that of
-        FIXED_WIDTH_BASE, at least at present.
-    */
 
-    switch (opcode) {
+
+
+
+
+
+
+
+
+
+
+
       case Opcode::SP_ADJ: {
           dprint(F("SP_ADJ: SP += "), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t adjustment = readData <uint8_t> ();

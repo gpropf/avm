@@ -7,6 +7,10 @@
 	    { "mnemonic" : "SUB_UINT_8", "base" : "MATH_BASE_8", "offset" : "1" },
 	    { "mnemonic" : "MUL_UINT_8", "base" : "MATH_BASE_8", "offset" : "2" },
 	    { "mnemonic" : "DIV_UINT_8", "base" : "MATH_BASE_8", "offset" : "3" },
+	    { "mnemonic" : "ADD_INT_8", "base" : "MATH_BASE_8", "argFormats":["N","N"], "formatCode":"B" },
+	    { "mnemonic" : "SUB_INT_8", "base" : "MATH_BASE_8", "offset" : "1" },
+	    { "mnemonic" : "MUL_INT_8", "base" : "MATH_BASE_8", "offset" : "2" },
+	    { "mnemonic" : "DIV_INT_8", "base" : "MATH_BASE_8", "offset" : "3" },
 	    { "mnemonic" : "OR_8", "base" : "MATH_BASE_8", "offset" : "4" },
 	    { "mnemonic" : "AND_8", "base" : "MATH_BASE_8", "offset" : "5" },
 	    { "mnemonic" : "NOT_8", "base" : "MATH_BASE_8", "offset" : "6" },
@@ -73,6 +77,18 @@
 
 	    { "mnemonic" : "SP_ADJ", "base" : "BIND_BASE", "offset" : "6", "comments" : " increment the SP without pop. Takes uint8_t as arg." },
 	    { "mnemonic" : "PRINT_AS", "base" : "BIND_BASE", "offset" : "7", "comments" : " Takes an 8 bit operand. First nibble is register to print, 2nd is type to print as." },
+
+	    { "mnemonic" : "FLOAT_MATH_BASE", "base" : "BIND_BASE", "offset" : "5", "comments" : "Floating point math Operations Base" },
+	    
+	    { "mnemonic" : "ADD_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "formatCode":"B" },
+	    { "mnemonic" : "SUB_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "offset" : "1", "argFormats":["N","N"], "formatCode":"B" },
+	    { "mnemonic" : "MUL_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "offset" : "2", "argFormats":["N","N"], "formatCode":"B" },
+	    { "mnemonic" : "DIV_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "offset" : "3", "argFormats":["N","N"], "formatCode":"B" },
+
+
+
+	    
+	    
 	     { "mnemonic" : "TOP_BASE", "base" : "249", "offset" : "5", "comments" : "Bind Operations Base" },
 	    { "mnemonic" : "NOOP", "base" : "TOP_BASE", "offset" : "249", "comments" : "Top Operations Base" },
 	    { "mnemonic" : "NOOP_INIT", "base" : "TOP_BASE", "offset" : "250" },
