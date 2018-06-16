@@ -191,8 +191,8 @@ grouping = {'(':'open-parenz',
 
 def annotateChunk(chunk):
    
-                 
-    byteWidthIntval = 1
+    instructionEchelons = {"8":0, "16":1, "32":2}
+    #byteWidthIntval = 1
     #chunkBaseName = chunk
    
     lastUnderscoreIndex = chunk.rfind("_")
@@ -200,21 +200,24 @@ def annotateChunk(chunk):
         chunkBaseName = chunk[:lastUnderscoreIndex]
         byteWidth = chunk[lastUnderscoreIndex + 1:]
 
-        if byteWidth in ["8","16","32"]:
-            byteWidthIntval = int(byteWidth) // 8
+        if byteWidth in instructionEchelons:
+            instructionEchelon = instructionEchelons[byteWidth]
             chunk = chunkBaseName + "_8"             
         print("Annotated:" + chunk)
     if chunk in instructions:
         if instructions[chunk]['opcode'] <= END_8:
-            chunk = {'text':chunk, 'type':'instruction', 'instructionEchelon':byteWidthIntval}
+            chunk = {'text':chunk,
+                     'type':'instruction',
+                     'instructionEchelon':instructionEchelon,
+                     'bitWidth': 8}
         else:
-            chunk = {'text':chunk, 'type':'instruction'}
+            chunk = {'text':chunk, 'type':'instruction','bitWidth': 8}
     elif chunk in operators:
         chunk = {'text':chunk, 'type':'operator'}
     elif chunk in grouping:
         chunk = {'text':chunk, 'type': grouping[chunk]}
     elif chunk.isdigit():
-        chunk = {'text': chunk, 'type':'digit', 'value': int(chunk)}
+        chunk = {'text': chunk, 'type':'int', 'value': int(chunk)}
     else:
         chunk = {'text':chunk, 'type':'label', 'bitWidth': 0}
     return chunk
@@ -344,7 +347,7 @@ def chunkAndClassify(program, verbose = False):
 #argFormatBitWidths = { 'H': 16, 'B': 8, 'N': 4, 
 
 def captureIntructionArgs(program, verbose = False):
-    
+    bitWidthsByEchelon = [8,16,32]
     if verbose:
         print("================= captureIntructionArgs =================")
     for i in range(len(program)):
@@ -354,9 +357,17 @@ def captureIntructionArgs(program, verbose = False):
             for argFormat in instructionPrototype['argFormats']:
                 i = i + 1
                 if argFormat == 'V':
-                    program[i]['bitWidth'] = chunk['instructionEchelon'] * 8
+                    program[i]['bitWidth'] = bitWidthsByEchelon[chunk['instructionEchelon']]
                 else:
-                    program[i]['bitWidth'] = dataBitWidths[argFormat]
+                    desiredBitWidth = dataBitWidths[argFormat]
+                    if 'bitWidth' in program[i]:
+                        existingBitWidth = program[i]['bitWidth']
+                        if desiredBitWidth != existingBitWidth:
+                            print("WARNING: in " + chunk['text'])
+                            print("WARNING: bit width mismatch, expecting "
+                                  + str(desiredBitWidth) + " bits, found " + str(existingBitWidth) + " bits.")
+
+                    program[i]['bitWidth'] = desiredBitWidth
     return program
 
 def buildExpressionText(expList):
@@ -395,6 +406,7 @@ def indexProgram(program):
     needNibble = False
     byteCount = 0
     for chunk in program:
+        chunk['byteIndex'] = byteCount
         bits = 0
         if chunk['type'] == 'instruction':
             bits = 8
@@ -408,10 +420,85 @@ def indexProgram(program):
                     needNibble = True
                     bits = 0
         byteCount = byteCount + bits // 8
-        chunk['byteIndex'] = byteCount
+
     return program
 
+def buildSymbolTable(program):
+    symbols = {}
+    for chunk in program:
+        if (chunk['type'] == 'variable' or chunk['type'] == 'label') and 'declaration' in chunk and chunk['declaration'] == True:
+            symbols[chunk['text']] = { 'value': chunk['byteIndex'], 'symbolType': chunk['type'], 'bitWidth': chunk['bitWidth']}
+    return symbols
 
+
+def emitByteCodes(program, symbols):
+    for chunk in program:
+        ctype = chunk['type']
+        ctext = chunk['text']
+        value = False
+        print("CTYPE: " + ctype)
+        if ctype == 'instruction' and ctext in instructions:
+            
+            value = instructions[ctext]['opcode']
+            if opcode <= END_8:
+                value = value + END_8 * chunk['instructionEchelon']
+            chunk['value'] = value
+        elif ctype == 'variable' or ctype == 'label' and ctext in symbols:
+            value = symbols[ctext]['value']
+            chunk['value'] = value
+
+        return program
+            
+
+def tagByteValues(program, symbols):
+    for chunk in program:
+        ctype = chunk['type']
+        ctext = chunk['text']
+        value = False
+        print("CTYPE: " + ctype)
+        if ctype == 'instruction' and ctext in instructions:
+            print("INSTRUCTION!!!!!!! CTYPE: " + ctype)
+            value = instructions[ctext]['opcode']
+            if value <= END_8:
+                value = value + END_8 * chunk['instructionEchelon']
+            chunk['value'] = value
+        elif ctype == 'variable' or ctype == 'label' and ctext in symbols:
+            value = symbols[ctext]['value']
+            chunk['value'] = value
+    return program
+
+def emitValues(program):
+    formatCodes = { 8: ['b','B'], 16: ['h','H'], 32: ['i','I'] }
+    dp = cl.deque(program)
+    outp = []
+    bytes = []
+    while dp:
+        bitWidth = 0
+        chunk = dp.popleft()
+        formatCodeIndex = 1
+        if 'bitWidth' in chunk:
+            bitWidth = chunk['bitWidth']
+        if bitWidth == 0:
+            print("bitwidth == 0!!!!!!!!!!!!!!")
+            continue
+
+        if chunk['type'] == 'float':
+            bytes = struct.pack('f',chunk['value'])
+        else:
+            if chunk['type'] == 'sint':
+                formatCodeIndex = 0
+            if bitWidth == 4:
+                lowNibbleChunk = dp.popleft()
+                byteVal = chunk['value'] * 16 + lowNibbleChunk['value']
+                bytes = struct.pack('B',byteVal)
+            else:
+                bytes = struct.pack(formatCodes[bitWidth][formatCodeIndex],chunk['value'])
+                print(chunk['text'] + " has bitWidth = " +str(bitWidth) + ", bytes has " + str(len(bytes)) + " bytes")
+        outp = outp + [byte for byte in bytes]
+        #else:
+        #    outp = outp + [chunk['value']]
+    return outp
+#        print (chunk['value'])
 
 def test():
     p = stripComments("test-math.avm")
@@ -423,6 +510,10 @@ def test():
     
     (dp,p) = buildExpressionTree(p)
     p = captureIntructionArgs(p)
+    p = indexProgram(p)
+    s = buildSymbolTable(p)
+    p = tagByteValues(p,s)
+    p = emitValues(p)
     for c in p:
         print(c)
     return p
