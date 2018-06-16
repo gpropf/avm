@@ -1,22 +1,14 @@
-
-
 import re
-
 import struct, itertools, json
 import collections as cl
 
 from instruction_set import *
 
-
-#pnibbles = re.compile("[0-9]+,[0-9]+")
-pfloat = re.compile("[0-9]+\.[0-9]*")
-pint = re.compile("[0-9]+")
-
 NO_OPCODE_YET = -100000
 
 
 labelRefs = {}
-dataWidths = {'H':2,'h':2,'i':4,'I':4,'f':4,'b':1,'B':1, 'N':0.5}
+#dataWidths = {'H':2,'h':2,'i':4,'I':4,'f':4,'b':1,'B':1, 'N':0.5}
 dataBitWidths = {'H':16,'h':16,'i':32,'I':32,'f':32,'b':8,'B':8, 'N':4}
 
 ## For argFormats and formatCode below the codes are as follows:
@@ -59,14 +51,14 @@ def leftUnary(leftArg, op):
         
 
 operators = {':': {'stage':'leftUnary','combinator': leftUnary},
-             ',': {'stage':'s1','combinator':(lambda x,y: y)},
-             '.': {'stage':'s1','combinator':(lambda x,y: float(str(x['text']) + '.' +str(y['text'])))},
+             ',': {'stage':'processTextOperators','combinator':(lambda x,y: y)},
+             '.': {'stage':'processTextOperators','combinator':(lambda x,y: float(str(x['text']) + '.' +str(y['text'])))},
              '+': {'stage':'sx','combinator':(lambda x,y: x + y)},
              '-': {'stage':'sx','combinator':(lambda x,y: x - y)},
              '*': {'stage':'sx','combinator':(lambda x,y: x * y)},
              '/': {'stage':'sx','combinator':(lambda x,y: x / y)},
              '//': {'stage':'sx','combinator':(lambda x,y: x // y)},
-             '$': {'stage':'s1','combinator':(lambda x,y: { **y, **{'type':'variable', 'bitWidth': int(x['text']) * 8}})},
+             '$': {'stage':'processTextOperators','combinator':(lambda x,y: { **y, **{'type':'variable', 'bitWidth': int(x['text']) * 8}})},
              '=': {'stage':'sx','combinator':(lambda x,y: y)}
 }
 
@@ -93,7 +85,6 @@ def annotateChunk(chunk):
         if byteWidth in instructionEchelons:
             instructionEchelon = instructionEchelons[byteWidth]
             chunk = chunkBaseName + "_8"             
-        print("Annotated:" + chunk)
     if chunk in instructions:
         if instructions[chunk]['opcode'] <= END_8:
             chunk = {'text':chunk,
@@ -113,7 +104,7 @@ def annotateChunk(chunk):
     return chunk
 
 
-def s1(program):
+def processTextOperators(program):
     """ Early stage operators processed """
     plen = len(program)
     killNextChunk = False
@@ -123,14 +114,11 @@ def s1(program):
             killNextChunk = False
             continue
         chunk = program[i]
-        #print(chunk)
         ctype = chunk['type']
-        #print(ctype)
-
         if chunk['type'] == 'operator':
             op = operators[chunk['text']]
-            print(op)
-            if op['stage'] == 's1':
+#            print(op)
+            if op['stage'] == 'processTextOperators':
                 combo = op['combinator']
                 program[i] = combo(program[i-1],program[i+1])
                 program[i-1] = ""
@@ -146,13 +134,11 @@ def processUnaryOps(program):
     killNextChunk = False
     for i in range(len(program)):
         chunk = program[i]
-        #print(chunk)
         ctype = chunk['type']
-        #print(ctype)
 
         if ctype == 'operator':
             op = operators[chunk['text']]
-            print(op)
+#            print(op)
             if op['stage'] == 'leftUnary':
                 combo = op['combinator']
                 program[i] = combo(program[i-1],program[i])
@@ -208,7 +194,6 @@ def chunkAndClassify(program, verbose = False):
     
     if verbose:
         print("================= chunkAndClassify =================")
-    #print ("Filename: ", filename)
     ip = 0
     labelRefs = {}
     outProgram = []
@@ -276,16 +261,16 @@ def buildExpressionTree(program, r = 0):
     outList = cl.deque()
     while dp:
         outChunk = dp.popleft()
-        print("r = " + str(r) + ", CHUNK:" + str(outChunk))
+#        print("r = " + str(r) + ", CHUNK:" + str(outChunk))
         if type(outChunk) == dict:
-            print("CHUNK TEXT:" + outChunk['text'])
+            #print("CHUNK TEXT:" + outChunk['text'])
             if outChunk['type'] == "open-parenz":
-                print("open-parenz ------------------------------------------")
+                #print("open-parenz ------------------------------------------")
                 (dp, outChunk) = buildExpressionTree(dp, r + 1)
             elif outChunk['type'] == "close-parenz":
-                print("close-parenz ------------------------------------------")
+                #print("close-parenz ------------------------------------------")
                 if r == 1:
-                    print("r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1")
+                    #print("r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1")
                     outList = {'text':buildExpressionText(outList), 'type':'expression', 'expressionTree': outList}
                 return (dp, outList)
             
@@ -326,7 +311,7 @@ def emitByteCodes(program, symbols):
         ctype = chunk['type']
         ctext = chunk['text']
         value = False
-        print("CTYPE: " + ctype)
+        #print("CTYPE: " + ctype)
         if ctype == 'instruction' and ctext in instructions:
             
             value = instructions[ctext]['opcode']
@@ -345,9 +330,9 @@ def tagByteValues(program, symbols):
         ctype = chunk['type']
         ctext = chunk['text']
         value = False
-        print("CTYPE: " + ctype)
+        #print("CTYPE: " + ctype)
         if ctype == 'instruction' and ctext in instructions:
-            print("INSTRUCTION!!!!!!! CTYPE: " + ctype)
+            #print("INSTRUCTION!!!!!!! CTYPE: " + ctype)
             value = instructions[ctext]['opcode']
             if value <= END_8:
                 value = value + END_8 * chunk['instructionEchelon']
@@ -369,7 +354,7 @@ def emitValues(program):
         if 'bitWidth' in chunk:
             bitWidth = chunk['bitWidth']
         if bitWidth == 0:
-            print("bitwidth == 0!!!!!!!!!!!!!!")
+            #print("bitwidth == 0!!!!!!!!!!!!!!")
             continue
 
         if chunk['type'] == 'float':
@@ -383,7 +368,7 @@ def emitValues(program):
                 bytes = struct.pack('B',byteVal)
             else:
                 bytes = struct.pack(formatCodes[bitWidth][formatCodeIndex],chunk['value'])
-                print(chunk['text'] + " has bitWidth = " +str(bitWidth) + ", bytes has " + str(len(bytes)) + " bytes")
+                #print(chunk['text'] + " has bitWidth = " +str(bitWidth) + ", bytes has " + str(len(bytes)) + " bytes")
         outp = outp + [byte for byte in bytes]
         #else:
         #    outp = outp + [chunk['value']]
@@ -395,7 +380,7 @@ def test():
     p = chunkOnDblQuotes(p)
     p = chunkOnSpaces(p)
     p = chunkAndClassify(p)
-    p = s1(p)
+    p = processTextOperators(p)
     p = processUnaryOps(p)
     
     (dp,p) = buildExpressionTree(p)
@@ -404,8 +389,8 @@ def test():
     s = buildSymbolTable(p)
     p = tagByteValues(p,s)
     p = emitValues(p)
-    for c in p:
-        print(c)
+#    for c in p:
+#        print(c)
     return p
 
 

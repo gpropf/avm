@@ -34,7 +34,7 @@ void setup() {
   dprintln(repeatString("~", 20), static_cast<uint8_t>(PrintCategory::REPL));
   
   const uint8_t program[] = {
-#include "read-and-blink.h"
+#include "test-math.h"
     65, 86, 77, 10, 0, 0, 0, 79, 0, 0, 84, 0
   };
   uint8_t * srcptr = program;
