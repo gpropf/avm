@@ -17,7 +17,7 @@ baudrate = 57600
     
 
 def main():
-    ser = serial.Serial('/dev/ttyACM1', baudrate, timeout=1)
+    ser = serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
     print(ser.name) # check which port was really used
 #    ser.flush()
  
@@ -35,7 +35,7 @@ def main():
     print("Sleeping for 2...")
     time.sleep(2)
     print("Loading data...")
-    ser.write(b'l 0 ff0600ce00001800178217110c00020c0203fef9\n')
+    ser.write(b'l 0 cf31000fd133000aff1900f9f9f9f9ff2500f9f9\n')
  
     print("============================== After Writing =========================")
     response = 1
@@ -47,7 +47,7 @@ def main():
     print("Sleeping for 2...")
     time.sleep(2)
     
-    ser.write(b'l 20 f9f9f9f9f9\n')
+    ser.write(b'l 20 f9f9ce00003d001bff1000080d083300fe3d001b\n')
     print("============================== After Writing =========================")
     response = 1
     i = 0
@@ -58,11 +58,20 @@ def main():
     print("Sleeping for 2...")
     time.sleep(2)
 
-
+    ser.write(b'l 40 001000080d083300fe31003300\n')
+    print("============================== After Writing =========================")
+    response = 1
+    i = 0
+    while response:
+        i = i + 1
+        response = ser.readline()
+        print(str(i) + ":" + response.decode(), end='')
+    print("Sleeping for 2...")
+    time.sleep(2)
     
     
 
-    ser.write(b's 50\n')
+    ser.write(b's 500\n')
     time.sleep(1)
     print("============================== After Writing =========================")
     response = 1
