@@ -14,101 +14,65 @@ import serial
 import io
 
 baudrate = 57600
+
+def sendAndListen(ser, data = None, terminalNewline = b'\n', echoSentData = True):
+    print("Writing data...")
     
+    if data:
+        if echoSentData:
+            print(data + terminalNewline)
+        ser.flush()
+        ser.write(data + terminalNewline)
+        ser.flush()
+    else:
+        ser.flush()
+        ser.write(terminalNewline)
+        ser.flush()
+    #ser.flush()
+    time.sleep(1)
+    #ser.flush()
+    print("========================================== Begin Response ===")
+    response = 1
+    i = 0
+    while response:
+     #   ser.flush()
+        response = ser.readline()
+        print(str(i) + ":" + response.decode(), end='')
+      #  ser.flush()
+        i = i + 1
+
+    print("\n======================================== End Response ===")
+    time.sleep(2)
+
+filename = "read-and-blink.hex"
 
 def main():
     ser = serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
     print(ser.name) # check which port was really used
-#    ser.flush()
- 
-    
 
-    response = 1
-    i = 0
-    while response:
-        i = i + 1
-        #print(str(i) + ":After Writing...")
-        response = ser.readline()
-        print(str(i) + ":After Init:" + response.decode(), end='')
- #       ser.flush()
+    sendAndListen(ser)
+
+    print("Sleeping for 2...")
+
+    hexf = open(filename, "r")
+    lines = hexf.readlines()
+
+    for line in lines:
+        sendAndListen(ser, bytes(line,'utf-8'))
+
+        
+#    sendAndListen(ser, b'l 0 cf31000fd133000aff1900f9f9f9f9ff2500f9f9')
+#    sendAndListen(ser, b'l 20 f9f9ce00003d001bff1000080d083300fe3d001b')
+#    sendAndListen(ser, b'l 40 001000080d083300fe31003300')
 
     print("Sleeping for 2...")
     time.sleep(2)
-    print("Loading data...")
-    ser.write(b'l 0 cf31000fd133000aff1900f9f9f9f9ff2500f9f9\n')
- 
-    print("============================== After Writing =========================")
-    response = 1
-    i = 0
-    while response:
-        i = i + 1
-        response = ser.readline()
-        print(str(i) + ":" + response.decode(), end='')
-    print("Sleeping for 2...")
+    sendAndListen(ser, b's 500')
     time.sleep(2)
-    
-    ser.write(b'l 20 f9f9ce00003d001bff1000080d083300fe3d001b\n')
-    print("============================== After Writing =========================")
-    response = 1
-    i = 0
-    while response:
-        i = i + 1
-        response = ser.readline()
-        print(str(i) + ":" + response.decode(), end='')
-    print("Sleeping for 2...")
+    sendAndListen(ser,b'r')
     time.sleep(2)
-
-    ser.write(b'l 40 001000080d083300fe31003300\n')
-    print("============================== After Writing =========================")
-    response = 1
-    i = 0
-    while response:
-        i = i + 1
-        response = ser.readline()
-        print(str(i) + ":" + response.decode(), end='')
-    print("Sleeping for 2...")
+    sendAndListen(ser,b'q')
     time.sleep(2)
-    
-    
-
-    ser.write(b's 500\n')
-    time.sleep(1)
-    print("============================== After Writing =========================")
-    response = 1
-    i = 0
-    while response:
-        i = i + 1
-        response = ser.readline()
-        print(str(i) + ":" + response.decode(), end='')
-
-
-    ser.write(b'r\n')
-    time.sleep(1)
-    print("============================== After Writing =========================")
-    response = 1
-    i = 0
-    while response:
-        i = i + 1
-        response = ser.readline()
-        print(str(i) + ":" + response.decode(), end='')
-
-
-    print("Reading Memory...")
-
-    ser.write(b'q\n')
-#    ser.write(b'm 0 40\n')
-    time.sleep(1)
-    print("============================== After Writing =========================")
-    response = 1
-    i = 0
-    while response:
-        i = i + 1
-        response = ser.readline()
-        print(str(i) + ":" + response.decode(), end='')
-        #        print(response.decode())
-   # ser.write(b'm 0 100\n')
-   # response = ser.read(10)
     ser.close()
-    #print(response)
 
 main()
