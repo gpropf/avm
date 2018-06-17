@@ -38,7 +38,7 @@ struct RegPair {
 
 #include "instruction_set.h"
 /*
-enum class Opcode : uint8_t {
+  enum class Opcode : uint8_t {
   MATH_BASE_8 = 0,
   ADD_UINT_8 = MATH_BASE_8,
   SUB_UINT_8 = MATH_BASE_8 + 1,
@@ -64,7 +64,7 @@ enum class Opcode : uint8_t {
   MOV_REG2_REG_8 = MOV_BASE_8 + 9,
 
   PUSH_BASE_8 = MOV_BASE_8 + 10,
- // PP_START_8 = PUSH_BASE_8,
+  // PP_START_8 = PUSH_BASE_8,
   PUSH_MEM_8 = PUSH_BASE_8,
   PUSH_SPREL_8 = PUSH_BASE_8 + 1,
   PUSH_REGS_8 = PUSH_BASE_8 + 2, // push one or two registers [R4,R4], if both are the same register then push only that one.
@@ -90,7 +90,7 @@ enum class Opcode : uint8_t {
 
 
 
-  
+
   // **************************************
   // Below this we only need one of each instruction since there are not multiple data widths.
   FIXED_WIDTH_BASE = 200,
@@ -120,9 +120,9 @@ enum class Opcode : uint8_t {
   CALL = 255, // Takes a uint16_t address of the function to call. Automatically saves return address
   RET = 254, // Uses stored return address and leaves return value on stack
 
- 
- 
-};
+
+
+  };
 */
 
 struct OpcodeAndDataWidth {
@@ -130,6 +130,11 @@ struct OpcodeAndDataWidth {
   uint8_t dw;
 };
 
+template <typename T>
+struct doublePointer {
+  T *srcreg;
+  T *destreg;
+};
 
 class VM {
 
@@ -176,7 +181,7 @@ class VM {
     //static const String dwStrings[3] = {"8", "16", "32"};
     static const char* _dataModeStrings[8];
     uint8_t * getPtr(uint16_t addr, Location locationType);
-    void loadRegWithConst(uint8_t reg, uint32_t c = 0); 
+    void loadRegWithConst(uint8_t reg, uint32_t c = 0);
     RegPair getRegPair();
     uint16_t _ip16;
     String OpcodeWithWidth2String(OpcodeAndDataWidth opdw); // Might not do this after all.
@@ -212,10 +217,10 @@ class VM {
 
 
     void moveData(uint8_t * srcptr, uint8_t * destptr, uint8_t datumWidth);
-    
+
     // The zero in changeIP acts as a semaphor value causing the address to reset to its original value.
-    void changeIP(int16_t addressDelta = 0); 
-    
+    void changeIP(int16_t addressDelta = 0);
+
     inline void setIP(uint16_t newIP) {
       _ip16 = newIP;
     }
@@ -245,6 +250,19 @@ class VM {
         Template code for variable type and width data
        =================================================
     */
+    template <class datum>
+    doublePointer<datum> getRegPair2() {
+      doublePointer<datum> dp;
+      uint8_t * srcptr;
+      uint8_t * destptr;
+      RegPair tr = getRegPair();
+      srcptr = getPtr(tr.reg1, Location::REG);
+      destptr = getPtr(tr.reg2, Location::REG);
+      dp.srcreg = reinterpret_cast<datum*>(srcptr);
+      dp.destreg = reinterpret_cast<datum*>(destptr);
+      return dp;
+    }
+
 
     template <class datum>
     void castRegData(datum &value1, datum &value2, RegPair rp) {

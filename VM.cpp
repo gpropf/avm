@@ -480,6 +480,8 @@ RegPair VM::getRegPair() {
   return rp;
 }
 
+
+
 String VM::OpcodeWithWidth2String(OpcodeAndDataWidth opdw) {
   return String(opdw.dw * 8);
 }
@@ -568,7 +570,7 @@ void VM::exec(Opcode opcode) {
       case Opcode::CMP_INT_8: {
           dprint(F("CMP_INT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-       //   uint8_t targetRegisters = readData <uint8_t> ();
+          //   uint8_t targetRegisters = readData <uint8_t> ();
           RegPair rp = getRegPair();
 
           /*
@@ -727,7 +729,7 @@ void VM::exec(Opcode opcode) {
       case Opcode::POP_REGS_8: {
           dprint(F("POP_REGS:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-        //  uint8_t targetRegisters = readData <uint8_t> ();
+          //  uint8_t targetRegisters = readData <uint8_t> ();
           RegPair tr = getRegPair();
 
           srcptr = getPtr(_SP, Location::MEM);
@@ -748,45 +750,64 @@ void VM::exec(Opcode opcode) {
           // Add srcreg to destreg and leave the result in destreg
           dprint(F("ADD_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-       //   uint8_t targetRegisters = readData <uint8_t> ();
-          RegPair tr = getRegPair();
-          srcptr = getPtr(tr.reg1, Location::REG);
-          destptr = getPtr(tr.reg2, Location::REG);
-          uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
-          uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
-          *destreg += *srcreg;
-          dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+          //   uint8_t targetRegisters = readData <uint8_t> ();
+
+          /*
+            RegPair tr = getRegPair();
+            srcptr = getPtr(tr.reg1, Location::REG);
+            destptr = getPtr(tr.reg2, Location::REG);
+            uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
+            uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
+          */
+
+          doublePointer<uint32_t> dp = getRegPair2<uint32_t>();
+
+          *(dp.destreg) += *(dp.srcreg);
+          /*
+            dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          */
           break;
         }
       case Opcode::MUL_UINT_8: {
           // Multiply srcreg and destreg and leave the result in destreg
           dprint(F("MUL_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-        //  uint8_t targetRegisters = readData <uint8_t> ();
-          RegPair tr = getRegPair();
-          srcptr = getPtr(tr.reg1, Location::REG);
-          destptr = getPtr(tr.reg2, Location::REG);
-          uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
-          uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
-          *destreg *= *srcreg;
-          dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+          /*
+            //  uint8_t targetRegisters = readData <uint8_t> ();
+            RegPair tr = getRegPair();
+            srcptr = getPtr(tr.reg1, Location::REG);
+            destptr = getPtr(tr.reg2, Location::REG);
+            uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
+            uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
+            destreg *= *srcreg;
+            dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+
+          */
+          doublePointer<uint32_t> dp = getRegPair2<uint32_t>();
+
+          *(dp.destreg) *= *(dp.srcreg);
           break;
         }
       case Opcode::SUB_UINT_8: {
           // Substract srcreg from destreg and leave the result in destreg
           dprint(F("SUB_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-         // uint8_t targetRegisters = readData <uint8_t> ();
-          RegPair tr = getRegPair();
-          srcptr = getPtr(tr.reg1, Location::REG);
-          destptr = getPtr(tr.reg2, Location::REG);
-          uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
-          uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
-          *destreg -= *srcreg;
-          dprintln("Reg2 - Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+          /*
+            // uint8_t targetRegisters = readData <uint8_t> ();
+            RegPair tr = getRegPair();
+            srcptr = getPtr(tr.reg1, Location::REG);
+            destptr = getPtr(tr.reg2, Location::REG);
+            uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
+            uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
+            destreg -= *srcreg;
+            dprintln("Reg2 - Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          */
+          doublePointer<uint32_t> dp = getRegPair2<uint32_t>();
+
+          *(dp.destreg) -= *(dp.srcreg);
           break;
         }
       case Opcode::DIV_UINT_8: {
@@ -801,60 +822,82 @@ void VM::exec(Opcode opcode) {
           */
           dprint(F("DIV_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-         // uint8_t targetRegisters = readData <uint8_t> ();
-          RegPair tr = getRegPair();
-          srcptr = getPtr(tr.reg1, Location::REG);
-          destptr = getPtr(tr.reg2, Location::REG);
-          uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
-          uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
-          *destreg /= *srcreg;
-          dprintln("Reg2 / Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+          /*
+            // uint8_t targetRegisters = readData <uint8_t> ();
+            RegPair tr = getRegPair();
+            srcptr = getPtr(tr.reg1, Location::REG);
+            destptr = getPtr(tr.reg2, Location::REG);
+            uint32_t * srcreg = reinterpret_cast<uint32_t*>(srcptr);
+            uint32_t * destreg = reinterpret_cast<uint32_t*>(destptr);
+            destreg /= *srcreg;
+            dprintln("Reg2 / Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          */
+          doublePointer<uint32_t> dp = getRegPair2<uint32_t>();
+
+          *(dp.destreg) /= *(dp.srcreg);
           break;
         }
       case Opcode::ADD_INT_8: {
           // Add srcreg to destreg and leave the result in destreg
           dprint(F("ADD_INT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-        //  uint8_t targetRegisters = readData <uint8_t> ();
-          RegPair tr = getRegPair();
-          srcptr = getPtr(tr.reg1, Location::REG);
-          destptr = getPtr(tr.reg2, Location::REG);
-          int32_t * srcreg = reinterpret_cast<int32_t*>(srcptr);
-          int32_t * destreg = reinterpret_cast<int32_t*>(destptr);
-          *destreg += *srcreg;
-          dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+          /*
+            //  uint8_t targetRegisters = readData <uint8_t> ();
+            RegPair tr = getRegPair();
+            srcptr = getPtr(tr.reg1, Location::REG);
+            destptr = getPtr(tr.reg2, Location::REG);
+            int32_t * srcreg = reinterpret_cast<int32_t*>(srcptr);
+            int32_t * destreg = reinterpret_cast<int32_t*>(destptr);
+            destreg += *srcreg;
+            dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+
+          */
+          doublePointer<int32_t> dp = getRegPair2<int32_t>();
+
+          *(dp.destreg) += *(dp.srcreg);
           break;
         }
       case Opcode::MUL_INT_8: {
           // Multiply srcreg and destreg and leave the result in destreg
           dprint(F("MUL_INT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-       //   uint8_t targetRegisters = readData <uint8_t> ();
-          RegPair tr = getRegPair();
-          srcptr = getPtr(tr.reg1, Location::REG);
-          destptr = getPtr(tr.reg2, Location::REG);
-          int32_t * srcreg = reinterpret_cast<int32_t*>(srcptr);
-          int32_t * destreg = reinterpret_cast<int32_t*>(destptr);
-          *destreg *= *srcreg;
-          dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+          /*
+            //   uint8_t targetRegisters = readData <uint8_t> ();
+            RegPair tr = getRegPair();
+            srcptr = getPtr(tr.reg1, Location::REG);
+            destptr = getPtr(tr.reg2, Location::REG);
+            int32_t * srcreg = reinterpret_cast<int32_t*>(srcptr);
+            int32_t * destreg = reinterpret_cast<int32_t*>(destptr);
+            destreg *= *srcreg;
+            dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          */
+          doublePointer<int32_t> dp = getRegPair2<int32_t>();
+
+          *(dp.destreg) *= *(dp.srcreg);
           break;
         }
       case Opcode::SUB_INT_8: {
           // Substract srcreg from destreg and leave the result in destreg
           dprint(F("SUB_INT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-        //  uint8_t targetRegisters = readData <uint8_t> ();
-          RegPair tr = getRegPair();
-          srcptr = getPtr(tr.reg1, Location::REG);
-          destptr = getPtr(tr.reg2, Location::REG);
-          int32_t * srcreg = reinterpret_cast<int32_t*>(srcptr);
-          int32_t * destreg = reinterpret_cast<int32_t*>(destptr);
-          *destreg -= *srcreg;
-          dprintln("Reg2 - Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+          /*
+            //  uint8_t targetRegisters = readData <uint8_t> ();
+            RegPair tr = getRegPair();
+            srcptr = getPtr(tr.reg1, Location::REG);
+            destptr = getPtr(tr.reg2, Location::REG);
+            int32_t * srcreg = reinterpret_cast<int32_t*>(srcptr);
+            int32_t * destreg = reinterpret_cast<int32_t*>(destptr);
+            destreg -= *srcreg;
+            dprintln("Reg2 - Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          */
+          doublePointer<int32_t> dp = getRegPair2<int32_t>();
+
+          *(dp.destreg) -= *(dp.srcreg);
+
           break;
         }
       case Opcode::DIV_INT_8: {
@@ -869,15 +912,20 @@ void VM::exec(Opcode opcode) {
           */
           dprint(F("DIV_INT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-       //   uint8_t targetRegisters = readData <uint8_t> ();
-          RegPair tr = getRegPair();
-          srcptr = getPtr(tr.reg1, Location::REG);
-          destptr = getPtr(tr.reg2, Location::REG);
-          int32_t * srcreg = reinterpret_cast<int32_t*>(srcptr);
-          int32_t * destreg = reinterpret_cast<int32_t*>(destptr);
-          *destreg /= *srcreg;
-          dprintln("Reg2 / Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+          /*
+            //   uint8_t targetRegisters = readData <uint8_t> ();
+            RegPair tr = getRegPair();
+            srcptr = getPtr(tr.reg1, Location::REG);
+            destptr = getPtr(tr.reg2, Location::REG);
+            int32_t * srcreg = reinterpret_cast<int32_t*>(srcptr);
+            int32_t * destreg = reinterpret_cast<int32_t*>(destptr);
+            destreg /= *srcreg;
+            dprintln("Reg2 / Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          */
+          doublePointer<int32_t> dp = getRegPair2<int32_t>();
+
+          *(dp.destreg) /= *(dp.srcreg);
           break;
         }
     }
@@ -897,45 +945,60 @@ void VM::exec(Opcode opcode) {
           // Add srcreg to destreg and leave the result in destreg
           dprint(F("ADD_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-         // uint8_t targetRegisters = readData <uint8_t> ();
-          RegPair tr = getRegPair();
-          srcptr = getPtr(tr.reg1, Location::REG);
-          destptr = getPtr(tr.reg2, Location::REG);
-          float * srcreg = reinterpret_cast<float*>(srcptr);
-          float * destreg = reinterpret_cast<float*>(destptr);
-          *destreg += *srcreg;
-          dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
-                   static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          // uint8_t targetRegisters = readData <uint8_t> ();
+          /*
+                    RegPair tr = getRegPair();
+                    srcptr = getPtr(tr.reg1, Location::REG);
+                    destptr = getPtr(tr.reg2, Location::REG);
+                    float * srcreg = reinterpret_cast<float*>(srcptr);
+                    float * destreg = reinterpret_cast<float*>(destptr);
+                     destreg += *srcreg;
+                    dprintln("Sum of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+                             static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          */
+          doublePointer<float> dp = getRegPair2<float>();
+
+          *(dp.destreg) += *(dp.srcreg);
           break;
         }
       case Opcode::MUL_FL: {
           // Multiply srcreg and destreg and leave the result in destreg
           dprint(F("MUL_FL:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-         // uint8_t targetRegisters = readData <uint8_t> ();
-          RegPair tr = getRegPair();
-          srcptr = getPtr(tr.reg1, Location::REG);
-          destptr = getPtr(tr.reg2, Location::REG);
-          float * srcreg = reinterpret_cast<float*>(srcptr);
-          float * destreg = reinterpret_cast<float*>(destptr);
-          *destreg *= *srcreg;
-          dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+          // uint8_t targetRegisters = readData <uint8_t> ();
+          /*
+            RegPair tr = getRegPair();
+            srcptr = getPtr(tr.reg1, Location::REG);
+            destptr = getPtr(tr.reg2, Location::REG);
+            float * srcreg = reinterpret_cast<float*>(srcptr);
+            float * destreg = reinterpret_cast<float*>(destptr);
+            destreg *= *srcreg;
+            dprintln("Product of register pair (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
                    static_cast<uint8_t>(PrintCategory::MATH));
+          */
+          doublePointer<float> dp = getRegPair2<float>();
+
+          *(dp.destreg) *= *(dp.srcreg);
           break;
         }
       case Opcode::SUB_FL: {
           // Substract srcreg from destreg and leave the result in destreg
           dprint(F("SUB_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-        //  uint8_t targetRegisters = readData <uint8_t> ();
-          RegPair tr = getRegPair();
-          srcptr = getPtr(tr.reg1, Location::REG);
-          destptr = getPtr(tr.reg2, Location::REG);
-          float * srcreg = reinterpret_cast<float*>(srcptr);
-          float * destreg = reinterpret_cast<float*>(destptr);
-          *destreg -= *srcreg;
-          dprintln("Reg2 - Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
-                   static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          /*
+                    //  uint8_t targetRegisters = readData <uint8_t> ();
+                    RegPair tr = getRegPair();
+                    srcptr = getPtr(tr.reg1, Location::REG);
+                    destptr = getPtr(tr.reg2, Location::REG);
+                    float * srcreg = reinterpret_cast<float*>(srcptr);
+                    float * destreg = reinterpret_cast<float*>(destptr);
+                     destreg -= *srcreg;
+                    dprintln("Reg2 - Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+                             static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          */
+          doublePointer<float> dp = getRegPair2<float>();
+
+          *(dp.destreg) -= *(dp.srcreg);
           break;
         }
       case Opcode::DIV_FL: {
@@ -950,15 +1013,20 @@ void VM::exec(Opcode opcode) {
           */
           dprint(F("DIV_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
-         // uint8_t targetRegisters = readData <uint8_t> ();
-          RegPair tr = getRegPair();
-          srcptr = getPtr(tr.reg1, Location::REG);
-          destptr = getPtr(tr.reg2, Location::REG);
-          float * srcreg = reinterpret_cast<float*>(srcptr);
-          float * destreg = reinterpret_cast<float*>(destptr);
-          *destreg /= *srcreg;
-          dprintln("Reg2 / Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
-                   static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          // uint8_t targetRegisters = readData <uint8_t> ();
+          /*
+                    RegPair tr = getRegPair();
+                    srcptr = getPtr(tr.reg1, Location::REG);
+                    destptr = getPtr(tr.reg2, Location::REG);
+                    float * srcreg = reinterpret_cast<float*>(srcptr);
+                    float * destreg = reinterpret_cast<float*>(destptr);
+                     destreg /= *srcreg;
+                    dprintln("Reg2 / Reg1 (" + String(tr.reg1) + "," + String(tr.reg2) + ") = " + String(*destreg),
+                             static_cast<uint8_t>(PrintCategory::REG) & static_cast<uint8_t>(PrintCategory::MATH));
+          */
+          doublePointer<float> dp = getRegPair2<float>();
+
+          *(dp.destreg) /= *(dp.srcreg);
           break;
         }
 
@@ -983,7 +1051,7 @@ void VM::exec(Opcode opcode) {
         }
       case Opcode::PRINT_AS: {
           dprint(F("PRINT_AS: "), static_cast<uint8_t>(PrintCategory::STATUS));
-         // uint8_t nibbles = readData <uint8_t> ();
+          // uint8_t nibbles = readData <uint8_t> ();
           RegPair tr = getRegPair();
           String s = getAsString(static_cast<uint8_t*>(&_reg[tr.reg2 * 4]), static_cast<DataMode>(tr.reg1));
           dprintln("Reg " + String(tr.reg2) + ", as " + VM::_dataModeStrings[tr.reg1] + " is " + s,
