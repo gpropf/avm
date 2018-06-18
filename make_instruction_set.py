@@ -19,7 +19,7 @@ from Asm import *
 
 def main():
     buildCHeader("instruction_set")
-    (mdMultiWidth, mdFixedWidth) = buildPythonConstants("instruction_set")
+    (mdMultiWidth, mdFixedWidth) = buildPythonStub("instruction_set")
     #return(mdMultiWidth,mdFixedWidth)
 
 #(mdMultiWidth, mdFixedWidth) = main()

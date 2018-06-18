@@ -438,7 +438,7 @@ def makeMetadataForOpcode(mnemonic, argFormats, formatCode):
     return md
 
     
-def emitCode(instructions, outf, codeType = "C++"):
+def emitInstructionSet(instructions, outf, codeType = "C++"):
     """ Creates the enum and python code for the instruction set from the JSON file."""
     currentBase = ""
     singleLineCommentStart = "// "
@@ -476,22 +476,22 @@ def buildCHeader(filename):
         data = json.load(read_file)
         outf.write ("enum class Opcode : uint8_t {\n")
         outf.write("\n// ----------------------------------- \tVARIABLE DATA WIDTH INSTRUCTIONS \t\n")
-        emitCode(data["instructions"]["multiWidth"], outf)
+        emitInstructionSet(data["instructions"]["multiWidth"], outf)
         outf.write("\n// ----------------------------------- \tFIXED DATA WIDTH INSTRUCTIONS \t\n")
-        emitCode(data["instructions"]["fixedWidth"], outf)
+        emitInstructionSet(data["instructions"]["fixedWidth"], outf)
         outf.write ("};\n")
         outf.close()
 
-def buildPythonConstants(filename):
+def buildPythonStub(filename):
     """ Creates the Python file containing the instruction metadata."""
     outf = open(filename + ".py", "w")
     with open(filename + ".json", "r") as read_file:
         data = json.load(read_file)
         outf.write ("###### Python Instruction Codes Constant Block ######\n")
         outf.write("\n## ----------------------------------- \tVARIABLE DATA WIDTH INSTRUCTIONS \t\n")
-        mdMultiWidth = emitCode(data["instructions"]["multiWidth"], outf, "Python")
+        mdMultiWidth = emitInstructionSet(data["instructions"]["multiWidth"], outf, "Python")
         outf.write("\n## ----------------------------------- \tFIXED DATA WIDTH INSTRUCTIONS \t\n")
-        mdFixedWidth = emitCode(data["instructions"]["fixedWidth"], outf, "Python")
+        mdFixedWidth = emitInstructionSet(data["instructions"]["fixedWidth"], outf, "Python")
         outf.write ("### END Python Constants ###\n")
         outf.write ("\n\n### Begin Python Metadata ###\n")
         outf.write("\n## ----------------------------------- \tVARIABLE DATA WIDTH INSTRUCTIONS \t\n")
