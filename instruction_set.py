@@ -79,8 +79,8 @@ RET = 254 + 0 ##  Uses stored return address and leaves return value on stack
 ### Begin Python Metadata ###
 
 ## ----------------------------------- 	VARIABLE DATA WIDTH INSTRUCTIONS 	
-mdFixedWidth = {'BINDAO': {'opcode': 209, 'argFormats': ['H', 'B'], 'formatCode': 'B'}, 'ADD_FL': {'opcode': 215, 'argFormats': ['N', 'N'], 'formatCode': 'B'}, 'SUB_FL': {'opcode': 216, 'argFormats': ['N', 'N'], 'formatCode': 'B'}, 'MUL_FL': {'opcode': 217, 'argFormats': ['N', 'N'], 'formatCode': 'B'}, 'DIV_FL': {'opcode': 218, 'argFormats': ['N', 'N'], 'formatCode': 'B'}}
+mdFixedWidth = {'BINDAO': {'opcode': 209, 'argFormats': ['H', 'B']}, 'ADD_FL': {'opcode': 215, 'argFormats': ['N', 'N']}, 'SUB_FL': {'opcode': 216, 'argFormats': ['N', 'N']}, 'MUL_FL': {'opcode': 217, 'argFormats': ['N', 'N']}, 'DIV_FL': {'opcode': 218, 'argFormats': ['N', 'N']}}
 ## ----------------------------------- 	FIXED DATA WIDTH INSTRUCTIONS 	
-mdMultiWidth = {'ADD_UINT_8': {'opcode': 0, 'argFormats': ['N', 'N'], 'formatCode': 'B'}, 'ADD_INT_8': {'opcode': 4, 'argFormats': ['N', 'N'], 'formatCode': 'B'}, 'MOV_REG2_MEM_8': {'opcode': 13, 'argFormats': ['B', 'H'], 'formatCode': 'B'}}
+mdMultiWidth = {'ADD_UINT_8': {'opcode': 0, 'argFormats': ['N', 'N']}, 'ADD_INT_8': {'opcode': 4, 'argFormats': ['N', 'N']}, 'MOV_REG2_MEM_8': {'opcode': 13, 'argFormats': ['B', 'H']}}
 
 ### End Python Metadata ###

@@ -428,13 +428,13 @@ def printAsHexString(program, addr = 0):
     print(hexstr)
     
 
-def makeMetadataForOpcode(mnemonic, argFormats, formatCode):
+def makeMetadataForOpcode(mnemonic, argFormats):
     try:
         opcode = eval(mnemonic)
     except:
         opcode = NO_OPCODE_YET
         
-    md = {'opcode': opcode, 'argFormats':argFormats, 'formatCode':formatCode}
+    md = {'opcode': opcode, 'argFormats':argFormats }
     return md
 
     
@@ -452,10 +452,9 @@ def emitInstructionSet(instructions, outf, codeType = "C++"):
     for instr in instructions:
         mnemonic = instr["mnemonic"]
         comments = ""
-        if "argFormats" in instr and "formatCode" in instr and codeType != "C++":
+        if "argFormats" in instr and codeType != "C++":
             argFormats = instr["argFormats"]
-            formatCode = instr["formatCode"]
-            metadata[mnemonic] = makeMetadataForOpcode(mnemonic, argFormats, formatCode)
+            metadata[mnemonic] = makeMetadataForOpcode(mnemonic, argFormats)
         if "comments" in instr:
             comments = singleLineCommentStart + instr["comments"]
         base = instr["base"]
