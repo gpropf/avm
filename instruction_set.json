@@ -3,11 +3,11 @@
 	"multiWidth": 
 	[
 	    { "mnemonic" : "MATH_BASE_8", "base" : "0", "comments" : "Math Operations Base" },
-	    { "mnemonic" : "ADD_UINT_8", "base" : "MATH_BASE_8", "argFormats":["N","N"], "formatCode":"B" },
+	    { "mnemonic" : "ADD_UINT_8", "base" : "MATH_BASE_8", "argFormats":["N","N"] },
 	    { "mnemonic" : "SUB_UINT_8", "base" : "MATH_BASE_8", "offset" : "1" },
 	    { "mnemonic" : "MUL_UINT_8", "base" : "MATH_BASE_8", "offset" : "2" },
 	    { "mnemonic" : "DIV_UINT_8", "base" : "MATH_BASE_8", "offset" : "3" },
-	    { "mnemonic" : "ADD_INT_8", "base" : "MATH_BASE_8", "argFormats":["N","N"], "formatCode":"B" },
+	    { "mnemonic" : "ADD_INT_8", "base" : "MATH_BASE_8", "argFormats":["N","N"] },
 	    { "mnemonic" : "SUB_INT_8", "base" : "MATH_BASE_8", "offset" : "1" },
 	    { "mnemonic" : "MUL_INT_8", "base" : "MATH_BASE_8", "offset" : "2" },
 	    { "mnemonic" : "DIV_INT_8", "base" : "MATH_BASE_8", "offset" : "3" },
@@ -18,7 +18,7 @@
 	    { "mnemonic" : "SHR_8", "base" : "MATH_BASE_8", "offset" : "8" },
 	    
 	    { "mnemonic" : "MOV_BASE_8", "base" : "MATH_BASE_8", "offset" : "9", "comments" : "Move Operations Base" },
-	    { "mnemonic" : "MOV_REG2_MEM_8", "base" : "MOV_BASE_8", "argFormats":["B","H"], "formatCode":"B"  },
+	    { "mnemonic" : "MOV_REG2_MEM_8", "base" : "MOV_BASE_8", "argFormats":["B","H"]  },
 	    { "mnemonic" : "MOV_MEM2_REG_8", "base" : "MOV_BASE_8", "offset" : "1" },
 	    { "mnemonic" : "MOV_REG2_SPREL_8", "base" : "MOV_BASE_8", "offset" : "2" },
 	    { "mnemonic" : "MOV_SPREL2_REG_8", "base" : "MOV_BASE_8", "offset" : "3" },
@@ -70,7 +70,7 @@
 	    { "mnemonic" : "BIND_BASE", "base" : "JUMP_BASE", "offset" : "5", "comments" : "Bind Operations Base" },
 	    { "mnemonic" : "BINDAI", "base" : "BIND_BASE", "comments" : "A16 V8: Bind a mem address (uint16_t) (analog input) to a pin (uint8_t)" },
 	    { "mnemonic" : "BINDDI", "base" : "BIND_BASE", "offset" : "1", "comments" : "A16 V8: Bind a mem address (uint16_t) (digital input) to a pin (uint8_t)" },
-	    { "mnemonic" : "BINDAO", "base" : "BIND_BASE", "argFormats":["H","B"], "formatCode":"B", "comments" : "A16 V8: Bind a mem address (uint16_t) (analog out) to a pin (uint8_t)" },
+	    { "mnemonic" : "BINDAO", "base" : "BIND_BASE", "argFormats":["H","B"], "comments" : "A16 V8: Bind a mem address (uint16_t) (analog out) to a pin (uint8_t)" },
 	    { "mnemonic" : "BINDDO", "base" : "BIND_BASE", "offset" : "3", "comments" : "A16 V8: Bind a mem address (uint16_t) (digital output) to a pin (uint8_t)" },
 	    { "mnemonic" : "BINDAP", "base" : "BIND_BASE", "offset" : "4", "comments" : "A16 V8: Bind a mem address (uint16_t) (analog input-pullup) to a pin (uint8_t)" },
 	    { "mnemonic" : "BINDDP", "base" : "BIND_BASE", "offset" : "5", "comments" : "A16 V8: Bind a mem address (uint16_t) (digital input-pullup) to a pin (uint8_t)" },
@@ -80,10 +80,10 @@
 
 	    { "mnemonic" : "FLOAT_MATH_BASE", "base" : "BIND_BASE", "offset" : "5", "comments" : "Floating point math Operations Base" },
 	    
-	    { "mnemonic" : "ADD_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "formatCode":"B" },
-	    { "mnemonic" : "SUB_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "offset" : "1", "argFormats":["N","N"], "formatCode":"B" },
-	    { "mnemonic" : "MUL_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "offset" : "2", "argFormats":["N","N"], "formatCode":"B" },
-	    { "mnemonic" : "DIV_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "offset" : "3", "argFormats":["N","N"], "formatCode":"B" },
+	    { "mnemonic" : "ADD_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"] },
+	    { "mnemonic" : "SUB_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "offset" : "1", "argFormats":["N","N"] },
+	    { "mnemonic" : "MUL_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "offset" : "2", "argFormats":["N","N"] },
+	    { "mnemonic" : "DIV_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "offset" : "3", "argFormats":["N","N"] },
 
 
 
