@@ -236,6 +236,7 @@ def captureIntructionArgs(program, verbose = False):
                     if 'bitWidth' in program[i]:
                         existingBitWidth = program[i]['bitWidth']
                         if desiredBitWidth != existingBitWidth:
+                            print("WARNING: in " + str(chunk))
                             print("WARNING: in " + program[i]['text'])
                             print("WARNING: bit width mismatch, expecting "
                                   + str(desiredBitWidth) + " bits, found " + str(existingBitWidth) + " bits.")
@@ -304,26 +305,27 @@ def buildSymbolTable(program):
     return symbols
 
 
-def emitByteCodes(program, symbols):
-    for chunk in program:
-        ctype = chunk['type']
-        ctext = chunk['text']
-        value = False
-        #print("CTYPE: " + ctype)
-        if ctype == 'instruction' and ctext in instructions:
+# def emitByteCodes(program, symbols):
+#     for chunk in program:
+#         ctype = chunk['type']
+#         ctext = chunk['text']
+#         value = False
+#         #print("CTYPE: " + ctype)
+#         if ctype == 'instruction' and ctext in instructions:
             
-            value = instructions[ctext]['opcode']
-            if opcode <= END_8:
-                value = value + END_8 * chunk['instructionEchelon']
-            chunk['value'] = value
-        elif ctype == 'variable' or ctype == 'label' and ctext in symbols:
-            value = symbols[ctext]['value']
-            chunk['value'] = value
+#             value = instructions[ctext]['opcode']
+#             if opcode <= END_8:
+#                 value = value + END_8 * chunk['instructionEchelon']
+#             chunk['value'] = value
+#         elif ctype == 'variable' or ctype == 'label' and ctext in symbols:
+#             value = symbols[ctext]['value']
+#             chunk['value'] = value
 
-        return program
+#         return program
             
 
 def tagByteValues(program, symbols):
+    """ Lookup symbol values in instruction list and user-defined symbol table, add them to the chunks. """
     for chunk in program:
         ctype = chunk['type']
         ctext = chunk['text']
@@ -341,6 +343,9 @@ def tagByteValues(program, symbols):
     return program
 
 def emitValues(program):
+    """The last stage here. Everything should have been resolved to a
+value and now we write out an array of numbers representing the
+bytecode."""
     formatCodes = { 8: ['b','B'], 16: ['h','H'], 32: ['i','I'] }
     dp = cl.deque(program)
     outp = []

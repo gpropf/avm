@@ -559,7 +559,7 @@ void VM::exec(Opcode opcode) {
     switch (opcode) {
       case Opcode::INC_SPREL_UINT_8: {
           dprint(F("INC_SPREL_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS)
-                 & static_cast<uint8_t>(PrintCategory::MATH));
+                 | static_cast<uint8_t>(PrintCategory::MATH));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t sprel = readData <uint8_t> ();
           srcptr = getPtr(sprel, Location::SPREL);
