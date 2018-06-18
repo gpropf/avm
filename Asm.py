@@ -18,26 +18,24 @@ dataBitWidths = {'H':16,'h':16,'i':32,'I':32,'f':32,'b':8,'B':8, 'N':4}
 ## N: a "nibble", 4 bits. Used to pack 2 register indices into a single byte.
 
 instructions = {
-    "BINDAI": {'opcode':BINDAI, 'argFormats':['H','B']},
-    "BINDDI": {'opcode':BINDDI, 'argFormats':['H','B']},
-    "PUSH_MEM_8": {'opcode':PUSH_MEM_8, 'argFormats':['H']},
-    "PUSH_CONST_8":{'opcode':PUSH_CONST_8, 'argFormats':['V']},
-    "POP_REGS_8": {'opcode':POP_REGS_8, 'argFormats':['N','N']},
-    "PRINT_AS": {'opcode':PRINT_AS, 'argFormats':['N','N']},
-    "POP_REGS_16": {'opcode':POP_REGS_8 + END_8, 'argFormats':['N','N']},
-    "UJMP": {'opcode':UJMP, 'argFormats':['H']},
-    "CALL": {'opcode':CALL, 'argFormats':['H']},
-    "MOV_SPREL2_REG_8": {'opcode': MOV_SPREL2_REG_8, 'argFormats':['B','B']},
-    "MOV_MEM2_REG_16": {'opcode': MOV_MEM2_REG_8 + END_8, 'argFormats':['H','B']},  
-    "RET": {'opcode': RET, 'argFormats':[]},
-    "NOOP": {'opcode': NOOP, 'argFormats':[]},
-    "MOV_REG2_SPREL_8": {'opcode': MOV_REG2_SPREL_8, 'argFormats':['B','B']},
-    "CMP_INT_8": {'opcode': CMP_INT_8, 'argFormats':['N','N']},
-    "MUL_UINT_8": {'opcode': MUL_UINT_8, 'argFormats':['N','N']},
-    "SUB_UINT_8": {'opcode': SUB_UINT_8, 'argFormats':['N','N']},
-    "JEQ": {'opcode': JEQ, 'argFormats':['H']},
-    "INC_SPREL_UINT_8": {'opcode': INC_SPREL_UINT_8, 'argFormats':['B']},
-    "SP_ADJ": {'opcode': SP_ADJ, 'argFormats':['B']},
+  #  "PUSH_MEM_8": {"opcode":PUSH_MEM_8,},
+  
+ #   "POP_REGS_8": {"opcode":POP_REGS_8, "argFormats":["N","N"]},
+ #   "PRINT_AS": {"opcode":PRINT_AS, "argFormats":["N","N"]},
+ #   "POP_REGS_16": {"opcode":POP_REGS_8 + END_8, "argFormats":["N","N"]},
+#    "UJMP": {"opcode":UJMP, "argFormats":["H"]},
+ #   "CALL": {"opcode":CALL, "argFormats":["H"]},
+ #   "MOV_SPREL2_REG_8": {"opcode": MOV_SPREL2_REG_8, "argFormats":["B","B"]},
+ #   "MOV_MEM2_REG_16": {"opcode": MOV_MEM2_REG_8 + END_8, "argFormats":["H","B"]},  
+ #   "RET": {"opcode": RET, "argFormats":[]},
+#    "NOOP": {"opcode": NOOP, "argFormats":[]},
+#    "MOV_REG2_SPREL_8": {"opcode": MOV_REG2_SPREL_8, "argFormats":["B","B"]},
+ #   "CMP_INT_8": {"opcode": CMP_INT_8, "argFormats":["N","N"]},
+  #  "MUL_UINT_8": {"opcode": MUL_UINT_8, "argFormats":["N","N"]},
+ #   "SUB_UINT_8": {"opcode": SUB_UINT_8, "argFormats":["N","N"]},
+ #   "JEQ": {"opcode": JEQ, "argFormats":["H"]},
+#    "INC_SPREL_UINT_8": {"opcode": INC_SPREL_UINT_8, "argFormats":["B"]},
+    
 }
 
 instructions = { **instructions, **mdFixedWidth, **mdMultiWidth }

@@ -4,9 +4,9 @@
 	[
 	    { "mnemonic" : "MATH_BASE_8", "base" : "0", "comments" : "Math Operations Base" },
 	    { "mnemonic" : "ADD_UINT_8", "base" : "MATH_BASE_8", "argFormats":["N","N"] },
-	    { "mnemonic" : "SUB_UINT_8", "base" : "MATH_BASE_8", "offset" : "1" },
-	    { "mnemonic" : "MUL_UINT_8", "base" : "MATH_BASE_8", "offset" : "2" },
-	    { "mnemonic" : "DIV_UINT_8", "base" : "MATH_BASE_8", "offset" : "3" },
+	    { "mnemonic" : "SUB_UINT_8", "base" : "MATH_BASE_8", "argFormats":["N","N"], "offset" : "1" },
+	    { "mnemonic" : "MUL_UINT_8", "base" : "MATH_BASE_8", "argFormats":["N","N"], "offset" : "2" },
+	    { "mnemonic" : "DIV_UINT_8", "base" : "MATH_BASE_8", "argFormats":["N","N"], "offset" : "3" },
 	    { "mnemonic" : "ADD_INT_8", "base" : "MATH_BASE_8", "argFormats":["N","N"] },
 	    { "mnemonic" : "SUB_INT_8", "base" : "MATH_BASE_8", "offset" : "1" },
 	    { "mnemonic" : "MUL_INT_8", "base" : "MATH_BASE_8", "offset" : "2" },
@@ -19,9 +19,9 @@
 	    
 	    { "mnemonic" : "MOV_BASE_8", "base" : "MATH_BASE_8", "offset" : "9", "comments" : "Move Operations Base" },
 	    { "mnemonic" : "MOV_REG2_MEM_8", "base" : "MOV_BASE_8", "argFormats":["B","H"]  },
-	    { "mnemonic" : "MOV_MEM2_REG_8", "base" : "MOV_BASE_8", "offset" : "1" },
-	    { "mnemonic" : "MOV_REG2_SPREL_8", "base" : "MOV_BASE_8", "offset" : "2" },
-	    { "mnemonic" : "MOV_SPREL2_REG_8", "base" : "MOV_BASE_8", "offset" : "3" },
+	    { "mnemonic" : "MOV_MEM2_REG_8", "base" : "MOV_BASE_8", "argFormats":["H","B"], "offset" : "1" },
+	    { "mnemonic" : "MOV_REG2_SPREL_8", "base" : "MOV_BASE_8", "offset" : "2", "argFormats":["B","B"] },
+	    { "mnemonic" : "MOV_SPREL2_REG_8", "base" : "MOV_BASE_8", "argFormats":["B","B"], "offset" : "3" },
 	    { "mnemonic" : "MOV_REG_IND2_SPREL_8", "base" : "MOV_BASE_8", "offset" : "4" },
 	    { "mnemonic" : "MOV_SPREL_IND2_REG_8", "base" : "MOV_BASE_8", "offset" : "5" },
 
@@ -31,22 +31,22 @@
 	    { "mnemonic" : "MOV_REG2_REG_8", "base" : "MOV_BASE_8", "offset" : "9" },
 
 	    { "mnemonic" : "PUSH_BASE_8", "base" : "MOV_BASE_8", "offset" : "10", "comments" : "Push Operations Base" },
-	    { "mnemonic" : "PUSH_MEM_8", "base" : "PUSH_BASE_8" },
+	    { "mnemonic" : "PUSH_MEM_8", "base" : "PUSH_BASE_8", "argFormats":["H"] },
 	    { "mnemonic" : "PUSH_SPREL_8", "base" : "PUSH_BASE_8", "offset" : "1" },
 	    { "mnemonic" : "PUSH_REGS_8", "base" : "PUSH_BASE_8", "offset" : "2", "comments" : " push one or two registers [R4,R4], if both are the same register then push only that one." },
 	    { "mnemonic" : "PUSH_REGS_IND_8", "base" : "PUSH_BASE_8", "offset" : "3" },
-	    { "mnemonic" : "PUSH_CONST_8", "base" : "PUSH_BASE_8", "offset" : "4" },
+	    { "mnemonic" : "PUSH_CONST_8", "base" : "PUSH_BASE_8", "argFormats":["V"], "offset" : "4" },
 
 	    { "mnemonic" : "POP_BASE_8", "base" : "PUSH_BASE_8", "offset" : "5", "comments" : "Pop Operations Base" },
-	    { "mnemonic" : "POP_REGS_8", "base" : "POP_BASE_8", "comments" : "Same as push, if there are two differe nt regs this pops 2 values." },
+	    { "mnemonic" : "POP_REGS_8", "base" : "POP_BASE_8",  "argFormats":["N","N"], "comments" : "Same as push, if there are two differe nt regs this pops 2 values." },
 
 	    { "mnemonic" : "CMP_BASE", "base" : "POP_BASE_8", "offset" : "1", "comments" : "Comparison Operations Base" },
-	    { "mnemonic" : "CMP_INT_8", "base" : "CMP_BASE" },
+	    { "mnemonic" : "CMP_INT_8", "base" : "CMP_BASE", "argFormats":["N","N"] },
 	    { "mnemonic" : "CMP_UINT_8", "base" : "CMP_BASE", "offset" : "1" },
 
 	    { "mnemonic" : "INC_BASE_spacer", "base" : "CMP_BASE", "offset" : "1", "comments" : "Inc Operations Base" },
 	    { "mnemonic" : "INC_BASE", "base" : "CMP_BASE", "offset" : "1", "comments" : "Inc Operations Base" },
-	    { "mnemonic" : "INC_SPREL_UINT_8", "base" : "INC_BASE", "offset" : "1" },
+	    { "mnemonic" : "INC_SPREL_UINT_8", "base" : "INC_BASE", "argFormats":["B"], "offset" : "1" },
 	    { "mnemonic" : "INC_SPREL_INT_8", "base" : "INC_BASE", "offset" : "2" },
 
 	    { "mnemonic" : "INC_END", "base" : "INC_SPREL_INT_8" },
@@ -62,21 +62,21 @@
 
 	    { "mnemonic" : "JUMP_BASE", "base" : "FIXED_WIDTH_BASE", "offset" : "2", "comments" : "Jump Operations Base" },
 	    { "mnemonic" : "JNE", "base" : "JUMP_BASE" },
-	    { "mnemonic" : "JEQ", "base" : "JUMP_BASE", "offset" : "1" },
+	    { "mnemonic" : "JEQ", "base" : "JUMP_BASE",  "argFormats":["H"], "offset" : "1" },
 	    { "mnemonic" : "JLT", "base" : "JUMP_BASE", "offset" : "2" },
 	    { "mnemonic" : "JGT", "base" : "JUMP_BASE", "offset" : "3" },
-	    { "mnemonic" : "UJMP", "base" : "JUMP_BASE", "offset" : "4", "comments" : " Unconditional jump" },
+	    { "mnemonic" : "UJMP", "base" : "JUMP_BASE", "argFormats":["H"], "offset" : "4", "comments" : " Unconditional jump" },
 
 	    { "mnemonic" : "BIND_BASE", "base" : "JUMP_BASE", "offset" : "5", "comments" : "Bind Operations Base" },
-	    { "mnemonic" : "BINDAI", "base" : "BIND_BASE", "comments" : "A16 V8: Bind a mem address (uint16_t) (analog input) to a pin (uint8_t)" },
-	    { "mnemonic" : "BINDDI", "base" : "BIND_BASE", "offset" : "1", "comments" : "A16 V8: Bind a mem address (uint16_t) (digital input) to a pin (uint8_t)" },
+	    { "mnemonic" : "BINDAI", "base" : "BIND_BASE", "argFormats":["H","B"], "comments" : "A16 V8: Bind a mem address (uint16_t) (analog input) to a pin (uint8_t)" },
+	    { "mnemonic" : "BINDDI", "base" : "BIND_BASE", "argFormats":["H","B"], "offset" : "1", "comments" : "A16 V8: Bind a mem address (uint16_t) (digital input) to a pin (uint8_t)" },
 	    { "mnemonic" : "BINDAO", "base" : "BIND_BASE", "argFormats":["H","B"], "comments" : "A16 V8: Bind a mem address (uint16_t) (analog out) to a pin (uint8_t)" },
 	    { "mnemonic" : "BINDDO", "base" : "BIND_BASE", "offset" : "3", "comments" : "A16 V8: Bind a mem address (uint16_t) (digital output) to a pin (uint8_t)" },
 	    { "mnemonic" : "BINDAP", "base" : "BIND_BASE", "offset" : "4", "comments" : "A16 V8: Bind a mem address (uint16_t) (analog input-pullup) to a pin (uint8_t)" },
 	    { "mnemonic" : "BINDDP", "base" : "BIND_BASE", "offset" : "5", "comments" : "A16 V8: Bind a mem address (uint16_t) (digital input-pullup) to a pin (uint8_t)" },
 
 	    { "mnemonic" : "SP_ADJ", "base" : "BIND_BASE", "offset" : "6", "comments" : " increment the SP without pop. Takes uint8_t as arg." },
-	    { "mnemonic" : "PRINT_AS", "base" : "BIND_BASE", "offset" : "7", "comments" : " Takes an 8 bit operand. First nibble is register to print, 2nd is type to print as." },
+	    { "mnemonic" : "PRINT_AS", "base" : "BIND_BASE", "argFormats":["N","N"], "offset" : "7", "comments" : " Takes an 8 bit operand. First nibble is register to print, 2nd is type to print as." },
 
 	    { "mnemonic" : "FLOAT_MATH_BASE", "base" : "BIND_BASE", "offset" : "5", "comments" : "Floating point math Operations Base" },
 	    
@@ -90,10 +90,10 @@
 	    
 	    
 	     { "mnemonic" : "TOP_BASE", "base" : "249", "offset" : "5", "comments" : "Bind Operations Base" },
-	    { "mnemonic" : "NOOP", "base" : "TOP_BASE", "offset" : "249", "comments" : "Top Operations Base" },
-	    { "mnemonic" : "NOOP_INIT", "base" : "TOP_BASE", "offset" : "250" },
-	    { "mnemonic" : "CALL", "base" : "255", "offset" : "255", "comments" : " Takes a uint16_t address of the function to call. Automatically saves return address" },
-	    { "mnemonic" : "RET", "base" : "254", "offset" : "254", "comments" : " Uses stored return address and leaves return value on stack" }
+	    { "mnemonic" : "NOOP", "base" : "TOP_BASE", "argFormats":[], "offset" : "249", "comments" : "Top Operations Base" },
+	    { "mnemonic" : "NOOP_INIT", "base" : "TOP_BASE", "argFormats":[], "offset" : "250" },
+	    { "mnemonic" : "CALL", "base" : "255", "argFormats":["H"], "offset" : "255", "comments" : " Takes a uint16_t address of the function to call. Automatically saves return address" },
+	    { "mnemonic" : "RET", "base" : "254",  "argFormats":[], "offset" : "254", "comments" : " Uses stored return address and leaves return value on stack" }
 	]
     }
 }
