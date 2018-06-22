@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11.2)
+cmake_minimum_required(VERSION 3.5.1)
 project(avmx86)
 
 #There are lots of scripts with cmake
@@ -30,6 +30,7 @@ include_directories(
 #arduino-includes/usr/avr/include
 .
 ${ARDUNIO_INSTALLATION_PATH}
+..
 ##/usr/avr/include
 #"/home/gregory/.arduino15/packages/arduino/hardware/avr/1.6.17/cores/arduino"
 "/home/gregory/.arduino15/packages/arduino/hardware/avr/1.6.17/variants/standard"

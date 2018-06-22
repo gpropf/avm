@@ -227,7 +227,7 @@ void REPL::parseCommand(String s)
     uint16_t addr = args[2].toInt();
     dprint(F("mem["));
     dprint(String(addr) + "] ", static_cast<uint8_t>(PrintCategory::REPL));
-    dprintln("as " + dm + ": " + _vm->getAsString(addr, dm), static_cast<uint8_t>(PrintCategory::REPL));
+    dprintln(String("as ") + dm + ": " + _vm->getAsString(addr, dm), static_cast<uint8_t>(PrintCategory::REPL));
 
   }
   else if (action == "l") {

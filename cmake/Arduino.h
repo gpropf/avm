@@ -1,4 +1,7 @@
 //#include "avr/variants/standard/pins_arduino.h"
+#ifndef Arduino_h
+#define Arduino_h
+
 #include <stdint.h>
 #include <string>
 
@@ -19,14 +22,15 @@ public:
   //operator+=(FakeString lhs,  FakeString rhs);
   //FakeString operator+(const FakeString& rhs);
   FakeString(char*);
+  FakeString(uint16_t);
   FakeString();
 
 
   int toInt();
   FakeString substring(int,int);
-    FakeString substring(int);
-    int length();
-    int indexOf(const char *);
+  FakeString substring(int);
+  int length();
+  int indexOf(const char *);
   
 };
 
@@ -48,7 +52,7 @@ struct FakeSerial {
 
 
   
- public:
+public:
   FakeSerial() {}
   static void flush();
   static void println(String s);
@@ -61,5 +65,6 @@ struct FakeSerial {
 
 void delay(int);
 
+extern FakeSerial Serial;
 
-FakeSerial Serial;
+#endif
