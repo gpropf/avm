@@ -244,7 +244,12 @@ void VM::PinBinding::print() {
       modeStr = "Unbound";
       break;
   }
-  dprintln("Pin " + String(_pin) + ", addr:" + String(_address) + ", mode:" + modeStr);
+  dprint(F("Pin "));
+  dprint(String(_pin));
+  dprint(F(", addr:"));
+  dprint(String(_address));
+  dprint(F(", mode:"));
+  dprintln(modeStr);
 }
 
 VM::PinBinding::PinBinding() {
@@ -292,7 +297,10 @@ void VM::PinBinding::updatePin(VM & vm) {
           // We MUST set the flag that advances the IP to false if reading from a
           // specific address. This probably can be coded as policy into readDate()
           // without problems but that needs to be tested.
-          dprintln("Writing Analog Value: " + String(val) + " to pin " + String(_pin));
+          dprint(F("Writing Analog Value: "));
+          dprint(String(val));
+          dprint(F(" to pin "));
+          dprint(String(_pin));
           analogWrite(_pin, val);
 
           break;
@@ -300,7 +308,10 @@ void VM::PinBinding::updatePin(VM & vm) {
       case INPUT:
         {
           uint16_t val = analogRead(_pin);
-          dprintln("Got analog value " + String(val) + " from pin " + String(_pin));
+          dprint(F("Got analog value "));
+          dprint(String(val));
+          dprint(F(" from pin "));
+          dprintln(String(_pin));
           //uint16_t * u16ptr = reinterpret_cast<uint16_t>(&vm._mem[_address]);
           vm.writeData<uint16_t>(val, _address, false, false);
           //vm._mem[_address] = val;
@@ -314,14 +325,20 @@ void VM::PinBinding::updatePin(VM & vm) {
     switch (_io) {
       case OUTPUT: {
           uint16_t val = vm.readData <uint16_t> (_address, false);
-          dprintln("Writing Digital Value" + String(val) + " to pin " + String(_pin));
+          dprint(F("Writing Digital Value"));
+          dprint(String(val));
+          dprint(F(" to pin "));
+          dprintln(String(_pin));
           digitalWrite(_pin, val);
           break;
         }
       case INPUT:
         {
           uint16_t val = digitalRead(_pin);
-          dprintln("Got digital value " + String(val) + " from pin " + String(_pin));
+          dprintln("Got digital value ");
+          dprint(String(val));
+          dprint(" from pin ");
+          dprintln(String(_pin));
           //uint16_t * u16ptr = reinterpret_cast<uint16_t>(&vm._mem[_address]);
           vm.writeData<uint16_t>(val, _address, false, false);
           //vm._mem[_address] = val;
@@ -335,8 +352,13 @@ void VM::PinBinding::updatePin(VM & vm) {
 
 void VM::printStatus() {
   //String amString = (_am == AddressingMode::REL) ? "Relative" : "Absolute";
-  dprintln("IP:" + String(static_cast<uint16_t>(_ip16)) + ", "
-           + "SP:" + String(_SP) + " cmpReg: " + String(static_cast<uint16_t>(_cmpReg)));
+  dprint("IP:");
+  dprint(String(static_cast<uint16_t>(_ip16)));
+  dprint(", ");
+  dprint("SP:");
+  dprint(String(_SP));
+  dprint(" cmpReg: ");
+  dprintln(String(static_cast<uint16_t>(_cmpReg)));
 }
 
 VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(stackSize) {
@@ -371,7 +393,10 @@ int16_t VM::getStringLength(char * startAddr) {
   while (true) {
     if (*p == 0 || i >= MAX_STRING_LENGTH )
       return i;
-    dprintln("At index " + String(i) + " char is " + String(*p));
+    dprint("At index ");
+    dprint(String(i));
+    dprint(" char is ");
+    dprintln(String(*p));
     i++;
     p++;
   }
@@ -583,76 +608,21 @@ void VM::exec(Opcode opcode) {
           int32_t r2;
           castRegData(r1, r2, rp);
           if (r1 < r2) {
-            dprintln("R1 < R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
+            dprint("R1 < R2: ", static_cast<uint8_t>(PrintCategory::MATH));
+
             _cmpReg = Comparison::LESS_THAN;
           }
           else if (r1 > r2) {
-            dprintln("R1 > R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
+            dprint("R1 > R2: ", static_cast<uint8_t>(PrintCategory::MATH));
             _cmpReg = Comparison::GREATER_THAN;
           }
           else {
-            dprintln("R1 = R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
+            dprint("R1 = R2: ", static_cast<uint8_t>(PrintCategory::MATH));
             _cmpReg = Comparison::EQUAL;
           }
-
-          /*
-            switch (opPair.dw) {
-            case 1: {
-                int8_t r1;
-                int8_t r2;
-                castRegData(r1, r2, rp);
-                if (r1 < r2) {
-                  dprintln("R1 < R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
-                  _cmpReg = Comparison::LESS_THAN;
-                }
-                else if (r1 > r2) {
-                  dprintln("R1 > R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
-                  _cmpReg = Comparison::GREATER_THAN;
-                }
-                else {
-                  dprintln("R1 = R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
-                  _cmpReg = Comparison::EQUAL;
-                }
-                break;
-              }
-            case 2: {
-                int16_t r1;
-                int16_t r2;
-                castRegData(r1, r2, rp);
-                if (r1 < r2) {
-                  dprintln("R1 < R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
-                  _cmpReg = Comparison::LESS_THAN;
-                }
-                else if (r1 > r2) {
-                  dprintln("R1 > R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
-                  _cmpReg = Comparison::GREATER_THAN;
-                }
-                else {
-                  dprintln("R1 = R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
-                  _cmpReg = Comparison::EQUAL;
-                }
-                break;
-              }
-            case 4: {
-                int32_t r1;
-                int32_t r2;
-                castRegData(r1, r2, rp);
-                if (r1 < r2) {
-                  dprintln("R1 < R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
-                  _cmpReg = Comparison::LESS_THAN;
-                }
-                else if (r1 > r2) {
-                  dprintln("R1 > R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
-                  _cmpReg = Comparison::GREATER_THAN;
-                }
-                else {
-                  dprintln("R1 = R2: " + String(r1) + "," + String(r2), static_cast<uint8_t>(PrintCategory::MATH));
-                  _cmpReg = Comparison::EQUAL;
-                }
-                break;
-              }
-
-            } */
+          dprint(String(r1), static_cast<uint8_t>(PrintCategory::MATH));
+          dprint(",", static_cast<uint8_t>(PrintCategory::MATH));
+          dprintln(String(r2), static_cast<uint8_t>(PrintCategory::MATH));
           break;
         }
       case Opcode::MOV_SPREL2_REG_8: {
@@ -1029,19 +999,6 @@ void VM::exec(Opcode opcode) {
           *(dp.destreg) /= *(dp.srcreg);
           break;
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
       case Opcode::SP_ADJ: {
           dprint(F("SP_ADJ: SP += "), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t adjustment = readData <uint8_t> ();
@@ -1054,9 +1011,14 @@ void VM::exec(Opcode opcode) {
           // uint8_t nibbles = readData <uint8_t> ();
           RegPair tr = getRegPair();
           String s = getAsString(static_cast<uint8_t*>(&_reg[tr.reg2 * 4]), static_cast<DataMode>(tr.reg1));
-          dprintln("Reg " + String(tr.reg2) + ", as " + VM::_dataModeStrings[tr.reg1] + " is " + s,
-                   static_cast<uint8_t>(PrintCategory::STATUS));
-          dprint(s, static_cast<uint8_t>(PrintCategory::PRINT));
+          dprint(F("Reg "), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(String(tr.reg2), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F(", as "), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(VM::_dataModeStrings[tr.reg1], static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F(" is "), static_cast<uint8_t>(PrintCategory::STATUS));
+
+
+          dprintln(s, static_cast<uint8_t>(PrintCategory::PRINT) | static_cast<uint8_t>(PrintCategory::STATUS));
 
           break;
         }
@@ -1064,7 +1026,8 @@ void VM::exec(Opcode opcode) {
           //dprintln(F("UJMP"), static_cast<uint8_t>(PrintCategory::STATUS));
           uint16_t addr = readData <uint16_t> ();
           _ip16 = addr;
-          dprintln("UJMP to addr: " + String(addr), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("UJMP to addr: "), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(String(addr), static_cast<uint8_t>(PrintCategory::STATUS));
           break;
         }
       case Opcode::JEQ: {
@@ -1072,10 +1035,11 @@ void VM::exec(Opcode opcode) {
           uint16_t addr = readData <uint16_t> ();
           if (_cmpReg == Comparison::EQUAL ) {
             _ip16 = addr;
-            dprintln("Comparison ==, jump to " + String(addr), static_cast<uint8_t>(PrintCategory::STATUS));
           } else {
-            dprintln("Comparison !=, - no jump to " + String(addr), static_cast<uint8_t>(PrintCategory::STATUS));
+            dprint(F("NO "), static_cast<uint8_t>(PrintCategory::STATUS));
           }
+          dprint(F("Jump to "), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(String(addr), static_cast<uint8_t>(PrintCategory::STATUS));
           break;
         }
       case Opcode::CALL: {
@@ -1083,7 +1047,8 @@ void VM::exec(Opcode opcode) {
           uint8_t * ipValPtr = reinterpret_cast<uint8_t*>(&_ip16);
           _SP -= 2; // make room on stack for return address
           uint8_t * destptr = &_mem[_SP];
-          dprintln("CALL: " + String(addr), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("CALL: "), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(String(addr), static_cast<uint8_t>(PrintCategory::STATUS));
           moveData(ipValPtr, destptr, 2);
           _ip16 = addr;
           break;
@@ -1176,7 +1141,10 @@ void VM::printRegisters() {
   dprintln(repeatString("R", 20), static_cast<uint8_t>(PrintCategory::REPL));
   for (uint8_t i = 0; i < 16 ; i++) {
     uint32_t * regptr32 = reinterpret_cast<uint32_t*>(&_reg[i * 4]);
-    dprintln("Reg " + String(i) + ": " + String(*regptr32), static_cast<uint8_t>(PrintCategory::REPL));
+    dprint("Reg ", static_cast<uint8_t>(PrintCategory::REPL));
+    dprint(String(i), static_cast<uint8_t>(PrintCategory::REPL));
+    dprint(": ", static_cast<uint8_t>(PrintCategory::REPL));
+    dprintln(String(*regptr32), static_cast<uint8_t>(PrintCategory::REPL));
   }
 }
 

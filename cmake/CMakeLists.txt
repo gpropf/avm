@@ -12,14 +12,14 @@ set(ARDUNIO_INSTALLATION_PATH /usr/share/arduino/hardware/archlinux-arduino)
 SET(CMAKE_CXX_COMPILER /usr/bin/g++)
 set(ARDUINO_SOURCE_PATH ..)
 set(HEADERS
-#	${ARDUINO_SOURCE_PATH}/config.h
+	${ARDUINO_SOURCE_PATH}/config.h
 	${ARDUINO_SOURCE_PATH}/util.h
-#	${ARDUINO_SOURCE_PATH}/VM.h
+	${ARDUINO_SOURCE_PATH}/VM.h
 	${ARDUINO_SOURCE_PATH}/REPL.h
 )
 
 set(SOURCE
-#	${ARDUINO_SOURCE_PATH}/VM.cpp
+	${ARDUINO_SOURCE_PATH}/VM.cpp
 	${ARDUINO_SOURCE_PATH}/REPL.cpp
 	${ARDUINO_SOURCE_PATH}/util.cpp
 )
@@ -42,7 +42,7 @@ target_compile_options(runavm PUBLIC -std=gnu++11)
 
 install(TARGETS runavm DESTINATION bin)
 
-set(CMAKE_CXX_FLAGS "-g -Wall -Os -Wall -Wextra -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto")
+set(CMAKE_CXX_FLAGS "-g -Wall -Wwrite-strings -Os -Wextra -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -flto")
 
 
 

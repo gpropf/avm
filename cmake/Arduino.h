@@ -35,6 +35,7 @@ public:
 };
 
 const char * operator+(const char *, const FakeString& rhs);
+//const char * operator+(const char *, const char *);
 const char * operator+(const FakeString& rhs, const char *);
 
 typedef FakeString String;
@@ -64,6 +65,12 @@ public:
 };
 
 void delay(int);
+void pinMode(uint8_t, uint8_t);
+void analogWrite(uint8_t, uint8_t);
+void analogRead(uint8_t);
+
+void digitalWrite(uint8_t, uint8_t);
+void digitalRead(uint8_t);
 
 extern FakeSerial Serial;
 
