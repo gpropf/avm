@@ -63,7 +63,7 @@
 
 */
 
-static char* VM::_dataModeStrings[] = {"u8", "u16", "u32", "i8", "i16", "i32", "f", "s"};
+static char const *VM::_dataModeStrings[] = {"u8", "u16", "u32", "i8", "i16", "i32", "f", "s"};
 static const uint8_t VM::dataWidth[] = {1, 2, 4, 1, 2, 4, 4, 2};
 
 
@@ -75,7 +75,7 @@ String VM::getAsString(uint16_t addr, const String modeString) {
       return getAsString(addr, static_cast<DataMode>(i));
     }
   }
-  return "";
+  return String();
 }
 
 String VM::getAsString(uint8_t* addr8, const DataMode dm) {
@@ -119,7 +119,7 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) {
         char currentChar = 39;
         // 39 is the code for "'". It's a cute way to have currentChar be non-zero
         // at the start and as a way to start the single-quoted string.
-        String s = "";
+        String s = String((char *)"");
         boolean firstChar = true;
         // dprintln("memAddr:" + String(memAddr), static_cast<uint8_t>(PrintCategory::REPL));
         while (memAddr < VM_MEM_SIZE && currentChar != 0) {
@@ -133,9 +133,9 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) {
         return s;
       }
     default:
-      return "";
+      return String((char *)"");
   }
-  return "";
+  return String((char *)"");
 }
 
 String VM::getAsString(uint16_t addr, const DataMode dm) {
@@ -223,25 +223,25 @@ void VM::createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr) {
 }
 
 void VM::PinBinding::print() {
-  String modeStr = "";
+  String modeStr = String((char *)"");
   if (_ad ==  true) {
-    modeStr += "A";
+    modeStr += String((char *)"A");
   }
   else {
-    modeStr += "D";
+    modeStr += String((char *)"D");
   }
   switch (_io) {
     case INPUT:
-      modeStr += "I";
+      modeStr += String((char *)"I");
       break;
     case OUTPUT:
-      modeStr += "O";
+      modeStr += String((char *)"O");
       break;
     case INPUT_PULLUP:
-      modeStr += "P";
+      modeStr += String((char *)"P");
       break;
     case NOT_BOUND:
-      modeStr = "Unbound";
+      modeStr = String((char *)"Unbound");
       break;
   }
   dprint(F("Pin "));

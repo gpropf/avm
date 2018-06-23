@@ -177,9 +177,9 @@ class VM {
     // _AP is "append pointer, used at the beginning to make it easy to push a bunch
     // of instructions and data into the memory.
     int16_t getStringLength(char * startAddr);
-    static constexpr char * dmString = "UIFS";
+    //static constexpr char * dmString = "UIFS";
     //static const String dwStrings[3] = {"8", "16", "32"};
-    static char* _dataModeStrings[];
+    static char const *_dataModeStrings[];
     uint8_t * getPtr(uint16_t addr, Location locationType);
     void loadRegWithConst(uint8_t reg, uint32_t c = 0);
     RegPair getRegPair();

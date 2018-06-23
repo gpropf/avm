@@ -11,7 +11,7 @@
 String REPL::readCommand() {
   char readBuf[READ_BUFFER_LENGTH];
   uint8_t bytesRead = 0;
-  String cmd = "";
+  String cmd = String("");
 
   while (true) {
     for (uint8_t i = 0; i < READ_BUFFER_LENGTH; i++) {

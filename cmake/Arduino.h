@@ -67,10 +67,10 @@ public:
 void delay(int);
 void pinMode(uint8_t, uint8_t);
 void analogWrite(uint8_t, uint8_t);
-void analogRead(uint8_t);
+uint16_t analogRead(uint8_t);
 
 void digitalWrite(uint8_t, uint8_t);
-void digitalRead(uint8_t);
+bool digitalRead(uint8_t);
 
 extern FakeSerial Serial;
 
