@@ -454,7 +454,7 @@ uint8_t * VM::getPtr(uint16_t addr, Location locationType) {
   }
 }
 
-static Opcode VM::getOpcodeByDataWidth(Opcode c, uint8_t dw) {
+Opcode VM::getOpcodeByDataWidth(Opcode c, uint8_t dw) {
   /* This is the inverse of the VM::getOpcodeAndDataWidth(Opcode c) method */
   uint8_t cval = static_cast<uint8_t>(c);
   switch (dw) {
@@ -473,7 +473,7 @@ static Opcode VM::getOpcodeByDataWidth(Opcode c, uint8_t dw) {
 
 }
 
-static OpcodeAndDataWidth VM::getOpcodeAndDataWidth(Opcode c) {
+OpcodeAndDataWidth VM::getOpcodeAndDataWidth(Opcode c) {
   /* This function translates a raw opcode into its equivalent
       8 bit code and a data width value in bytes. The data width value ("dw")
       is used to determine which actual operation to perfom.
@@ -905,6 +905,9 @@ void VM::exec(Opcode opcode) {
           *(dp.destreg) /= *(dp.srcreg);
           break;
         }
+      default: {
+          dprintln(F("INVALID INSTRUCTION:"));
+        }
     }
   }
   else {
@@ -1021,7 +1024,7 @@ void VM::exec(Opcode opcode) {
           dprint(F("Reg "), static_cast<uint8_t>(PrintCategory::STATUS));
           dprint(String(tr.reg2), static_cast<uint8_t>(PrintCategory::STATUS));
           dprint(F(", as "), static_cast<uint8_t>(PrintCategory::STATUS));
-          dprint(VM::_dataModeStrings[tr.reg1], static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(String((char *)VM::_dataModeStrings[tr.reg1]), static_cast<uint8_t>(PrintCategory::STATUS));
           dprint(F(" is "), static_cast<uint8_t>(PrintCategory::STATUS));
 
 

@@ -40,7 +40,9 @@ const char * operator+(const char *, const FakeString& rhs);
 const char * operator+(const FakeString& rhs, const char *);
 
 typedef FakeString String;
-typedef String F;
+//typedef String F;
+
+#define F(s) String((char *)s)
 
 typedef bool boolean;
 
