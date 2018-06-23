@@ -40,7 +40,7 @@ class REPL {
     String getPromptString(String subPrompt);
     String readCommand();
     //void evalCommand(String cmd);
-    void loop(String subPrompt = "");
+    void loop(String subPrompt = String((char *)""));
     VM * bindVM(VM * vm);
     void toggleStepping();
     void parseCommand(String s);

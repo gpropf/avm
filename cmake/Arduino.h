@@ -12,6 +12,7 @@ struct FakeString {
 public:
   uint8_t charAt(int);
   inline bool operator==(const FakeString& lhs) { return false; };
+  inline bool operator!=(const FakeString& lhs) { return false; };
   inline bool operator!=(const char [1]) { return false; };
   inline bool operator==(const char *) { return false; };
   FakeString operator+=(const FakeString& lhs);
