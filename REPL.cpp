@@ -11,7 +11,7 @@
 String REPL::readCommand() {
   char readBuf[READ_BUFFER_LENGTH];
   uint8_t bytesRead = 0;
-  String cmd = String("");
+  String cmd = String(F(""));
 
   while (true) {
     for (uint8_t i = 0; i < READ_BUFFER_LENGTH; i++) {
@@ -50,8 +50,8 @@ String REPL::readCommand() {
 
 String REPL::getPromptString(String subPrompt) {
   String tabs;
-  if (subPrompt != "") {
-    tabs = "\t";
+  if (subPrompt != F("")) {
+    tabs = F("\t");
   }
   return tabs + _leftPrompt + String(_eptr++) + _rightPrompt + subPrompt;
 }
@@ -70,7 +70,7 @@ void REPL::loop(String subPrompt) {
           break;
         }
       case RUN: {
-          dprintln("");
+          dprintln(F(""));
           _vm->step();
           break;
         }

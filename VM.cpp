@@ -69,7 +69,7 @@ static const uint8_t VM::dataWidth[] = {1, 2, 4, 1, 2, 4, 4, 2};
 
 String VM::getAsString(uint16_t addr, const String modeString) {
   uint8_t numModeStrings = sizeof(VM::_dataModeStrings) / sizeof(VM::_dataModeStrings[0]);
-  //dprintln("sizeof(VM::_dataModeStrings): " + String(numModeStrings));
+  //dprintln(F("sizeof(VM::_dataModeStrings): ") + String(numModeStrings));
   for (uint8_t i = 0; i < numModeStrings; i++) {
     if (modeString == VM::_dataModeStrings[i]) {
       return getAsString(addr, static_cast<DataMode>(i));
@@ -79,7 +79,7 @@ String VM::getAsString(uint16_t addr, const String modeString) {
 }
 
 String VM::getAsString(uint8_t* addr8, const DataMode dm) {
-  //dprintln("getAsString: " + String(static_cast<uint8_t>(dm)), static_cast<uint8_t>(PrintCategory::STATUS));
+  //dprintln(F("getAsString: ") + String(static_cast<uint8_t>(dm)), static_cast<uint8_t>(PrintCategory::STATUS));
   switch (dm) {
     case DataMode::UINT8: {
         return String(*reinterpret_cast<uint8_t*>(addr8));
@@ -115,20 +115,20 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) {
         */
 
         uint16_t memAddr = *reinterpret_cast<uint16_t*>(addr8);
-        //dprintln("String addr = " + String(memAddr), static_cast<uint8_t>(PrintCategory::STATUS));
+        //dprintln(F("String addr = ") + String(memAddr), static_cast<uint8_t>(PrintCategory::STATUS));
         char currentChar = 39;
         // 39 is the code for "'". It's a cute way to have currentChar be non-zero
         // at the start and as a way to start the single-quoted string.
         String s = String((char *)"");
         boolean firstChar = true;
-        // dprintln("memAddr:" + String(memAddr), static_cast<uint8_t>(PrintCategory::REPL));
+        // dprintln(F("memAddr:") + String(memAddr), static_cast<uint8_t>(PrintCategory::REPL));
         while (memAddr < VM_MEM_SIZE && currentChar != 0) {
           if (!firstChar && currentChar != 0)
             s += currentChar;
           firstChar = false;
           currentChar = readData<char>(memAddr++, false);
         }
-        // dprintln("STRING:" + s, static_cast<uint8_t>(PrintCategory::REPL));
+        // dprintln(F("STRING:") + s, static_cast<uint8_t>(PrintCategory::REPL));
 
         return s;
       }
@@ -175,7 +175,7 @@ String VM::getAsString(uint16_t addr, const DataMode dm) {
         char currentChar = 39;
         // 39 is the code for "'". It's a cute way to have currentChar be non-zero
         // at the start and as a way to start the single-quoted string.
-        String s = "";
+        String s = F("");
         while (addr < VM_MEM_SIZE && currentChar != 0) {
           s += currentChar;
           currentChar = readData<char>(addr++, false);
@@ -335,9 +335,9 @@ void VM::PinBinding::updatePin(VM & vm) {
       case INPUT:
         {
           uint16_t val = digitalRead(_pin);
-          dprintln("Got digital value ");
+          dprintln(F("Got digital value "));
           dprint(String(val));
-          dprint(" from pin ");
+          dprint(F(" from pin "));
           dprintln(String(_pin));
           //uint16_t * u16ptr = reinterpret_cast<uint16_t>(&vm._mem[_address]);
           vm.writeData<uint16_t>(val, _address, false, false);
@@ -352,12 +352,12 @@ void VM::PinBinding::updatePin(VM & vm) {
 
 void VM::printStatus() {
   //String amString = (_am == AddressingMode::REL) ? "Relative" : "Absolute";
-  dprint("IP:");
+  dprint(F("IP:"));
   dprint(String(static_cast<uint16_t>(_ip16)));
-  dprint(", ");
-  dprint("SP:");
+  dprint(F(", "));
+  dprint(F("SP:"));
   dprint(String(_SP));
-  dprint(" cmpReg: ");
+  dprint(F(" cmpReg: "));
   dprintln(String(static_cast<uint16_t>(_cmpReg)));
 }
 
@@ -382,7 +382,7 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
 }
 
 void VM::setSP(uint16_t newIP) {
-  dprint("New SP:");
+  dprint(F("New SP:"));
   dprintln(String(newIP));
   _SP = newIP;
 }
@@ -390,13 +390,13 @@ void VM::setSP(uint16_t newIP) {
 int16_t VM::getStringLength(char * startAddr) {
   char * p = startAddr;
   uint16_t i = 0;
-  //dprintln("VM::getStringLength(char * startAddr)");
+  //dprintln(F("VM::getStringLength(char * startAddr)"));
   while (true) {
     if (*p == 0 || i >= MAX_STRING_LENGTH )
       return i;
-    dprint("At index ");
+    dprint(F("At index "));
     dprint(String(i));
-    dprint(" char is ");
+    dprint(F(" char is "));
     dprintln(String(*p));
     i++;
     p++;
@@ -497,14 +497,14 @@ OpcodeAndDataWidth VM::getOpcodeAndDataWidth(Opcode c) {
 
 RegPair VM::getRegPair() {
   uint8_t registers = readData <uint8_t> ();
-  dprint("POP targets = :", static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
+  dprint(F("POP targets = :"), static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
   dprintln(String(registers), static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
   RegPair rp;
   rp.reg1 = registers & 0x0f; // low nibble (4bits)
   rp.reg2 = (registers & 0xf0) >> 4; // high nibble (4bits)
-  dprint("reg1 = :", static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
+  dprint(F("reg1 = :"), static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
   dprint(String(rp.reg1), static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
-  dprint("reg2 = :", static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
+  dprint(F("reg2 = :"), static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
   dprintln(String(rp.reg2), static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
   return rp;
 }
@@ -517,15 +517,15 @@ String VM::OpcodeWithWidth2String(OpcodeAndDataWidth opdw) {
 
 
 void VM::exec(Opcode opcode) {
-  //dprintln("sp: " + String(_SP) + ",ip: " + String(_ip16), static_cast<uint8_t>(PrintCategory::REPL));
+  //dprintln(F("sp: " + String(_SP) + ",ip: ") + String(_ip16), static_cast<uint8_t>(PrintCategory::REPL));
   uint8_t opcodeVal = static_cast<uint8_t>(opcode);
   uint8_t * buf = NULL;
 
   OpcodeAndDataWidth opPair = VM::getOpcodeAndDataWidth(opcode);
-  dprint("Opcode: ", static_cast<uint8_t>(PrintCategory::STATUS));
+  dprint(F("Opcode: "), static_cast<uint8_t>(PrintCategory::STATUS));
 
   dprint(String(static_cast<uint8_t>(opPair.c)), static_cast<uint8_t>(PrintCategory::STATUS));
-  dprint(", Data width : ", static_cast<uint8_t>(PrintCategory::STATUS));
+  dprint(F(", Data width : "), static_cast<uint8_t>(PrintCategory::STATUS));
   dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
   opcode = opPair.c;
   //uint8_t dw = opPair.dw;
@@ -549,7 +549,7 @@ void VM::exec(Opcode opcode) {
         io = OUTPUT;
         break;
       case Opcode::BINDAI:
-        dprintln("BINDAI", static_cast<uint8_t>(PrintCategory::STATUS));
+        dprintln(F("BINDAI"), static_cast<uint8_t>(PrintCategory::STATUS));
         ad = true;
         io = INPUT;
         break;
@@ -585,7 +585,7 @@ void VM::exec(Opcode opcode) {
 
     */
 
-    // dprintln("BELOW FIXED WIDTH BASE: IP = " + String(_ip16), static_cast<uint8_t>(PrintCategory::STATUS));
+    // dprintln(F("BELOW FIXED WIDTH BASE: IP = ") + String(_ip16), static_cast<uint8_t>(PrintCategory::STATUS));
     uint8_t * srcptr;
     uint8_t * destptr;
     switch (opcode) {
@@ -615,20 +615,20 @@ void VM::exec(Opcode opcode) {
           int32_t r2;
           castRegData(r1, r2, rp);
           if (r1 < r2) {
-            dprint("R1 < R2: ", static_cast<uint8_t>(PrintCategory::MATH));
+            dprint(F("R1 < R2: "), static_cast<uint8_t>(PrintCategory::MATH));
 
             _cmpReg = Comparison::LESS_THAN;
           }
           else if (r1 > r2) {
-            dprint("R1 > R2: ", static_cast<uint8_t>(PrintCategory::MATH));
+            dprint(F("R1 > R2: "), static_cast<uint8_t>(PrintCategory::MATH));
             _cmpReg = Comparison::GREATER_THAN;
           }
           else {
-            dprint("R1 = R2: ", static_cast<uint8_t>(PrintCategory::MATH));
+            dprint(F("R1 = R2: "), static_cast<uint8_t>(PrintCategory::MATH));
             _cmpReg = Comparison::EQUAL;
           }
           dprint(String(r1), static_cast<uint8_t>(PrintCategory::MATH));
-          dprint(",", static_cast<uint8_t>(PrintCategory::MATH));
+          dprint(F(","), static_cast<uint8_t>(PrintCategory::MATH));
           dprintln(String(r2), static_cast<uint8_t>(PrintCategory::MATH));
           break;
         }
@@ -1072,7 +1072,7 @@ void VM::exec(Opcode opcode) {
              ==============================================================
           */
           uint16_t * retAddr = reinterpret_cast<uint16_t*>(&_reg[0]);
-          dprint("RET to addr in Reg0: ", static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("RET to addr in Reg0: "), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(String(*retAddr), static_cast<uint8_t>(PrintCategory::STATUS));
           _ip16 = *retAddr;
           break;
@@ -1084,25 +1084,25 @@ void VM::exec(Opcode opcode) {
         break;
     }
   }
-  //dprintln("After inst (sp,ip) : (" + String(_SP) + "," + String(_ip16) + ")\n");
+  //dprintln(F("After inst (sp,ip) : (" + String(_SP) + "," + String(_ip16) + ")\n"));
 }
 
 void VM::step() {
-  dprintln(repeatString("-=", 40), static_cast<uint8_t>(PrintCategory::STATUS));
+  dprintln(repeatString(F("-="), 40), static_cast<uint8_t>(PrintCategory::STATUS));
   updateBoundData();
-  //dprintln(repeatString("B", 5), static_cast<uint8_t>(PrintCategory::STATUS));
+  //dprintln(repeatString(F("B"), 5), static_cast<uint8_t>(PrintCategory::STATUS));
   printStatus();
-  //dprintln(repeatString("C", 5), static_cast<uint8_t>(PrintCategory::STATUS));
-  //dprintln("*** sp: " + String(_SP) + ",ip: " + String(_ip16), static_cast<uint8_t>(PrintCategory::REPL));
+  //dprintln(repeatString(F("C"), 5), static_cast<uint8_t>(PrintCategory::STATUS));
+  //dprintln(F("*** sp: " + String(_SP) + ",ip: ") + String(_ip16), static_cast<uint8_t>(PrintCategory::REPL));
   Opcode opcode = readData <Opcode> (_ip16);
-  //dprintln("Opcode:" + String(static_cast<uint8_t>(opcode)));
+  //dprintln(F("Opcode:") + String(static_cast<uint8_t>(opcode)));
   exec(opcode);
 
 }
 
 void VM::updateBoundData() {
   for (uint8_t i = 0; i < NUM_PINS; i++) {
-    //dprint("i:" + String(i));
+    //dprint(F("i:") + String(i));
     _pinBindings[i].updatePin(*this);
 
   }
@@ -1114,21 +1114,21 @@ void VM::printBindings() {
 }
 
 void VM::printMem(uint16_t startAddr, uint16_t endAddr, boolean printAsCArray) {
-  dprintln(repeatString("M", 20), static_cast<uint8_t>(PrintCategory::REPL));
+  dprintln(repeatString(F("M"), 20), static_cast<uint8_t>(PrintCategory::REPL));
 
-  String divider = "\n";
-  String preamble = "";
-  String postamble = "";
+  String divider = F("\n");
+  String preamble = F("");
+  String postamble = F("");
   if (printAsCArray) {
-    preamble = "[";
-    postamble = "]\n";
-    divider = ", ";
+    preamble = F("[");
+    postamble = F("]\n");
+    divider = F(", ");
   }
   dprint(preamble, static_cast<uint8_t>(PrintCategory::REPL));
   for (uint16_t i = startAddr; i < endAddr; i++) {
     if (printAsCArray) {
       if ((i - startAddr + 1) % 10 == 0) {
-        dprintln("");
+        dprintln(F(""));
       }
 
     }
@@ -1142,19 +1142,19 @@ void VM::printMem(uint16_t startAddr, uint16_t endAddr, boolean printAsCArray) {
 }
 
 void VM::printStack() {
-  dprintln(repeatString("S", 20), static_cast<uint8_t>(PrintCategory::REPL));
+  dprintln(repeatString(F("S"), 20), static_cast<uint8_t>(PrintCategory::REPL));
   for (uint16_t i = STACK_TOP - 1; i > STACK_TOP - _stackSize; i--) {
     dprintln(String(i) + ": " + String(static_cast<uint8_t>(_mem[i])), static_cast<uint8_t>(PrintCategory::REPL));
   }
 }
 
 void VM::printRegisters() {
-  dprintln(repeatString("R", 20), static_cast<uint8_t>(PrintCategory::REPL));
+  dprintln(repeatString(F("R"), 20), static_cast<uint8_t>(PrintCategory::REPL));
   for (uint8_t i = 0; i < 16 ; i++) {
     uint32_t * regptr32 = reinterpret_cast<uint32_t*>(&_reg[i * 4]);
-    dprint("Reg ", static_cast<uint8_t>(PrintCategory::REPL));
+    dprint(F("Reg "), static_cast<uint8_t>(PrintCategory::REPL));
     dprint(String(i), static_cast<uint8_t>(PrintCategory::REPL));
-    dprint(": ", static_cast<uint8_t>(PrintCategory::REPL));
+    dprint(F(": "), static_cast<uint8_t>(PrintCategory::REPL));
     dprintln(String(*regptr32), static_cast<uint8_t>(PrintCategory::REPL));
   }
 }

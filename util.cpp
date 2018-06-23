@@ -3,7 +3,7 @@
 #include "util.h"
 
 String repeatString(const String s, const uint8_t n) {
-  String rs = "";
+  String rs = F("");
   for (uint8_t i = 0; i < n; i++) {
     rs += s;
   }
