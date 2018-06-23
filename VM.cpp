@@ -63,7 +63,7 @@
 
 */
 
-static const char* VM::_dataModeStrings[] = {"u8", "u16", "u32", "i8", "i16", "i32", "f", "s"};
+static char* VM::_dataModeStrings[] = {"u8", "u16", "u32", "i8", "i16", "i32", "f", "s"};
 static const uint8_t VM::dataWidth[] = {1, 2, 4, 1, 2, 4, 4, 2};
 
 
@@ -382,7 +382,8 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
 }
 
 void VM::setSP(uint16_t newIP) {
-  dprintln("New SP:" + String(newIP));
+  dprint("New SP:");
+  dprintln(String(newIP));
   _SP = newIP;
 }
 
@@ -496,12 +497,15 @@ static OpcodeAndDataWidth VM::getOpcodeAndDataWidth(Opcode c) {
 
 RegPair VM::getRegPair() {
   uint8_t registers = readData <uint8_t> ();
-  dprintln("POP targets = :" + String(registers), static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
+  dprint("POP targets = :", static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
+  dprintln(String(registers), static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
   RegPair rp;
   rp.reg1 = registers & 0x0f; // low nibble (4bits)
   rp.reg2 = (registers & 0xf0) >> 4; // high nibble (4bits)
-  dprintln("reg1 = :" + String(rp.reg1), static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
-  dprintln("reg2 = :" + String(rp.reg2), static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
+  dprint("reg1 = :", static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
+  dprint(String(rp.reg1), static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
+  dprint("reg2 = :", static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
+  dprintln(String(rp.reg2), static_cast<uint8_t>(PrintCategory::POP) & static_cast<uint8_t>(PrintCategory::REG));
   return rp;
 }
 
@@ -518,8 +522,11 @@ void VM::exec(Opcode opcode) {
   uint8_t * buf = NULL;
 
   OpcodeAndDataWidth opPair = VM::getOpcodeAndDataWidth(opcode);
-  dprint("Opcode: " + String(static_cast<uint8_t>(opPair.c)), static_cast<uint8_t>(PrintCategory::STATUS));
-  dprintln(", Data width : " + OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
+  dprint("Opcode: ", static_cast<uint8_t>(PrintCategory::STATUS));
+
+  dprint(String(static_cast<uint8_t>(opPair.c)), static_cast<uint8_t>(PrintCategory::STATUS));
+  dprint(", Data width : ", static_cast<uint8_t>(PrintCategory::STATUS));
+  dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
   opcode = opPair.c;
   //uint8_t dw = opPair.dw;
   if (opcode == Opcode::BINDAO || opcode == Opcode::BINDAI ||
@@ -1062,7 +1069,8 @@ void VM::exec(Opcode opcode) {
              ==============================================================
           */
           uint16_t * retAddr = reinterpret_cast<uint16_t*>(&_reg[0]);
-          dprintln("RET to addr in Reg0: " + String(*retAddr), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint("RET to addr in Reg0: ", static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(String(*retAddr), static_cast<uint8_t>(PrintCategory::STATUS));
           _ip16 = *retAddr;
           break;
         }
