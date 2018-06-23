@@ -22,6 +22,7 @@ set(SOURCE
 	${ARDUINO_SOURCE_PATH}/VM.cpp
 	${ARDUINO_SOURCE_PATH}/REPL.cpp
 	${ARDUINO_SOURCE_PATH}/util.cpp
+	Arduino.cpp
 )
 
 include_directories(

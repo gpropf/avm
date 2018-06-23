@@ -63,11 +63,11 @@
 
 */
 
-static char const *VM::_dataModeStrings[] = {"u8", "u16", "u32", "i8", "i16", "i32", "f", "s"};
-static const uint8_t VM::dataWidth[] = {1, 2, 4, 1, 2, 4, 4, 2};
+char const *VM::_dataModeStrings[] = {"u8", "u16", "u32", "i8", "i16", "i32", "f", "s"};
+const uint8_t VM::dataWidth[] = {1, 2, 4, 1, 2, 4, 4, 2};
 
 
-String VM::getAsString(uint16_t addr, const String modeString) {
+String VM::getAsString(uint16_t addr, const String modeString) const {
   uint8_t numModeStrings = sizeof(VM::_dataModeStrings) / sizeof(VM::_dataModeStrings[0]);
   //dprintln(F("sizeof(VM::_dataModeStrings): ") + String(numModeStrings));
   for (uint8_t i = 0; i < numModeStrings; i++) {
@@ -78,7 +78,7 @@ String VM::getAsString(uint16_t addr, const String modeString) {
   return String();
 }
 
-String VM::getAsString(uint8_t* addr8, const DataMode dm) {
+String VM::getAsString(uint8_t* addr8, const DataMode dm) const {
   //dprintln(F("getAsString: ") + String(static_cast<uint8_t>(dm)), static_cast<uint8_t>(PrintCategory::STATUS));
   switch (dm) {
     case DataMode::UINT8: {
@@ -126,7 +126,7 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) {
           if (!firstChar && currentChar != 0)
             s += currentChar;
           firstChar = false;
-          currentChar = readData<char>(memAddr++, false);
+          currentChar = readDataConst<char>(memAddr++);
         }
         // dprintln(F("STRING:") + s, static_cast<uint8_t>(PrintCategory::REPL));
 
@@ -138,7 +138,7 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) {
   return String((char *)"");
 }
 
-String VM::getAsString(uint16_t addr, const DataMode dm) {
+String VM::getAsString(uint16_t addr, const DataMode dm) const {
 
   uint8_t * realAddrPtr = reinterpret_cast<uint8_t*>(&_mem[addr]);
   return getAsString(realAddrPtr, dm);
@@ -451,6 +451,8 @@ uint8_t * VM::getPtr(uint16_t addr, Location locationType) {
     case Location::REG:
       return &_reg[addr * 4];
       break;
+    default:
+      return 0;
   }
 }
 
@@ -518,8 +520,8 @@ String VM::OpcodeWithWidth2String(OpcodeAndDataWidth opdw) {
 
 void VM::exec(Opcode opcode) {
   //dprintln(F("sp: " + String(_SP) + ",ip: ") + String(_ip16), static_cast<uint8_t>(PrintCategory::REPL));
-  uint8_t opcodeVal = static_cast<uint8_t>(opcode);
-  uint8_t * buf = NULL;
+  //uint8_t opcodeVal = static_cast<uint8_t>(opcode);
+  //uint8_t * buf = NULL;
 
   OpcodeAndDataWidth opPair = VM::getOpcodeAndDataWidth(opcode);
   dprint(F("Opcode: "), static_cast<uint8_t>(PrintCategory::STATUS));
@@ -917,8 +919,8 @@ void VM::exec(Opcode opcode) {
         is of a single fixed width so they have a numeric value above that of
         FIXED_WIDTH_BASE, at least at present.
     */
-    uint8_t * srcptr;
-    uint8_t * destptr;
+    //  uint8_t * srcptr;
+    // uint8_t * destptr;
     switch (opcode) {
 
       case Opcode::ADD_FL: {

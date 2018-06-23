@@ -8,14 +8,17 @@
 
 
 struct FakeString {
-
+  
+private:
+  std::string _s;
+  
 public:
   uint8_t charAt(int);
-  inline bool operator==(const FakeString& lhs) { return false; };
-  inline bool operator!=(const FakeString& lhs) { return false; };
-  inline bool operator!=(const char [1]) { return false; };
-  inline bool operator==(const char *) { return false; };
-  FakeString operator+=(const FakeString& lhs);
+  bool operator==(const FakeString& rhs);
+  bool operator!=(const FakeString& rhs);
+  bool operator!=(const char [1]);
+  bool operator==(const char *);
+  FakeString operator+=(const FakeString& rhs);
   FakeString operator+(const char *);
   
   FakeString operator+(const FakeString& rhs);

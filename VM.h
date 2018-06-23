@@ -173,7 +173,7 @@ class VM {
     uint8_t _reg[64];
 
     //uint8_t * _progmem;
-    uint16_t _memSize, _stackSize, _SP, _AP;
+    uint16_t _memSize, _stackSize, _ip16, _SP, _AP;
     // _AP is "append pointer, used at the beginning to make it easy to push a bunch
     // of instructions and data into the memory.
     int16_t getStringLength(char * startAddr);
@@ -183,7 +183,7 @@ class VM {
     uint8_t * getPtr(uint16_t addr, Location locationType);
     void loadRegWithConst(uint8_t reg, uint32_t c = 0);
     RegPair getRegPair();
-    uint16_t _ip16;
+    //uint16_t ;
     String OpcodeWithWidth2String(OpcodeAndDataWidth opdw); // Might not do this after all.
 
   public:
@@ -193,10 +193,10 @@ class VM {
 
 
 
-    String getAsString(uint8_t* addr8, const DataMode dm);
-    String getAsString(uint16_t addr, const String modeString);
-    String getAsString(uint16_t addr, const DataMode dm);
-    String getAsString(uint8_t regnum, const DataMode dm);
+    String getAsString(uint8_t* addr8, const DataMode dm) const;
+    String getAsString(uint16_t addr, const String modeString) const;
+    String getAsString(uint16_t addr, const DataMode dm) const;
+    String getAsString(uint8_t regnum, const DataMode dm) const;
 
 
     void writeString(char * sptr, uint16_t inAddr = 0, boolean advanceIP = true);
@@ -270,12 +270,20 @@ class VM {
       value2 = *(reinterpret_cast<datum*>(&(_reg[rp.reg2 * 4])));
     }
 
-    template <class datum> datum readDataAtPtr(datum *inAddr)
+    template <class datum> datum readDataAtPtr(datum *inAddr) const
     {
 
       datum * dptr = reinterpret_cast<datum*>(inAddr);
       datum d = *dptr;
       return d;
+    }
+
+    template <class datum> datum readDataConst(uint16_t inAddr = 0) const
+    {
+      datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
+      datum d = readDataAtPtr<datum>(dptr);
+      return d;
+
     }
 
     template <class datum> datum readData(uint16_t inAddr = 0, boolean advanceIP = true)
