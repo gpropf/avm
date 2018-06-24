@@ -11,12 +11,14 @@ using namespace std;
 struct FakeString {
   
 private:
-  std::string _s;
+
   
 public:
+  std::string _s;
   friend ostream& operator<<(ostream& os, const FakeString& fs); 
   uint8_t charAt(int);
-  bool operator==(const FakeString& rhs);
+  bool operator==(const FakeString rhs);
+
   bool operator!=(const FakeString& rhs);
   bool operator!=(const char [1]);
   bool operator==(const char *);
@@ -44,6 +46,7 @@ public:
 const char * operator+(const char *, const FakeString& rhs);
 //const char * operator+(const char *, const char *);
 const char * operator+(const FakeString& rhs, const char *);
+bool operator==(const FakeString lhs, const FakeString rhs);
 
 typedef FakeString String;
 //typedef String F;
@@ -64,9 +67,9 @@ struct FakeSerial {
   
 public:
   FakeSerial() {}
-  static void flush();
-  static void println(String s);
-  static void print(String s);
+  void flush();
+   void println(String s);
+   void print(String s);
   uint8_t readBytes(char *, int);
   uint8_t readBytes();
   bool available();

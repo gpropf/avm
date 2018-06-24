@@ -63,7 +63,10 @@
 
 */
 
-char const *VM::_dataModeStrings[] = {"u8", "u16", "u32", "i8", "i16", "i32", "f", "s"};
+String const VM::_dataModeStrings[] = {String((char *)"u8"), String((char *)"u16"), String((char *)"u32"),
+                                       String((char *)"i8"), String((char *)"i16"), String((char *)"i32"),
+                                       String((char *)"f"), String((char *)"s")
+                                      };
 const uint8_t VM::dataWidth[] = {1, 2, 4, 1, 2, 4, 4, 2};
 
 
@@ -300,7 +303,7 @@ void VM::PinBinding::updatePin(VM & vm) {
           dprint(F("Writing Analog Value: "));
           dprint(String(val));
           dprint(F(" to pin "));
-          dprint(String(_pin));
+          dprintln(String(_pin));
           analogWrite(_pin, val);
 
           break;
@@ -1026,7 +1029,7 @@ void VM::exec(Opcode opcode) {
           dprint(F("Reg "), static_cast<uint8_t>(PrintCategory::STATUS));
           dprint(String(tr.reg2), static_cast<uint8_t>(PrintCategory::STATUS));
           dprint(F(", as "), static_cast<uint8_t>(PrintCategory::STATUS));
-          dprint(String((char *)VM::_dataModeStrings[tr.reg1]), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(VM::_dataModeStrings[tr.reg1], static_cast<uint8_t>(PrintCategory::STATUS));
           dprint(F(" is "), static_cast<uint8_t>(PrintCategory::STATUS));
 
 
