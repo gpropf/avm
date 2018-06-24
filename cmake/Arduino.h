@@ -4,8 +4,9 @@
 
 #include <stdint.h>
 #include <string>
+#include <iostream>
 
-
+using namespace std;
 
 struct FakeString {
   
@@ -13,15 +14,17 @@ private:
   std::string _s;
   
 public:
+  friend ostream& operator<<(ostream& os, const FakeString& fs); 
   uint8_t charAt(int);
   bool operator==(const FakeString& rhs);
   bool operator!=(const FakeString& rhs);
   bool operator!=(const char [1]);
   bool operator==(const char *);
+  FakeString(std::string s);
   FakeString operator+=(const FakeString& rhs);
   FakeString operator+(const char *);
   
-  FakeString operator+(const FakeString& rhs);
+  FakeString operator+(const FakeString rhs);
   //  char * operator+(const FakeString& rhs);
   //operator+=(FakeString lhs,  FakeString rhs);
   //FakeString operator+(const FakeString& rhs);
