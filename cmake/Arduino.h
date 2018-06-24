@@ -20,9 +20,20 @@ public:
   bool operator==(const FakeString rhs);
 
   bool operator!=(const FakeString& rhs);
-  bool operator!=(const char [1]);
+  //  bool operator!=(const char [1]);
   bool operator==(const char *);
+  bool operator!=(const char *);
+
+  template<typename T>
+  FakeString(const T &t) {
+    _s = std::to_string(t);
+  }
+
+  
   FakeString(std::string s);
+  //  FakeString(uint16_t u16);
+  //  FakeString(uint32_t u32);
+  //  FakeString(uint8_t u8);
   FakeString operator+=(const FakeString& rhs);
   FakeString operator+(const char *);
   
@@ -31,7 +42,7 @@ public:
   //operator+=(FakeString lhs,  FakeString rhs);
   //FakeString operator+(const FakeString& rhs);
   FakeString(char*);
-  FakeString(uint16_t);
+  //  FakeString(uint16_t);
   FakeString();
 
 
