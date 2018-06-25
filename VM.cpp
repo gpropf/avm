@@ -540,8 +540,8 @@ void VM::exec(Opcode opcode) {
 
     uint16_t addr = readData <uint16_t> ();
     uint8_t pin = readData <uint8_t> ();
-    uint8_t io;
-    boolean ad;
+    uint8_t io = INPUT;
+    boolean ad = false;
     switch (opcode) {
       case Opcode::BINDAO:
         dprintln(F("BINDAO"), static_cast<uint8_t>(PrintCategory::STATUS));
