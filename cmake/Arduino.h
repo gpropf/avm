@@ -16,14 +16,19 @@ private:
 public:
   std::string _s;
   friend ostream& operator<<(ostream& os, const FakeString& fs); 
-  uint8_t charAt(int);
+  //uint8_t charAt(int);
   bool operator==(const FakeString rhs);
 
   bool operator!=(const FakeString& rhs);
   //  bool operator!=(const char [1]);
   bool operator==(const char *);
   bool operator!=(const char *);
-
+  int indexOf(char const*);
+  int indexOf(char);
+  int toInt();
+  char charAt(int i);
+  FakeString substring(int,int);
+  FakeString substring(int);
   template<typename T>
   FakeString(const T &t) {
     _s = std::to_string(t);
@@ -42,15 +47,17 @@ public:
   //operator+=(FakeString lhs,  FakeString rhs);
   //FakeString operator+(const FakeString& rhs);
   FakeString(char*);
+  FakeString(const char*);
   //  FakeString(uint16_t);
   FakeString();
 
 
-  int toInt();
-  FakeString substring(int,int);
-  FakeString substring(int);
+  //  int toInt();
+  //FakeString substring(int,int);
+  //  FakeString substring(int);
   int length();
-  int indexOf(const char *);
+  //int indexOf(const char *);
+  void trim();
   
 };
 
@@ -84,6 +91,7 @@ public:
   uint8_t readBytes(char *, int);
   uint8_t readBytes();
   bool available();
+  FakeString readStringUntil(char t = '\n');
 
 };
 

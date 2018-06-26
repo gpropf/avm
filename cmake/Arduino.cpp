@@ -14,19 +14,30 @@ FakeString::FakeString(std::string s) {
   this->_s = s;
 }
 
+void FakeString::trim() {}
+
 FakeString::FakeString() {}
+
+FakeString::FakeString(const char * cptr) {
+  this->_s = std::string(cptr);
+}
+
+int FakeString::length() {
+  return _s.length();
+}
+
 /*
-FakeString::FakeString(uint16_t u16) {
+  FakeString::FakeString(uint16_t u16) {
   _s = std::to_string(u16);
-}
+  }
 
-FakeString::FakeString(uint8_t u8) {
+  FakeString::FakeString(uint8_t u8) {
   _s = std::to_string(u8);
-}
+  }
 
-FakeString::FakeString(uint32_t u32) {
+  FakeString::FakeString(uint32_t u32) {
   _s = std::to_string(u32);
-}
+  }
 */
 
 bool FakeString::operator==(const FakeString rhs) {
@@ -41,12 +52,19 @@ bool operator==(const FakeString lhs, const FakeString rhs) {
   return false;
 }
 
-bool FakeString::operator==(const char *) {
+bool FakeString::operator==(const char * cstr) {
+  std::string rhsStr = std::string(cstr);
+  if (_s.compare(rhsStr) == 0)
+    return true;
   return false;
 }
 
-bool FakeString::operator!=(const char *) {
+bool FakeString::operator!=(const char * cstr) {
+   std::string rhsStr = std::string(cstr);
+  if (_s.compare(rhsStr) != 0)
+    return true;
   return false;
+
 }
 
 bool FakeString::operator!=(const FakeString& rhs) {
@@ -70,6 +88,29 @@ FakeString FakeString::operator+(const FakeString rhs) {
   return FakeString(_s + rhs._s);
 }
 
+int FakeString::indexOf(char const *cptr) {
+  //  return 0; // FIXME!!!!
+  return _s.find(cptr);
+}
+
+int FakeString::indexOf(char c) {
+  return _s.find(c);
+}
+
+int FakeString::toInt() {
+  return std::stoi(_s);
+}
+
+char FakeString::charAt(int i) {
+  return _s[i];
+}
+
+FakeString FakeString::substring(int start,int end) {
+  return _s.substr(start, end - start);
+}
+FakeString FakeString::substring(int start) {
+  return _s.substr(start);
+}
 
 
 void FakeSerial::flush() {}
@@ -86,6 +127,15 @@ uint8_t FakeSerial::readBytes(char * buf, int numBytes) {
   cout << "Read input: " << buf << "\n";
   return numBytes;
 }
+
+FakeString FakeSerial::readStringUntil(char t) {
+  //  cout << "Looking for " << std::to_string(numBytes) << " bytes of input...\n";
+  std::string s;  
+  std::getline(std::cin, s, t);
+  cout << "Read input: '" << s << "'\n";
+  return FakeString(s);
+}
+
 uint8_t FakeSerial::readBytes() {
   return 0;
 }

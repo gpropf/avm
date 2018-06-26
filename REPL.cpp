@@ -9,43 +9,22 @@
 
 
 String REPL::readCommand() {
-  char readBuf[READ_BUFFER_LENGTH];
-  uint8_t bytesRead = 0;
-  String cmd = String(F(""));
-
   while (true) {
-    for (uint8_t i = 0; i < READ_BUFFER_LENGTH; i++) {
-      readBuf[i] = 0;
-    }
     if (Serial.available() > 0) {
-      bytesRead = Serial.readBytes(readBuf, READ_BUFFER_LENGTH - 1);
-
-      if (bytesRead > 0) {
-
-        char c = readBuf[bytesRead - 1];
-        if (c == '\n') {
-          readBuf[bytesRead - 1] = 0;
-
-          // dispatch command
-          cmd += String(readBuf);
-          Serial.flush();
-          return cmd;
-        }
-        else {
-          readBuf[bytesRead] = 0;
-          cmd += String(readBuf);
-        }
-
-        for (uint8_t i = 0; i < READ_BUFFER_LENGTH; i++) {
-          readBuf[i] = 0;
-        }
-      }
+      String cmd = Serial.readStringUntil('\n');
+      //dprint(F("GOT: '"));
+      //dprint(cmd);
+      //dprintln(F("'"));
+      cmd.trim();
+      //dprint(F("GOT: '"));
+      //dprint(cmd);
+      //dprintln(F("'"));
+      return cmd;
     }
-
-    bytesRead = 0;
     delay(REPL_DELAY);
   }
-
+  return String(F(""));
+  //bytesRead = 0;
 }
 
 String REPL::getPromptString(String subPrompt) {
@@ -66,6 +45,7 @@ void REPL::loop(String subPrompt) {
           String cmd = readCommand();
           dprintln(cmd);
           parseCommand(cmd);
+          dprintln(cmd);
           // evalCommand(cmd);
           break;
         }
@@ -87,7 +67,6 @@ uint8_t REPL::hexToDec(char hex) {
 }
 
 void REPL::loadProgram(String programStr, uint16_t addr) {
-
   for (uint16_t i = 0; i < programStr.length(); i += 2) {
     uint8_t lowByte = programStr.charAt(i + 1);
     uint8_t highByte = programStr.charAt(i);
@@ -96,8 +75,7 @@ void REPL::loadProgram(String programStr, uint16_t addr) {
     highByte = highByte * 16 + lowByte;
     dprint(String(lowByte) + ":" + String(highByte) + "\n", static_cast<uint8_t>(PrintCategory::REPL));
     _vm->_mem[addr++] = highByte;
-  }
-  //dprint("=======ENDENDEND\r\n\r\n\r\n", static_cast<uint8_t>(PrintCategory::REPL));
+  }  
 }
 
 void REPL::parseCommand(String s)
@@ -125,25 +103,38 @@ void REPL::parseCommand(String s)
   */
 
   int startIndex = 0;
-  //String action;
   String args[5];
   uint8_t i = 0;
-  //dprintln("parsing..." + s);
   int spaceAt = 0;
-  //dprintln("s init:" + s);
-  while (s != "" && i < 4 && spaceAt != -1) {
+    
+  while (s != "" && i < 4 && spaceAt != -1) {      
     spaceAt = s.indexOf(" ");
     if (spaceAt == -1) {
       args[i] = s;
+      //dprint(F("Chunk (no space):'"));
+      //dprint(s);
+      //dprintln(F("'"));
     }
-    else {
+    else {      
       args[i] = s.substring(startIndex, spaceAt);
       s = s.substring(spaceAt + 1);
+      //dprint(F("Chunk:'"));
+      //dprint(s);
+      //dprintln(F("'"));
     }
-    //dprintln("s:" + s);
+    // dprintln("s:" + s);
     i++;
+
   }
   /*
+  dprint(F("Attempted to parse:{'"));
+  dprint(s);
+  dprintln(F("'}"));
+  */
+
+
+  /*
+
     for (uint8_t j = 0; j < i; j++) {
       dprintln("Arg " + String(j) + ": " + args[j]);
     }
@@ -171,6 +162,7 @@ void REPL::parseCommand(String s)
         dprintln(F("ERROR: pin io must be analog ('a') or digital ('d')"),
                  static_cast<uint8_t>(PrintCategory::REPL));
     }
+    
     uint8_t io = 0; // to get rid of annoying compiler warnings about possible undefined value.
     c = args[3].charAt(1);
     // Second character determines whether we have an input, output, or output pullup pin
@@ -188,8 +180,7 @@ void REPL::parseCommand(String s)
         dprintln(F("ERROR: pin io must be input ('a'), input pullup ('p'), or output ('o')"),
                  static_cast<uint8_t>(PrintCategory::REPL));
     }
-
-
+    
     uint16_t addr = args[2].toInt();
     _vm->createBinding(pin, io, ad, addr);
     //_vm->set
@@ -197,13 +188,13 @@ void REPL::parseCommand(String s)
   else if (action == "p") {
     _vm->printBindings();
   }
-  else if (action == "m") {
+  else if (action == "m") {    
     if (i > 3)
       _vm->printMem(args[1].toInt(), args[2].toInt(), true);
     else
       _vm->printMem(args[1].toInt(), args[2].toInt(), false);
   }
-  else if (action == "s") {
+  else if (action == "s") {    
     uint16_t steps = 1;
     if (i > 1) {
       steps = args[1].toInt();
@@ -239,10 +230,10 @@ void REPL::parseCommand(String s)
     loadProgram(programStr, addr);
   }
   else if (action == "i") {
-    uint16_t newIP = args[1].toInt();    
-    _vm->setIP(newIP);    
+    uint16_t newIP = args[1].toInt();
+    _vm->setIP(newIP);
     dprint(F("IP = "));
-    dprint(String(newIP), static_cast<uint8_t>(PrintCategory::REPL));    
+    dprint(String(newIP), static_cast<uint8_t>(PrintCategory::REPL));
   }
 }
 
