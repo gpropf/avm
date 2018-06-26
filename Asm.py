@@ -161,10 +161,9 @@ def stripComments(filename, verbose = False):
 
 def chunkOnDblQuotes(program, verbose = False):
     if verbose:
-        print("================= chunkOnQuotes =================")
+        print("================= chunkOnDblQuotes =================")
     outProgram = []
     for line in program:
-
         chunks = line.split("\"")
         numChunks = len(chunks)
         for i in range(numChunks):
@@ -189,7 +188,8 @@ def chunkOnSpaces(program, verbose = False):
 
         
 def chunkAndClassify(program, verbose = False):
-    
+    """ Fine grained chunking of text and early identification of things
+# like floating point numbers and integers."""
     if verbose:
         print("================= chunkAndClassify =================")
     ip = 0
@@ -217,9 +217,10 @@ def chunkAndClassify(program, verbose = False):
     return outProgram
 
 
-#argFormatBitWidths = { 'H': 16, 'B': 8, 'N': 4, 
-
 def captureIntructionArgs(program, verbose = False):
+    """Looks up each instruction and what kind of args it takes. Tags the
+objects that follow accordingly so as to create instruction/argument
+groups."""
     bitWidthsByEchelon = [8,16,32]
     if verbose:
         print("================= captureIntructionArgs =================")
@@ -244,7 +245,9 @@ def captureIntructionArgs(program, verbose = False):
                     program[i]['bitWidth'] = desiredBitWidth
     return program
 
+
 def buildExpressionText(expList):
+    """ Builds a text representation of the expression from the syntax tree."""
     expTexts = []
     for expDict in expList:
         if type(expDict) == dict:
@@ -256,27 +259,30 @@ def buildExpressionText(expList):
     return (" ").join(expTexts)
 
 def buildExpressionTree(program, r = 0):
+    """Somewhat experimental still. Meant to process compile-time math
+ expressions like (V1 + 5) where V1 is the address of a variable."""
     dp = cl.deque(program)
     outList = cl.deque()
     while dp:
         outChunk = dp.popleft()
-#        print("r = " + str(r) + ", CHUNK:" + str(outChunk))
         if type(outChunk) == dict:
-            #print("CHUNK TEXT:" + outChunk['text'])
             if outChunk['type'] == "open-parenz":
-                #print("open-parenz ------------------------------------------")
                 (dp, outChunk) = buildExpressionTree(dp, r + 1)
             elif outChunk['type'] == "close-parenz":
-                #print("close-parenz ------------------------------------------")
                 if r == 1:
-                    #print("r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1r=1")
-                    outList = {'text':buildExpressionText(outList), 'type':'expression', 'expressionTree': outList}
-                return (dp, outList)
-            
+                    outList = {'text':buildExpressionText(outList),
+                               'type':'expression',
+                               'expressionTree': outList}
+                return (dp, outList)            
         outList.append(outChunk)
     return (dp, outList)
-            
+
+
 def indexProgram(program):
+    """We should now have enough information to note the byte index of
+each object in the program. We take account of the fact there are 2
+nibbles to a byte here as well."""
+    
     needNibble = False
     byteCount = 0
     for chunk in program:
@@ -298,34 +304,17 @@ def indexProgram(program):
     return program
 
 def buildSymbolTable(program):
+    """ Builds the symbol table so that variables and labels can be resolved to numeric values."""
     symbols = {}
     for chunk in program:
         if (chunk['type'] == 'variable' or chunk['type'] == 'label') and 'declaration' in chunk and chunk['declaration'] == True:
             symbols[chunk['text']] = { 'value': chunk['byteIndex'], 'symbolType': chunk['type'], 'bitWidth': chunk['bitWidth']}
     return symbols
-
-
-# def emitByteCodes(program, symbols):
-#     for chunk in program:
-#         ctype = chunk['type']
-#         ctext = chunk['text']
-#         value = False
-#         #print("CTYPE: " + ctype)
-#         if ctype == 'instruction' and ctext in instructions:
-            
-#             value = instructions[ctext]['opcode']
-#             if opcode <= END_8:
-#                 value = value + END_8 * chunk['instructionEchelon']
-#             chunk['value'] = value
-#         elif ctype == 'variable' or ctype == 'label' and ctext in symbols:
-#             value = symbols[ctext]['value']
-#             chunk['value'] = value
-
-#         return program
-            
+         
 
 def tagByteValues(program, symbols):
-    """ Lookup symbol values in instruction list and user-defined symbol table, add them to the chunks. """
+    """Lookup symbol values in instruction list and user-defined symbol
+table, add them to the chunks."""
     for chunk in program:
         ctype = chunk['type']
         ctext = chunk['text']
@@ -342,6 +331,7 @@ def tagByteValues(program, symbols):
             chunk['value'] = value
     return program
 
+
 def emitValues(program):
     """The last stage here. Everything should have been resolved to a
 value and now we write out an array of numbers representing the
@@ -357,7 +347,6 @@ bytecode."""
         if 'bitWidth' in chunk:
             bitWidth = chunk['bitWidth']
         if bitWidth == 0:
-            #print("bitwidth == 0!!!!!!!!!!!!!!")
             continue
 
         if chunk['type'] == 'float':
@@ -371,35 +360,11 @@ bytecode."""
                 bytes = struct.pack('B',byteVal)
             else:
                 bytes = struct.pack(formatCodes[bitWidth][formatCodeIndex],chunk['value'])
-                #print(chunk['text'] + " has bitWidth = " +str(bitWidth) + ", bytes has " + str(len(bytes)) + " bytes")
         outp = outp + [byte for byte in bytes]
-        #else:
-        #    outp = outp + [chunk['value']]
     return outp
-#        print (chunk['value'])
-
-def test():
-    p = stripComments("test-math.avm")
-    p = chunkOnDblQuotes(p)
-    p = chunkOnSpaces(p)
-    p = chunkAndClassify(p)
-    p = processTextOperators(p)
-    p = processUnaryOps(p)
-    
-    (dp,p) = buildExpressionTree(p)
-    p = captureIntructionArgs(p)
-    p = indexProgram(p)
-    s = buildSymbolTable(p)
-    pfinal = tagByteValues(p,s)
-    p = emitValues(pfinal)
-#    for c in p:
-#        print(c)
-    return (pfinal,s,p)
 
 
 
-
-                
 def printAsCStr(program):
     """print program As C-style uint8_t array:"""
     cstr = ""
@@ -411,7 +376,7 @@ def printAsCStr(program):
             cstr = cstr + "\n"
 
     print(cstr)
-  
+
 
 def printAsHexString(program, addr = 0):
     """print program as block of hex characters:"""
@@ -432,6 +397,9 @@ def printAsHexString(program, addr = 0):
     
 
 def makeMetadataForOpcode(mnemonic, argFormats):
+    """Tries to resolve the mnemonic string as code.  Failing that,
+ assigns a placeholder value until we can add the opcode to the list
+ of opcodes."""
     try:
         opcode = eval(mnemonic)
     except:
@@ -504,3 +472,24 @@ def buildPythonStub(filename):
         
         outf.close()
         return (mdMultiWidth,mdFixedWidth)
+
+
+def test():
+    """ Quickie test script meant to be run by just doing up-arrow at the ipython cmd line."""
+    p = stripComments("test-math.avm")
+    p = chunkOnDblQuotes(p)
+    p = chunkOnSpaces(p)
+    p = chunkAndClassify(p)
+    p = processTextOperators(p)
+    p = processUnaryOps(p)
+    
+    (dp,p) = buildExpressionTree(p)
+    p = captureIntructionArgs(p)
+    p = indexProgram(p)
+    s = buildSymbolTable(p)
+    pfinal = tagByteValues(p,s)
+    p = emitValues(pfinal)
+#    for c in p:
+#        print(c)
+    return (pfinal,s,p)
+
