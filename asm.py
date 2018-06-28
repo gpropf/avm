@@ -31,8 +31,17 @@ s = buildSymbolTable(p)
 p = tagByteValues(p,s)
 p = emitValues(p)
 
+outputHex = True
+if len(sys.argv) > 1:
+    arg1 = sys.argv[1]
+    if arg1 == "--C++":
+        outputHex = False
 
+        
 
-printAsCStr(p)
+if outputHex:
+    printAsHexString(p)
+else:
+    printAsCStr(p)
 print()
-printAsHexString(p)
+

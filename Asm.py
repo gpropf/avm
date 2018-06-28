@@ -1,4 +1,4 @@
-import re
+import re, sys
 import struct, itertools, json
 import collections as cl
 
@@ -6,6 +6,11 @@ from instruction_set import *
 
 NO_OPCODE_YET = -100000
 
+showErrors = False
+
+def eprint(*args, **kwargs):
+    if showErrors:
+        print(*args, file=sys.stderr, **kwargs)
 
 labelRefs = {}
 #dataWidths = {'H':2,'h':2,'i':4,'I':4,'f':4,'b':1,'B':1, 'N':0.5}
@@ -237,9 +242,9 @@ groups."""
                     if 'bitWidth' in program[i]:
                         existingBitWidth = program[i]['bitWidth']
                         if desiredBitWidth != existingBitWidth:
-                            print("WARNING: in " + str(chunk))
-                            print("WARNING: in " + program[i]['text'])
-                            print("WARNING: bit width mismatch, expecting "
+                            eprint("WARNING: in " + str(chunk))
+                            eprint("WARNING: in " + program[i]['text'])
+                            eprint("WARNING: bit width mismatch, expecting "
                                   + str(desiredBitWidth) + " bits, found " + str(existingBitWidth) + " bits.")
 
                     program[i]['bitWidth'] = desiredBitWidth

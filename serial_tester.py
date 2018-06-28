@@ -12,8 +12,81 @@ if sys.version_info[0] != 3 or sys.version_info[1] < 6:
 
 import serial
 import io
+import unittest
 
 baudrate = 57600
+
+### Begin Tests ###
+###################
+
+class TestBlink(unittest.TestCase):
+
+    def test_blink(self):
+        ser = serial.Serial('/dev/ttyACM1', baudrate, timeout=1)
+        responses = sendAndListen(ser)
+        print("Sleeping for 2...")
+        hexf = open("tests/blink.hex", "r")
+        lines = hexf.readlines()
+
+        for line in lines:
+            commandSentResponses = sendAndListen(ser, bytes(line,'utf-8'))
+            prettyPrintArray(commandSentResponses)
+
+        
+
+        #print("Sleeping for 2...")
+        #time.sleep(2)
+        commandSentResponses = sendAndListen(ser, b's 500')
+        prettyPrintArray(commandSentResponses)
+        #time.sleep(2)
+        commandSentResponses = sendAndListen(ser,b'r')
+        prettyPrintArray(commandSentResponses)
+        #time.sleep(2)
+        commandSentResponses = sendAndListen(ser,b'q')
+        prettyPrintArray(commandSentResponses)
+        #time.sleep(2)
+        ser.close()
+
+        line43 = commandSentResponses[43].split(":")[1].strip()
+        self.assertEqual( int(line43), 255)
+
+
+
+    def test_loop_intmath(self):
+        ser = serial.Serial('/dev/ttyACM1', baudrate, timeout=1)
+        responses = sendAndListen(ser)
+        print("Sleeping for 2...")
+        hexf = open("tests/loop-intmath.hex", "r")
+        lines = hexf.readlines()
+
+        for line in lines:
+            commandSentResponses = sendAndListen(ser, bytes(line,'utf-8'))
+            prettyPrintArray(commandSentResponses)
+
+        
+
+        #print("Sleeping for 2...")
+        #time.sleep(2)
+        commandSentResponses = sendAndListen(ser, b's 200')
+        prettyPrintArray(commandSentResponses)
+        #time.sleep(2)
+#        commandSentResponses = sendAndListen(ser,b'r')
+#        prettyPrintArray(commandSentResponses)
+#        time.sleep(2)
+        commandSentResponses = sendAndListen(ser,b'q')
+        prettyPrintArray(commandSentResponses)
+        #time.sleep(2)
+        ser.close()
+
+        testline = commandSentResponses[20].split(":")[1].strip()
+        self.assertEqual( int(testline), 25)
+
+        
+#################
+### End Tests ###        
+
+
+
 
 def sendAndListen(ser, data = None, terminalNewline = b'\n', echoSentData = True):
     print("Writing data...")
@@ -33,24 +106,36 @@ def sendAndListen(ser, data = None, terminalNewline = b'\n', echoSentData = True
     #ser.flush()
     print("========================================== Begin Response ===")
     response = 1
+    responses = []
     i = 0
+    
     while response:
      #   ser.flush()
         response = ser.readline()
-        print(str(i) + ":" + response.decode(), end='')
+        rdecoded = response.decode()
+        responses.append(rdecoded)
+        #print(str(i) + ":" + rdecoded, end='')
       #  ser.flush()
         i = i + 1
 
     print("\n======================================== End Response ===")
-    time.sleep(2)
+    return responses
+#    time.sleep(2)
 
 filename = "read-and-blink.hex"
 
+def prettyPrintArray(arr):
+    i = 0
+    for a in arr:
+#        print(str(i) + ":" + a, end = '')
+        print(a, end = '')
+        i = i + 1
+
 def main():
-    ser = serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
+    ser = serial.Serial('/dev/ttyACM1', baudrate, timeout=1)
     print(ser.name) # check which port was really used
 
-    sendAndListen(ser)
+    responses = sendAndListen(ser)
 
     print("Sleeping for 2...")
 
@@ -58,7 +143,8 @@ def main():
     lines = hexf.readlines()
 
     for line in lines:
-        sendAndListen(ser, bytes(line,'utf-8'))
+        commandSentResponses = sendAndListen(ser, bytes(line,'utf-8'))
+        prettyPrintArray(commandSentResponses)
 
         
 #    sendAndListen(ser, b'l 0 cf31000fd133000aff1900f9f9f9f9ff2500f9f9')
@@ -67,12 +153,15 @@ def main():
 
     print("Sleeping for 2...")
     time.sleep(2)
-    sendAndListen(ser, b's 500')
+    commandSentResponses = sendAndListen(ser, b's 500')
+    prettyPrintArray(commandSentResponses)
     time.sleep(2)
-    sendAndListen(ser,b'r')
+    commandSentResponses = sendAndListen(ser,b'r')
+    prettyPrintArray(commandSentResponses)
     time.sleep(2)
-    sendAndListen(ser,b'q')
+    commandSentResponses = sendAndListen(ser,b'q')
+    prettyPrintArray(commandSentResponses)
     time.sleep(2)
     ser.close()
 
-main()
+#main()
