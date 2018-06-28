@@ -46,12 +46,14 @@ void REPL::loop(String subPrompt) {
           dprintln(cmd);
           parseCommand(cmd);
           dprintln(cmd);
+          dprintln(F("STEP"));
           // evalCommand(cmd);
           break;
         }
       case RUN: {
-          dprintln(F(""));
+          //dprintln(F("STEP - Run"));
           _vm->step();
+          
           break;
         }
       default:
@@ -201,6 +203,7 @@ void REPL::parseCommand(String s)
     }
     for (uint16_t j = 0; j < steps; j++)
       _vm->step();
+      _vm2->step();
   }
   else if (action == "q") {
     _vm->printStack();

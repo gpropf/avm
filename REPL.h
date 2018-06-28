@@ -33,9 +33,10 @@ class REPL {
       float f;
     };
 
-    REPL(String leftPrompt, String rightPrompt, VM *vm): _leftPrompt(leftPrompt),
+    REPL(String leftPrompt, String rightPrompt, VM *vm, VM *vm2): _leftPrompt(leftPrompt),
       _rightPrompt(rightPrompt),
-      _vm(vm) {};
+      _vm(vm),
+      _vm2(vm2) {};
 
     String getPromptString(String subPrompt);
     String readCommand();
@@ -52,6 +53,7 @@ class REPL {
     uint16_t cmdCount = 0;
     uint16_t _eptr = 0;
     VM *_vm;
+    VM *_vm2;
 
     void loadProgram(String programStr, uint16_t addr);
     

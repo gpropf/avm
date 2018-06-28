@@ -364,11 +364,16 @@ void VM::printStatus() {
   dprintln(String(static_cast<uint16_t>(_cmpReg)));
 }
 
-VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(stackSize) {
+VM::VM(uint16_t memSize, uint16_t stackSize, uint8_t * memptr):  _memSize(memSize), _stackSize(stackSize) {
 
   //_dm = DataMode::UINT8;
   //_am = AddressingMode::ABS;
-  _mem = new uint8_t[memSize];
+  if (memptr) {
+    _mem = memptr;
+  }
+  else {
+    _mem = new uint8_t[memSize];
+  }
   _ip16 = 0;
   _SP = STACK_TOP;
   _stackSize = stackSize;
@@ -1031,10 +1036,7 @@ void VM::exec(Opcode opcode) {
           dprint(F(", as "), static_cast<uint8_t>(PrintCategory::STATUS));
           dprint(VM::_dataModeStrings[tr.reg1], static_cast<uint8_t>(PrintCategory::STATUS));
           dprint(F(" is "), static_cast<uint8_t>(PrintCategory::STATUS));
-
-
           dprintln(s, static_cast<uint8_t>(PrintCategory::PRINT) | static_cast<uint8_t>(PrintCategory::STATUS));
-
           break;
         }
       case Opcode::UJMP: {
@@ -1089,20 +1091,14 @@ void VM::exec(Opcode opcode) {
         break;
     }
   }
-  //dprintln(F("After inst (sp,ip) : (" + String(_SP) + "," + String(_ip16) + ")\n"));
 }
 
 void VM::step() {
   dprintln(repeatString(F("-="), 40), static_cast<uint8_t>(PrintCategory::STATUS));
   updateBoundData();
-  //dprintln(repeatString(F("B"), 5), static_cast<uint8_t>(PrintCategory::STATUS));
   printStatus();
-  //dprintln(repeatString(F("C"), 5), static_cast<uint8_t>(PrintCategory::STATUS));
-  //dprintln(F("*** sp: " + String(_SP) + ",ip: ") + String(_ip16), static_cast<uint8_t>(PrintCategory::REPL));
   Opcode opcode = readData <Opcode> (_ip16);
-  //dprintln(F("Opcode:") + String(static_cast<uint8_t>(opcode)));
   exec(opcode);
-
 }
 
 void VM::updateBoundData() {

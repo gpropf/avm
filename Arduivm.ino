@@ -6,8 +6,9 @@
 #include "REPL.h"
 
 VM vm(VM_MEM_SIZE, VM_STACK_SIZE);
+VM vm2(VM_MEM_SIZE, VM_STACK_SIZE, &(vm._mem[74]));
 
-REPL repl("$[", "]:", &vm);
+REPL repl("$[", "]:", &vm, &vm2);
 
 void flashLEDs () {
   pinMode(ANALOG_OUT_PIN, OUTPUT);
@@ -34,9 +35,9 @@ void setup() {
   dprintln(repeatString("~", 20), static_cast<uint8_t>(PrintCategory::REPL));
   
   const uint8_t program[] = {
-//#include "test-math.h"
+#include "test-math.h"
 //#include "read-and-blink.h"
-#include "pow.h"
+//#include "pow.h"
     65, 86, 77, 10, 0, 0, 0, 79, 0, 0, 84, 0
   };
   uint8_t * srcptr = program;

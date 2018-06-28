@@ -487,9 +487,10 @@ def test():
     p = captureIntructionArgs(p)
     p = indexProgram(p)
     s = buildSymbolTable(p)
-    pfinal = tagByteValues(p,s)
-    p = emitValues(pfinal)
+    print(str(s))
+    #pfinal = tagByteValues(p,s)
+    #p = emitValues(pfinal)
 #    for c in p:
 #        print(c)
-    return (pfinal,s,p)
+    #return (pfinal,s,p)
 

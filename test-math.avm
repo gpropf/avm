@@ -28,13 +28,20 @@ RET### More crazy comments
 
 DATASEG:
 2$N1:
-#NOOP N2:
 2$N3:
 2$N4:   ### More crazy comments
-#NOOP N4: "addf"
-#NOOP N5:
-#NOOP N6:
 
-#(56+22 -(4 // 2$N1))
 
-#FOO:
+
+REGCOPY:
+MOV_REG2_MEM_32 2 U2
+MOV_REG2_MEM_32 3 U3
+MOV_REG2_MEM_32 4 U4
+MOV_REG2_MEM_32 0 U5
+MOV_REG2_MEM_32 6 U6
+UJMP REGCOPY
+4$U2:
+4$U3:
+4$U4:
+4$U5:
+4$U6:
