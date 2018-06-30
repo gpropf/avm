@@ -5,15 +5,14 @@
 
 /* Machine Design Overview:
 
-    Registers: There are 16 32bit general purpose regs. Two are actually "reserved" though they are referenced
-    using the standard instructions (i.e. there are no special PUSH or POP instructions for them). R0 is essentially
-    the "accumulator" that is the target of all math ops. R1 is the "state register". Bit fields here determine data type,
-    data width, perhaps addressing mode.
-
+    Registers: There are 16 32bit general purpose regs.
 
     Instruction Families
 
-    -- <Math op> <RA:4 bits, RB: 4bits>: ADD, SUB, MUL, DIV, POW, OR, AND, NOT: all use registers only.
+    -- <Math op> <RA:4 bits, RB: 4bits>: ADD, SUB, MUL, DIV, POW, OR, AND, NOT: all use registers only. The four
+          basic operations, ADD, SUB, MUL, DIV exist as unsigned integer, signed integer, and floating point
+          forms. The bitwise operators operate on bitfields and do not take type into account. POW is currently
+          not implemented (06-30-2018). We also need bitwise shift operators SHL and SHR (06-30-2018)
 
     -- <Jump> <Addr: 16 bits> <RA:4 bits, RB: 4bits>: JEQ, JNE, JLT, JGT, JGTE, JLTE, JMP: Jump to Addr if registers
       are; equal, not equal, RA < RB, RA > RB, RA >= RB, RA <= RB, any (i.e. unconditional jump).
@@ -22,8 +21,7 @@
     PUSHREGS <RA:4 bits, RB: 4bits>: Pushes two registers onto the stack according to current data mode. If RA = RB
     we only push one.
 
-    POPREGS <RA:4 bits, RB: 4bits>: Pops stack values into two registers. If RA = RB we only pop one.
-    we only push one.
+    POPREGS <RA:4 bits, RB: 4bits>: Pops stack values into two registers. If RA = RB we only pop one or push one.
 
     PUSH <Addr: 16 bits>: Push the object at <Addr> onto the stack
     POP <Addr: 16 bits>: Pop the stack into memory at <Addr>
@@ -32,34 +30,15 @@
     determined by mode. This is a convenience op to allow one-time-use constants to be inlined instead
     of storing them somewhere and referencing that address.
 
-    PUSHALLREGS <No argument: 0 bits>: Push contents of all registers onto the stack. This is a shortcut
+    [Currently not implemented (06-30-2018)] PUSHALLREGS <No argument: 0 bits>: Push contents of all registers onto the stack. This is a shortcut
     used to make saving of stack frame state convenient when calling a function within a function.
 
-    POPALLREGS <No argument: 0 bits>: Pop contents of all registers from the stack. This is a shortcut
+    [Currently not implemented (06-30-2018)] POPALLREGS <No argument: 0 bits>: Pop contents of all registers from the stack. This is a shortcut
     used to make resotation of stack frame state convenient when returning from a called
     function within a function.
 
     -- CALL <Addr: 16 bits>: pushes the return address onto the stack and jumps to function address.
     This is computed as the instruction directly following CALL.
-
-  // ==============================================================
-  Example program
-
-  func pow(x,n)
-                  SP:STACK_TOP - 2*dm, Stack [x,n]
-  PUSH_CONST_88 0:8, [0:dm,x,n], SP:STACK_TOP - 3*dm
-  PUSH_CONST_88 1:8, [1:dm,0:dm,x,n], SP:STACK_TOP - 4*dm
-  CMP_SPREL 1,3, (STACK_TOP - 1*dm, STACK_TOP - 3*dm)
-
-  JEQ BAILOUT
-  INC 1:(SP-1*dm), [1,1:dm,x,n]
-  MUL_SPREL 2,0, (SP-2*dm, SP-0*dm --> SP-0*dm) [x,1:dm,x,n]
-
-  Label: BAILOUT
-  POPREG 0 (SP --> R0) [n:dm,x,n]
-  SP += 3*dm []
-  PUSHREG 0 [x^n]
-  RET
 
 */
 
@@ -68,6 +47,16 @@ String const VM::_dataModeStrings[] = {String((char *)"u8"), String((char *)"u16
                                        String((char *)"f"), String((char *)"s")
                                       };
 const uint8_t VM::dataWidth[] = {1, 2, 4, 1, 2, 4, 4, 2};
+
+void VM::printBootMsg(const String versionDetails) const {
+
+  dprintln(repeatString("~", 40), static_cast<uint8_t>(PrintCategory::REPL));
+  dprint(F("Arduivm: v0.16-"));
+  dprint(versionDetails, static_cast<uint8_t>(PrintCategory::REPL));
+  dprint(F("; END_8 opcode = "), static_cast<uint8_t>(PrintCategory::REPL));
+  dprintln(String(static_cast<uint8_t>(Opcode::END_8)), static_cast<uint8_t>(PrintCategory::REPL));
+  dprintln(repeatString("~", 40), static_cast<uint8_t>(PrintCategory::REPL));
+}
 
 
 String VM::getAsString(uint16_t addr, const String modeString) const {
@@ -82,7 +71,7 @@ String VM::getAsString(uint16_t addr, const String modeString) const {
 }
 
 String VM::getAsString(uint8_t* addr8, const DataMode dm) const {
-  //dprintln(F("getAsString: ") + String(static_cast<uint8_t>(dm)), static_cast<uint8_t>(PrintCategory::STATUS));
+
   switch (dm) {
     case DataMode::UINT8: {
         return String(*reinterpret_cast<uint8_t*>(addr8));
@@ -369,6 +358,7 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
   //_dm = DataMode::UINT8;
   //_am = AddressingMode::ABS;
   _mem = new uint8_t[memSize];
+  _reg = new uint8_t[64];
   _ip16 = 0;
   _SP = STACK_TOP;
   _stackSize = stackSize;
@@ -380,9 +370,31 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
   for (uint16_t i = 0; i < memSize; i++)
     _mem[i] = static_cast<uint8_t>(Opcode::NOOP_INIT);
 
+  for (uint8_t i = 0; i < 64; i++)
+    _reg[i] = 0;
+}
+
+
+VM::VM(uint8_t * memBase, uint16_t stackBase, uint8_t * regBase): _mem(memBase), _reg(regBase) {
+
+  //_dm = DataMode::UINT8;
+  //_am = AddressingMode::ABS;
+  //_mem = memBase;
+  _ip16 = 0;
+  _SP = stackBase;
+  // _stackSize = stackSize;
+  _ip16Copy = _ip16;
+  _AP = 0;
+
+  // Fills the memory and stack with some values for now to show that it's working
+/*
+  for (uint16_t i = 0; i < memSize; i++)
+    _mem[i] = static_cast<uint8_t>(Opcode::NOOP_INIT);
+*/
   for (uint8_t i = 0; i < 16; i++)
     _reg[i * 4] = 0;
 }
+
 
 void VM::setSP(uint16_t newIP) {
   dprint(F("New SP:"));
@@ -1080,6 +1092,21 @@ void VM::exec(Opcode opcode) {
           dprint(F("RET to addr in Reg0: "), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(String(*retAddr), static_cast<uint8_t>(PrintCategory::STATUS));
           _ip16 = *retAddr;
+          break;
+        }
+      case Opcode::SPAWNVM: {
+          //dprintln(F("UJMP"), static_cast<uint8_t>(PrintCategory::STATUS));
+          uint16_t membase = readData <uint16_t> ();
+          uint16_t stackbase = readData <uint16_t> ();
+          uint16_t regbase = readData <uint8_t> ();
+
+          dprint(F("SPAWN NEW VM! [membase: "), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(String(membase), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F(", stackbase: "), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(String(stackbase), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F(", regbase: "), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(String(regbase), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(F("]"), static_cast<uint8_t>(PrintCategory::STATUS));
           break;
         }
       case Opcode::NOOP:

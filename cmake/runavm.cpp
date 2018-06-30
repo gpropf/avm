@@ -22,15 +22,10 @@ VM vm(VM_MEM_SIZE, VM_STACK_SIZE);
 REPL repl(String((char *)"x86["), String((char *)"]:"), &vm);
 
 void x86setup() {
-  dprintln(repeatString(F("*"), 20), static_cast<uint8_t>(PrintCategory::REPL));
-  dprintln(F("Arduivm: v0.15-x86.0"), static_cast<uint8_t>(PrintCategory::REPL));
-  dprintln(repeatString(F("*"), 20), static_cast<uint8_t>(PrintCategory::REPL));
-  dprintln(F("END_8:") + String(static_cast<uint8_t>(Opcode::END_8)),
-           static_cast<uint8_t>(PrintCategory::REPL));
-  dprintln(repeatString(F("~"), 20), static_cast<uint8_t>(PrintCategory::REPL));
+  vm.printBootMsg("x86");
   
    uint8_t program[] = {
-#include "test-math.h"
+#include "boot.h"
     //#include "read-and-blink.h"
     //#include "pow.h"
     65, 86, 77, 10, 0, 0, 0, 79, 0, 0, 84, 0

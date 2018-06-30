@@ -84,6 +84,8 @@
 	    { "mnemonic" : "SUB_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "offset" : "1", "argFormats":["N","N"] },
 	    { "mnemonic" : "MUL_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "offset" : "2", "argFormats":["N","N"] },
 	    { "mnemonic" : "DIV_FL", "base" : "FLOAT_MATH_BASE", "argFormats":["N","N"], "offset" : "3", "argFormats":["N","N"] },
+	    { "mnemonic" : "SPAWNVM", "base" : "FLOAT_MATH_BASE", "argFormats":["H","H","B"],
+	    "comments" : " Creates a new VM with arg1, arg2, and arg3 as the memory base address, the stack base, and the register base respectively"},
 
 
 

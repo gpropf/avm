@@ -32,8 +32,8 @@ p = tagByteValues(p,s)
 p = emitValues(p)
 
 outputHex = True
-if len(sys.argv) > 1:
-    arg1 = sys.argv[1]
+if len(sys.argv) > 2:
+    arg1 = sys.argv[2]
     if arg1 == "--C++":
         outputHex = False
 

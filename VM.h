@@ -35,95 +35,7 @@ struct RegPair {
   uint8_t reg2;
 };
 
-
 #include "instruction_set.h"
-/*
-  enum class Opcode : uint8_t {
-  MATH_BASE_8 = 0,
-  ADD_UINT_8 = MATH_BASE_8,
-  SUB_UINT_8 = MATH_BASE_8 + 1,
-  MUL_UINT_8 = MATH_BASE_8 + 2,
-  DIV_UINT_8 = MATH_BASE_8 + 3,
-  OR_8   = MATH_BASE_8 + 4,
-  AND_8 = MATH_BASE_8 + 5,
-  NOT_8 = MATH_BASE_8 + 6,
-  SHL_8 = MATH_BASE_8 + 7,
-  SHR_8 = MATH_BASE_8 + 8,
-
-  MOV_BASE_8 = MATH_BASE_8 + 9,
-  MOV_REG2_MEM_8 = MOV_BASE_8,
-  MOV_MEM2_REG_8 = MOV_BASE_8 + 1,
-  MOV_REG2_SPREL_8 = MOV_BASE_8 + 2,
-  MOV_SPREL2_REG_8 = MOV_BASE_8 + 3,
-  MOV_REG_IND2_SPREL_8 = MOV_BASE_8 + 4,
-  MOV_SPREL_IND2_REG_8 = MOV_BASE_8 + 5,
-
-  MOV_REG_IND2_REG_8 = MOV_BASE_8 + 6,
-  MOV_REG_IND2_REG_IND_8 = MOV_BASE_8 + 7,
-  MOV_REG2_REG_IND_8 = MOV_BASE_8 + 8,
-  MOV_REG2_REG_8 = MOV_BASE_8 + 9,
-
-  PUSH_BASE_8 = MOV_BASE_8 + 10,
-  // PP_START_8 = PUSH_BASE_8,
-  PUSH_MEM_8 = PUSH_BASE_8,
-  PUSH_SPREL_8 = PUSH_BASE_8 + 1,
-  PUSH_REGS_8 = PUSH_BASE_8 + 2, // push one or two registers [R4,R4], if both are the same register then push only that one.
-  PUSH_REGS_IND_8 = PUSH_BASE_8 + 3,
-  PUSH_CONST_8 = PUSH_BASE_8 + 4,
-
-  POP_BASE_8 = PUSH_BASE_8 + 5,
-  POP_REGS_8 = POP_BASE_8, // Same as push, if there are two differe nt regs this pops 2 values.
-  //PP_END_8 = POP_REGS_8,
-
-  CMP_BASE = POP_BASE_8 + 1,
-  CMP_INT_8 = CMP_BASE,
-  CMP_UINT_8 = CMP_BASE + 1,
-
-  INC_BASE = CMP_BASE + 2,
-  INC_SPREL_UINT_8 = INC_BASE + 1,
-  INC_SPREL_INT_8 = INC_BASE + 2,
-
-  //INC_END = INC_SPREL_INT_8,
-
-  END_8 = INC_SPREL_INT_8,
-
-
-
-
-
-  // **************************************
-  // Below this we only need one of each instruction since there are not multiple data widths.
-  FIXED_WIDTH_BASE = 200,
-  CMP_FLOAT = FIXED_WIDTH_BASE,
-  CMP_STRING = FIXED_WIDTH_BASE + 1,
-
-  JUMP_BASE = FIXED_WIDTH_BASE + 2,
-  JNE = JUMP_BASE,
-  JEQ = JUMP_BASE + 1,
-  JLT = JUMP_BASE + 2,
-  JGT = JUMP_BASE + 3,
-  UJMP = JUMP_BASE + 4, // Unconditional jump
-
-  BIND_BASE = JUMP_BASE + 5,
-  BINDAI = BIND_BASE, // A16 V8: Bind a mem address (uint16_t) (analog input) to a pin (uint8_t)
-  BINDDI = BIND_BASE + 1, // A16 V8: Bind a mem address (uint16_t) (digital input) to a pin (uint8_t)
-  BINDAO = BIND_BASE + 2, // A16 V8: Bind a mem address (uint16_t) (analog out) to a pin (uint8_t)
-  BINDDO = BIND_BASE + 3, // A16 V8: Bind a mem address (uint16_t) (digital output) to a pin (uint8_t)
-  BINDAP = BIND_BASE + 4, // A16 V8: Bind a mem address (uint16_t) (analog input-pullup) to a pin (uint8_t)
-  BINDDP = BIND_BASE + 5, // A16 V8: Bind a mem address (uint16_t) (digital input-pullup) to a pin (uint8_t)
-
-
-  SP_ADJ = BIND_BASE + 6, // increment the SP without pop. Takes uint8_t as arg.
-  PRINT_AS = BIND_BASE + 7, // Takes an 8 bit operand. First nibble is register to print, 2nd is type to print as.
-  NOOP = 249,
-  NOOP_INIT = 250,
-  CALL = 255, // Takes a uint16_t address of the function to call. Automatically saves return address
-  RET = 254, // Uses stored return address and leaves return value on stack
-
-
-
-  };
-*/
 
 struct OpcodeAndDataWidth {
   Opcode c;
@@ -170,7 +82,7 @@ class VM {
     uint16_t _ip16Copy;
     Comparison _cmpReg;
 
-    uint8_t _reg[64];
+    uint8_t * _reg;
 
     //uint8_t * _progmem;
     uint16_t _memSize, _stackSize, _ip16, _SP, _AP;
@@ -190,8 +102,9 @@ class VM {
     uint8_t * _mem;
     VM(): _ip16(0), _SP(0) , _AP(0) {};
     VM(uint16_t memSize, uint16_t stackSize);
+    VM(uint8_t * memBase, uint16_t stackBase, uint8_t * regBase);
 
-
+    void printBootMsg(const String) const;
 
     String getAsString(uint8_t* addr8, const DataMode dm) const;
     String getAsString(uint16_t addr, const String modeString) const;

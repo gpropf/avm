@@ -469,9 +469,9 @@ def buildPythonStub(filename):
         mdFixedWidth = emitInstructionSet(data["instructions"]["fixedWidth"], outf, "Python")
         outf.write ("### END Python Constants ###\n")
         outf.write ("\n\n### Begin Python Metadata ###\n")
-        outf.write("\n## ----------------------------------- \tVARIABLE DATA WIDTH INSTRUCTIONS \t\n")
-        outf.write("mdFixedWidth = " + str(mdFixedWidth))
         outf.write("\n## ----------------------------------- \tFIXED DATA WIDTH INSTRUCTIONS \t\n")
+        outf.write("mdFixedWidth = " + str(mdFixedWidth))
+        outf.write("\n## ----------------------------------- \tVARIABLE DATA WIDTH INSTRUCTIONS \t\n")
         outf.write("mdMultiWidth = " + str(mdMultiWidth))
         outf.write ("\n\n### End Python Metadata ###\n")
         

@@ -68,6 +68,7 @@ ADD_FL = FLOAT_MATH_BASE + 0,
 SUB_FL = FLOAT_MATH_BASE + 1, 
 MUL_FL = FLOAT_MATH_BASE + 2, 
 DIV_FL = FLOAT_MATH_BASE + 3, 
+SPAWNVM = FLOAT_MATH_BASE + 4, //  Creates a new VM with arg1, arg2, and arg3 as the memory base address, the stack base, and the register base respectively
 TOP_BASE = 249 + 0, // Bind Operations Base
 NOOP = TOP_BASE + 0, // Top Operations Base
 NOOP_INIT = TOP_BASE + 1, 
