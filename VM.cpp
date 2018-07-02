@@ -358,7 +358,7 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
   //_dm = DataMode::UINT8;
   //_am = AddressingMode::ABS;
   _mem = new uint8_t[memSize];
-  _reg = new uint8_t[64];
+  _reg = new uint8_t[REGISTER_BLOCK_SIZE];
   _ip16 = 0;
   _SP = STACK_TOP;
   _stackSize = stackSize;
@@ -375,22 +375,25 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
 }
 
 
-VM::VM(uint8_t * memBase, uint16_t stackBase, uint8_t * regBase): _mem(memBase), _reg(regBase) {
+VM::VM(uint8_t * memBase,
+       uint16_t memBaseAddr,
+       uint16_t stackBaseAddr,
+       uint8_t * regBase): _mem(memBase), _memBaseAddr(memBaseAddr), _reg(regBase) {
 
   //_dm = DataMode::UINT8;
   //_am = AddressingMode::ABS;
   //_mem = memBase;
   _ip16 = 0;
-  _SP = stackBase;
+  _SP = stackBaseAddr;
   // _stackSize = stackSize;
   _ip16Copy = _ip16;
   _AP = 0;
 
   // Fills the memory and stack with some values for now to show that it's working
-/*
-  for (uint16_t i = 0; i < memSize; i++)
-    _mem[i] = static_cast<uint8_t>(Opcode::NOOP_INIT);
-*/
+  /*
+    for (uint16_t i = 0; i < memSize; i++)
+      _mem[i] = static_cast<uint8_t>(Opcode::NOOP_INIT);
+  */
   for (uint8_t i = 0; i < 16; i++)
     _reg[i * 4] = 0;
 }
@@ -1096,17 +1099,36 @@ void VM::exec(Opcode opcode) {
         }
       case Opcode::SPAWNVM: {
           //dprintln(F("UJMP"), static_cast<uint8_t>(PrintCategory::STATUS));
-          uint16_t membase = readData <uint16_t> ();
-          uint16_t stackbase = readData <uint16_t> ();
-          uint16_t regbase = readData <uint8_t> ();
+          uint16_t memBaseAddr = readData <uint16_t> ();
+          uint16_t stackBase = readData <uint16_t> ();
+          uint16_t regBase = readData <uint8_t> ();
 
-          dprint(F("SPAWN NEW VM! [membase: "), static_cast<uint8_t>(PrintCategory::STATUS));
-          dprint(String(membase), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(F("SPAWN NEW VM! [memBaseAddr: "), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(String(memBaseAddr), static_cast<uint8_t>(PrintCategory::STATUS));
           dprint(F(", stackbase: "), static_cast<uint8_t>(PrintCategory::STATUS));
-          dprint(String(stackbase), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(String(stackBase), static_cast<uint8_t>(PrintCategory::STATUS));
           dprint(F(", regbase: "), static_cast<uint8_t>(PrintCategory::STATUS));
-          dprint(String(regbase), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprint(String(regBase), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(F("]"), static_cast<uint8_t>(PrintCategory::STATUS));
+
+          VM * lastVM = _nextVM;
+          VM * tailVM = _nextVM;
+          uint8_t i = 0;
+          while (lastVM) {
+            dprint(F("lastVM exists: "));
+            dprintln(String(i));
+            tailVM = lastVM;
+            lastVM = lastVM->_nextVM;
+          }
+          lastVM = new VM(&_mem[memBaseAddr], memBaseAddr, STACK_TOP - memBaseAddr - stackBase, &_reg[regBase * 4]);
+          if (_nextVM) {
+            dprintln(F("_nextVM exists: "));
+            tailVM->_nextVM = lastVM;
+          }
+          else {
+            dprintln(F("_nextVM = lastVM "));
+            _nextVM = lastVM;
+          }
           break;
         }
       case Opcode::NOOP:
@@ -1129,6 +1151,14 @@ void VM::step() {
   Opcode opcode = readData <Opcode> (_ip16);
   //dprintln(F("Opcode:") + String(static_cast<uint8_t>(opcode)));
   exec(opcode);
+  VM * lastVM = _nextVM;
+  VM * tailVM = _nextVM;
+
+  while (lastVM) {
+    lastVM->step();
+    //dprintln(String(lastVM->_SP));
+    lastVM = lastVM->_nextVM;
+  }
 
 }
 

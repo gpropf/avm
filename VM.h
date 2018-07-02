@@ -76,6 +76,7 @@ class VM {
 
   private:
 
+    VM * _nextVM = 0;
     PinBinding _pinBindings[NUM_PINS];
     //DataMode _dm;
 
@@ -86,6 +87,7 @@ class VM {
 
     //uint8_t * _progmem;
     uint16_t _memSize, _stackSize, _ip16, _SP, _AP;
+    uint16_t _memBaseAddr;
     // _AP is "append pointer, used at the beginning to make it easy to push a bunch
     // of instructions and data into the memory.
     int16_t getStringLength(char * startAddr);
@@ -102,7 +104,7 @@ class VM {
     uint8_t * _mem;
     VM(): _ip16(0), _SP(0) , _AP(0) {};
     VM(uint16_t memSize, uint16_t stackSize);
-    VM(uint8_t * memBase, uint16_t stackBase, uint8_t * regBase);
+    VM(uint8_t * memBase, uint16_t memBaseAddr, uint16_t stackBaseAddr, uint8_t * regBase);
 
     void printBootMsg(const String) const;
 
