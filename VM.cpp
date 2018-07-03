@@ -360,6 +360,7 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
   _mem = new uint8_t[memSize];
   _reg = new uint8_t[REGISTER_BLOCK_SIZE];
   _ip16 = 0;
+  _memBaseAddr = 0;
   _SP = STACK_TOP;
   _stackSize = stackSize;
   _ip16Copy = _ip16;
@@ -540,7 +541,8 @@ void VM::exec(Opcode opcode) {
   //dprintln(F("sp: " + String(_SP) + ",ip: ") + String(_ip16), static_cast<uint8_t>(PrintCategory::REPL));
   //uint8_t opcodeVal = static_cast<uint8_t>(opcode);
   //uint8_t * buf = NULL;
-
+  dprint(F("MEMBASE ADDR: "), static_cast<uint8_t>(PrintCategory::STATUS));
+  dprintln(String(_memBaseAddr), static_cast<uint8_t>(PrintCategory::STATUS));
   OpcodeAndDataWidth opPair = VM::getOpcodeAndDataWidth(opcode);
   dprint(F("Opcode: "), static_cast<uint8_t>(PrintCategory::STATUS));
 
@@ -1151,13 +1153,17 @@ void VM::step() {
   Opcode opcode = readData <Opcode> (_ip16);
   //dprintln(F("Opcode:") + String(static_cast<uint8_t>(opcode)));
   exec(opcode);
-  VM * lastVM = _nextVM;
-  VM * tailVM = _nextVM;
+  if (_memBaseAddr == 0) {
+    VM * lastVM = _nextVM;
+   // VM * tailVM = _nextVM;
 
-  while (lastVM) {
-    lastVM->step();
-    //dprintln(String(lastVM->_SP));
-    lastVM = lastVM->_nextVM;
+    uint8_t i = 0;
+    while (lastVM) {
+      lastVM->step();
+      dprintln("Machine #: " + String(i));
+      lastVM = lastVM->_nextVM;
+      i++;
+    }
   }
 
 }

@@ -48,7 +48,7 @@ instructions = { **instructions, **mdFixedWidth, **mdMultiWidth }
 def leftUnary(leftArg, op):
     """ Process left unary operators. Currently only handles the declaration operator ":". The value of 'op' is ignored."""
     if leftArg['type'] == 'variable' or leftArg['type'] == 'label':
-        return {**leftArg, **{'declaration': True}}
+        return {**leftArg, **{'declaration': True}} # Return whatever leftArg was but marked up as a 'declaration' IOW.
     else:
         return leftArg # Really this is an error but I'm not adding the exceptions yet.
         
@@ -71,40 +71,6 @@ grouping = {'(':'open-parenz',
             ']':'close-square-bracket',
             '{':'open-curly-bracket',
             '}':'close-curly-bracket'}
-
-            
-
-def annotateChunk(chunk):
-   
-    instructionEchelons = {"8":0, "16":1, "32":2}
-    #byteWidthIntval = 1
-    #chunkBaseName = chunk
-   
-    lastUnderscoreIndex = chunk.rfind("_")
-    if lastUnderscoreIndex != -1: 
-        chunkBaseName = chunk[:lastUnderscoreIndex]
-        byteWidth = chunk[lastUnderscoreIndex + 1:]
-
-        if byteWidth in instructionEchelons:
-            instructionEchelon = instructionEchelons[byteWidth]
-            chunk = chunkBaseName + "_8"             
-    if chunk in instructions:
-        if instructions[chunk]['opcode'] <= END_8:
-            chunk = {'text':chunk,
-                     'type':'instruction',
-                     'instructionEchelon':instructionEchelon,
-                     'bitWidth': 8}
-        else:
-            chunk = {'text':chunk, 'type':'instruction','bitWidth': 8}
-    elif chunk in operators:
-        chunk = {'text':chunk, 'type':'operator'}
-    elif chunk in grouping:
-        chunk = {'text':chunk, 'type': grouping[chunk]}
-    elif chunk.isdigit():
-        chunk = {'text': chunk, 'type':'int', 'value': int(chunk)}
-    else:
-        chunk = {'text':chunk, 'type':'label', 'bitWidth': 0}
-    return chunk
 
 
 def processTextOperators(program):
@@ -149,6 +115,41 @@ def processUnaryOps(program):
                 
 #                program[i+1] = ""
     return list(filter(lambda x: x != "", program))
+
+
+def annotateChunk(chunk):
+   
+    instructionEchelons = {"8":0, "16":1, "32":2}
+    #byteWidthIntval = 1
+    #chunkBaseName = chunk
+   
+    lastUnderscoreIndex = chunk.rfind("_")
+    if lastUnderscoreIndex != -1: 
+        chunkBaseName = chunk[:lastUnderscoreIndex]
+        byteWidth = chunk[lastUnderscoreIndex + 1:]
+
+        if byteWidth in instructionEchelons:
+            instructionEchelon = instructionEchelons[byteWidth]
+            chunk = chunkBaseName + "_8"             
+    if chunk in instructions:
+        if instructions[chunk]['opcode'] <= END_8:
+            chunk = {'text':chunk,
+                     'type':'instruction',
+                     'instructionEchelon':instructionEchelon,
+                     'bitWidth': 8}
+        else:
+            chunk = {'text':chunk, 'type':'instruction','bitWidth': 8}
+    elif chunk in operators:
+        chunk = {'text':chunk, 'type':'operator'}
+    elif chunk in grouping:
+        chunk = {'text':chunk, 'type': grouping[chunk]}
+    elif chunk.isdigit():
+        chunk = {'text': chunk, 'type':'int', 'value': int(chunk)}
+    else:
+        chunk = {'text':chunk, 'type':'label', 'bitWidth': 0}
+    return chunk
+
+
 
     
 def stripComments(filename, verbose = False):
@@ -205,6 +206,19 @@ def chunkAndClassify(program, verbose = False):
         if type(chunk) == str:
             if re.match("^\d+?\.\d+?$", chunk): # Chunk is a floating point value
                 chunk = {'text':chunk, 'value': float(chunk), 'type':'float', 'bitWidth':32}
+                # Floats are always going to take up 4 bytes.
+                outProgram.append(chunk)
+                # No need to classify further, we're done.
+                continue
+            m = re.match("^(\w+):(\d+)$", chunk) # Chunk is a a symbol, then ':', then a number
+            if m:
+                # Symbols declared with a numeric value after the colon (i.e. "FOO:3")
+                # have that value hardcoded no matter where they appear in the code.
+                # This allows for the creation of "local" variables for use by spawned VMs.
+                (label,index) = m.groups()
+                indexVal = int(index)
+                chunk = {'text':label, 'type':'label', 'resetIndex':indexVal,
+                         'value':indexVal, 'declaration': True, 'bitWidth':0}
                 # Floats are always going to take up 4 bytes.
                 outProgram.append(chunk)
                 # No need to classify further, we're done.
@@ -295,6 +309,12 @@ nibbles to a byte here as well."""
         bits = 0
         if chunk['type'] == 'instruction':
             bits = 8
+            
+        elif 'resetIndex' in chunk:
+            oldByteCount = byteCount
+            resetIndex = chunk['resetIndex']
+            #print("Found resetIndex " + str(resetIndex) + " at old byte count " + str(oldByteCount))
+
         elif 'bitWidth' in chunk:
             bits = chunk['bitWidth']
             if bits == 4:
@@ -313,7 +333,14 @@ def buildSymbolTable(program):
     symbols = {}
     for chunk in program:
         if (chunk['type'] == 'variable' or chunk['type'] == 'label') and 'declaration' in chunk and chunk['declaration'] == True:
-            symbols[chunk['text']] = { 'value': chunk['byteIndex'], 'symbolType': chunk['type'], 'bitWidth': chunk['bitWidth']}
+            if 'resetIndex' in chunk:
+                # Symbols declared with a numeric value after the colon (i.e. "FOO:3")
+                # have that value hardcoded no matter where they appear in the code.
+                # This allows for the creation of "local" variables for use by spawned VMs.
+                chunkVal = chunk['resetIndex']
+            else:
+                chunkVal = chunk['byteIndex']
+            symbols[chunk['text']] = { 'value': chunkVal, 'symbolType': chunk['type'], 'bitWidth': chunk['bitWidth']}
     return symbols
          
 
@@ -481,19 +508,46 @@ def buildPythonStub(filename):
 
 def test():
     """ Quickie test script meant to be run by just doing up-arrow at the ipython cmd line."""
-    p = stripComments("test-math.avm")
+    p = stripComments("tests/spawn.avm")
     p = chunkOnDblQuotes(p)
     p = chunkOnSpaces(p)
+    print(p)
+    print("==================================")
     p = chunkAndClassify(p)
+    print(p)
+    print("==================================")
+
     p = processTextOperators(p)
+    print(p)
+    print("==================================")
+
     p = processUnaryOps(p)
+    print(p)
+    print("==================================")
     
     (dp,p) = buildExpressionTree(p)
+    print(p)
+    print("==================================")
+
     p = captureIntructionArgs(p)
+    print(p)
+    print("==================================")
+
     p = indexProgram(p)
+    print(p)
+    print("indexProgram ==================================")
+
     s = buildSymbolTable(p)
+    print(p)
+    print("buildSymbolTable ==================================")
+
     pfinal = tagByteValues(p,s)
+    print(p)
+    print("tagByteValues ==================================")
+
     p = emitValues(pfinal)
+    print(p)
+    print("emitValues ==================================")
 #    for c in p:
 #        print(c)
     return (pfinal,s,p)
