@@ -5,7 +5,8 @@
 
 /* Machine Design Overview:
 
-    Registers: There are 16 32bit general purpose regs.
+    Registers: Registers are 32 bit. The number can vary but the current design allocates a block of 32
+    of them for the main and spawned processors to use.
 
     Instruction Families
 
@@ -70,6 +71,10 @@ String VM::getAsString(uint16_t addr, const String modeString) const {
   return String();
 }
 
+uint16_t VM::translateAddr(uint16_t addr) {
+  return addr - _memBaseAddr;
+}
+
 String VM::getAsString(uint8_t* addr8, const DataMode dm) const {
 
   switch (dm) {
@@ -130,59 +135,10 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) const {
   return String((char *)"");
 }
 
-String VM::getAsString(uint16_t addr, const DataMode dm) const {
 
+String VM::getAsString(uint16_t addr, const DataMode dm) const {
   uint8_t * realAddrPtr = reinterpret_cast<uint8_t*>(&_mem[addr]);
   return getAsString(realAddrPtr, dm);
-  /*
-    switch (dm) {
-    case DataMode::UINT8: {
-        return String(readData<uint8_t>(addr, false));
-
-
-      }
-    case DataMode::UINT16: {
-        return String(readData<uint16_t>(addr, false));
-      }
-
-    case DataMode::UINT32: {
-        return String(readData<uint32_t>(addr, false));
-      }
-    case DataMode::INT8: {
-        return String(readData<int8_t>(addr, false));
-      }
-    case DataMode::INT16: {
-        return String(readData<int16_t>(addr, false));
-      }
-    case DataMode::INT32: {
-        return String(readData<int32_t>(addr, false));
-      }
-
-    case DataMode::FLOAT: {
-        return String(readData<float>(addr, false));
-      }
-
-    case DataMode::STRING: {
-
-        char currentChar = 39;
-        // 39 is the code for "'". It's a cute way to have currentChar be non-zero
-        // at the start and as a way to start the single-quoted string.
-        String s = F("");
-        while (addr < VM_MEM_SIZE && currentChar != 0) {
-          s += currentChar;
-          currentChar = readData<char>(addr++, false);
-
-        }
-
-        return s + "'";
-
-      }
-    default:
-      return "";
-
-    }
-  */
-  //return "";
 }
 
 
@@ -199,6 +155,7 @@ void VM::writeString(char * sptr, uint16_t inAddr , boolean advanceIP) {
   }
 }
 
+
 void VM::changeIP(int16_t addressDelta) {
   // The zero here acts as a semaphor value causing the address to reset to its original value.
   if (addressDelta == 0)
@@ -207,12 +164,14 @@ void VM::changeIP(int16_t addressDelta) {
     _ip16 += addressDelta;
 }
 
+
 void VM::createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr) {
   _pinBindings[pin].setIO(io);
   _pinBindings[pin].setAD(ad);
   _pinBindings[pin].setAddress(addr);
   _pinBindings[pin].setPin(pin);
 }
+
 
 void VM::PinBinding::print() {
   String modeStr = String((char *)"");
@@ -244,37 +203,47 @@ void VM::PinBinding::print() {
   dprintln(modeStr);
 }
 
+
 VM::PinBinding::PinBinding() {
   _io = NOT_BOUND; // They all begin life de-activated.
 }
+
 
 void VM::PinBinding::setIO(uint8_t m) {
   pinMode(_pin, m);
   _io = m;
 }
+
+
 uint8_t VM::PinBinding::getIO() {
   return _io;
 }
+
 
 void VM::PinBinding::setAD(boolean ad) {
   _ad = ad;
 }
 
+
 boolean VM::PinBinding::getAD() {
   return _ad;
 }
+
 
 void VM::PinBinding::setPin(uint8_t pin) {
   _pin = pin;
 }
 
+
 void VM::PinBinding::setAddress(uint16_t address) {
   _address = address;
 }
 
+
 uint8_t VM::PinBinding::getPin() {
   return _pin;
 }
+
 
 void VM::PinBinding::updatePin(VM & vm) {
 
@@ -342,6 +311,7 @@ void VM::PinBinding::updatePin(VM & vm) {
 
 }
 
+
 void VM::printStatus() {
   //String amString = (_am == AddressingMode::REL) ? "Relative" : "Absolute";
   dprint(F("IP:"));
@@ -352,6 +322,7 @@ void VM::printStatus() {
   dprint(F(" cmpReg: "));
   dprintln(String(static_cast<uint16_t>(_cmpReg)));
 }
+
 
 VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(stackSize) {
 
@@ -371,7 +342,7 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
   for (uint16_t i = 0; i < memSize; i++)
     _mem[i] = static_cast<uint8_t>(Opcode::NOOP_INIT);
 
-  for (uint8_t i = 0; i < 64; i++)
+  for (uint8_t i = 0; i < REGISTER_BLOCK_SIZE; i++)
     _reg[i] = 0;
 }
 
@@ -389,14 +360,6 @@ VM::VM(uint8_t * memBase,
   // _stackSize = stackSize;
   _ip16Copy = _ip16;
   _AP = 0;
-
-  // Fills the memory and stack with some values for now to show that it's working
-  /*
-    for (uint16_t i = 0; i < memSize; i++)
-      _mem[i] = static_cast<uint8_t>(Opcode::NOOP_INIT);
-  */
-  for (uint8_t i = 0; i < 16; i++)
-    _reg[i * 4] = 0;
 }
 
 
@@ -1115,20 +1078,20 @@ void VM::exec(Opcode opcode) {
 
           VM * lastVM = _nextVM;
           VM * tailVM = _nextVM;
-          uint8_t i = 0;
+          //uint8_t i = 0;
           while (lastVM) {
-            dprint(F("lastVM exists: "));
-            dprintln(String(i));
+            //dprint(F("lastVM exists: "));
+            //dprintln(String(i));
             tailVM = lastVM;
             lastVM = lastVM->_nextVM;
           }
           lastVM = new VM(&_mem[memBaseAddr], memBaseAddr, STACK_TOP - memBaseAddr - stackBase, &_reg[regBase * 4]);
           if (_nextVM) {
-            dprintln(F("_nextVM exists: "));
+            //dprintln(F("_nextVM exists: "));
             tailVM->_nextVM = lastVM;
           }
           else {
-            dprintln(F("_nextVM = lastVM "));
+            //dprintln(F("_nextVM = lastVM "));
             _nextVM = lastVM;
           }
           break;
@@ -1143,6 +1106,7 @@ void VM::exec(Opcode opcode) {
   //dprintln(F("After inst (sp,ip) : (" + String(_SP) + "," + String(_ip16) + ")\n"));
 }
 
+
 void VM::step() {
   dprintln(repeatString(F("-="), 40), static_cast<uint8_t>(PrintCategory::STATUS));
   updateBoundData();
@@ -1155,18 +1119,20 @@ void VM::step() {
   exec(opcode);
   if (_memBaseAddr == 0) {
     VM * lastVM = _nextVM;
-   // VM * tailVM = _nextVM;
+    // VM * tailVM = _nextVM;
 
     uint8_t i = 0;
     while (lastVM) {
       lastVM->step();
-      dprintln("Machine #: " + String(i));
+      dprint(F("Machine #: "), static_cast<uint8_t>(PrintCategory::STATUS));
+      dprintln(String(i), static_cast<uint8_t>(PrintCategory::STATUS));
       lastVM = lastVM->_nextVM;
       i++;
     }
   }
 
 }
+
 
 void VM::updateBoundData() {
   for (uint8_t i = 0; i < NUM_PINS; i++) {
@@ -1218,7 +1184,7 @@ void VM::printStack() {
 
 void VM::printRegisters() {
   dprintln(repeatString(F("R"), 20), static_cast<uint8_t>(PrintCategory::REPL));
-  for (uint8_t i = 0; i < 16 ; i++) {
+  for (uint8_t i = 0; i < REGISTER_BLOCK_SIZE / 4 ; i++) {
     uint32_t * regptr32 = reinterpret_cast<uint32_t*>(&_reg[i * 4]);
     dprint(F("Reg "), static_cast<uint8_t>(PrintCategory::REPL));
     dprint(String(i), static_cast<uint8_t>(PrintCategory::REPL));

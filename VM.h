@@ -99,7 +99,7 @@ class VM {
     RegPair getRegPair();
     //uint16_t ;
     String OpcodeWithWidth2String(OpcodeAndDataWidth opdw); // Might not do this after all.
-    //uint16_t read
+    uint16_t translateAddr(uint16_t addr);
 
   public:
     uint8_t * _mem;
