@@ -335,7 +335,6 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
   _SP = STACK_TOP;
   _stackSize = stackSize;
   _ip16Copy = _ip16;
-  _AP = 0;
 
   // Fills the memory and stack with some values for now to show that it's working
 
@@ -350,16 +349,11 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
 VM::VM(uint8_t * memBase,
        uint16_t memBaseAddr,
        uint16_t stackBaseAddr,
-       uint8_t * regBase): _mem(memBase), _memBaseAddr(memBaseAddr), _reg(regBase) {
-
-  //_dm = DataMode::UINT8;
-  //_am = AddressingMode::ABS;
-  //_mem = memBase;
-  _ip16 = 0;
-  _SP = stackBaseAddr;
-  // _stackSize = stackSize;
+       uint8_t * regBase):
+  _mem(memBase), _memBaseAddr(memBaseAddr),
+  _SP(stackBaseAddr), _reg(regBase) {
+  _ip16 = 0;  
   _ip16Copy = _ip16;
-  _AP = 0;
 }
 
 

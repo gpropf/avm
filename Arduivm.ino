@@ -27,21 +27,22 @@ void setup() {
   Serial.begin(57600);
   flashLEDs();
   vm.printBootMsg("avr");
-  
-  const uint8_t program[] = {
-//#include "test-math.h"
-//#include "read-and-blink.h"
-//#include "pow.h"
+
+  uint8_t  program[] = {
+    //#include "test-math.h"
+    //#include "read-and-blink.h"
+    //#include "pow.h"
 #include "boot.h"
     65, 86, 77, 10, 0, 0, 0, 79, 0, 0, 84, 0
   };
-  uint8_t * srcptr = program;
-  uint8_t * destptr = &vm._mem[0];
+  //uint8_t * srcptr = program;
+  //uint8_t * destptr = &vm._mem[0];
+  uint8_t * destptr = vm.getPtr(0, Location::MEM);
   //dprintln("Before program loading :" + String(vm.getIP()) + ")");
-  vm.moveData(srcptr, destptr, sizeof(program));
+  vm.moveData(program, destptr, sizeof(program));
 }
 
 void loop() {
   repl.loop();
-//  vm.reset();
+  //  vm.reset();
 }

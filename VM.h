@@ -83,30 +83,30 @@ class VM {
     uint16_t _ip16Copy;
     Comparison _cmpReg;
 
-    uint8_t * _reg;
 
-    //uint8_t * _progmem;
-    uint16_t _memSize, _stackSize, _ip16, _SP, _AP;
-    uint16_t _memBaseAddr;
-    // _AP is "append pointer, used at the beginning to make it easy to push a bunch
-    // of instructions and data into the memory.
+   
     int16_t getStringLength(char * startAddr);
     //static constexpr char * dmString = "UIFS";
     //static const String dwStrings[3] = {"8", "16", "32"};
     static String const _dataModeStrings[];
-    uint8_t * getPtr(uint16_t addr, Location locationType);
+
     void loadRegWithConst(uint8_t reg, uint32_t c = 0);
     RegPair getRegPair();
     //uint16_t ;
     String OpcodeWithWidth2String(OpcodeAndDataWidth opdw); // Might not do this after all.
     uint16_t translateAddr(uint16_t addr);
 
+
   public:
     uint8_t * _mem;
-    VM(): _ip16(0), _SP(0) , _AP(0) {};
+    uint16_t _memBaseAddr, _SP;
+    uint8_t * _reg;
+    uint16_t _memSize, _stackSize, _ip16;
+
+  
     VM(uint16_t memSize, uint16_t stackSize);
     VM(uint8_t * memBase, uint16_t memBaseAddr, uint16_t stackBaseAddr, uint8_t * regBase);
-
+    uint8_t * getPtr(uint16_t addr, Location locationType);
     void printBootMsg(const String) const;
 
     String getAsString(uint8_t* addr8, const DataMode dm) const;
@@ -186,24 +186,20 @@ class VM {
       value2 = *(reinterpret_cast<datum*>(&(_reg[rp.reg2 * 4])));
     }
 
-    template <class datum> datum readDataAtPtr(datum *inAddr) const
-    {
-
+    template <class datum> datum readDataAtPtr(datum *inAddr) const {
       datum * dptr = reinterpret_cast<datum*>(inAddr);
       datum d = *dptr;
       return d;
     }
 
-    template <class datum> datum readDataConst(uint16_t inAddr = 0) const
-    {
+    template <class datum> datum readDataConst(uint16_t inAddr = 0) const {
       datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
       datum d = readDataAtPtr<datum>(dptr);
       return d;
 
     }
 
-    template <class datum> datum readData(uint16_t inAddr = 0, boolean advanceIP = true)
-    {
+    template <class datum> datum readData(uint16_t inAddr = 0, boolean advanceIP = true) {
       if (advanceIP) {
         inAddr = _ip16;
         _ip16 += sizeof(datum);
