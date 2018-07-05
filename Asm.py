@@ -297,6 +297,24 @@ def buildExpressionTree(program, r = 0):
     return (dp, outList)
 
 
+def identifyContextBlocks(program):
+    dp = cl.deque(program)
+    outList = cl.deque()
+    while dp:
+        context = None
+        outChunk = dp.popleft()
+        if outChunk['text'] == "BEGIN":
+            context = 'beginContext'
+        elif outChunk['text'] == "END":
+            context = 'endContext'
+        outList.append(outChunk)
+        if context:
+            outChunk = dp.popleft()
+            outChunk['context'] = context
+            outList.append(outChunk)
+    return outList
+            
+
 def indexProgram(program):
     """We should now have enough information to note the byte index of
 each object in the program. We take account of the fact there are 2
@@ -304,17 +322,27 @@ nibbles to a byte here as well."""
     
     needNibble = False
     byteCount = 0
+    context = None
     for chunk in program:
+        if context:
+            print(context + " : " + str(byteCount) + " : " + str(chunk))
+        else:
+            print(str(byteCount) + " : " + str(chunk))
         chunk['byteIndex'] = byteCount
         bits = 0
         if chunk['type'] == 'instruction':
             bits = 8
             
-        elif 'resetIndex' in chunk:
-            oldByteCount = byteCount
-            resetIndex = chunk['resetIndex']
+        #elif 'resetIndex' in chunk:
+        #    oldByteCount = byteCount
+        #    resetIndex = chunk['resetIndex']
             #print("Found resetIndex " + str(resetIndex) + " at old byte count " + str(oldByteCount))
-
+        elif 'context' in chunk:
+            ctx = chunk['context']
+            if ctx == 'beginContext':
+                context = chunk['text']
+            elif ctx == 'endContext':
+                context = None
         elif 'bitWidth' in chunk:
             bits = chunk['bitWidth']
             if bits == 4:
@@ -333,13 +361,7 @@ def buildSymbolTable(program):
     symbols = {}
     for chunk in program:
         if (chunk['type'] == 'variable' or chunk['type'] == 'label') and 'declaration' in chunk and chunk['declaration'] == True:
-            if 'resetIndex' in chunk:
-                # Symbols declared with a numeric value after the colon (i.e. "FOO:3")
-                # have that value hardcoded no matter where they appear in the code.
-                # This allows for the creation of "local" variables for use by spawned VMs.
-                chunkVal = chunk['resetIndex']
-            else:
-                chunkVal = chunk['byteIndex']
+            chunkVal = chunk['byteIndex']
             symbols[chunk['text']] = { 'value': chunkVal, 'symbolType': chunk['type'], 'bitWidth': chunk['bitWidth']}
     return symbols
          
@@ -505,49 +527,64 @@ def buildPythonStub(filename):
         outf.close()
         return (mdMultiWidth,mdFixedWidth)
 
-
+def printChunks(p):
+    if type(p) == dict:
+        for k,v in p.items():
+            print(str(k) + ":" + str(v))
+    else:
+        for chunk in p:
+            print(chunk)
+    
 def test():
     """ Quickie test script meant to be run by just doing up-arrow at the ipython cmd line."""
-    p = stripComments("tests/spawn.avm")
+    p = stripComments("tests/parallel_loop-intmath_blink.avm")
     p = chunkOnDblQuotes(p)
     p = chunkOnSpaces(p)
-    print(p)
-    print("==================================")
-    p = chunkAndClassify(p)
-    print(p)
-    print("==================================")
-
-    p = processTextOperators(p)
-    print(p)
-    print("==================================")
-
-    p = processUnaryOps(p)
-    print(p)
-    print("==================================")
     
+    print("chunkOnSpaces ==================================")
+    printChunks(p)
+    
+
+    print("chunkAndClassify ==================================")
+    p = chunkAndClassify(p)
+    printChunks(p)
+
+    print("processTextOperators ==================================")
+    p = processTextOperators(p)
+    printChunks(p)
+
+    print("processUnaryOps ==================================")
+    p = processUnaryOps(p)
+    printChunks(p)
+    
+    print("buildExpressionTree ==================================")
     (dp,p) = buildExpressionTree(p)
-    print(p)
-    print("==================================")
+    printChunks(p)
 
+    print("identifyContextBlocks ==================================")
+    p = identifyContextBlocks(p)
+    printChunks(p)
+    
+    print("captureIntructionArgs ==================================")
     p = captureIntructionArgs(p)
-    print(p)
-    print("==================================")
+    printChunks(p)
 
-    p = indexProgram(p)
-    print(p)
     print("indexProgram ==================================")
+    p = indexProgram(p)
+    printChunks(p)
 
+    print("buildSymbolTable SYMBOL TABLE: ==================================")
     s = buildSymbolTable(p)
-    print(p)
-    print("buildSymbolTable ==================================")
+    printChunks(s)
 
-    pfinal = tagByteValues(p,s)
-    print(p)
     print("tagByteValues ==================================")
+    pfinal = tagByteValues(p,s)
+    printChunks(p)
 
-    p = emitValues(pfinal)
-    print(p)
     print("emitValues ==================================")
+    p = emitValues(pfinal)
+    printChunks(p)
+
 #    for c in p:
 #        print(c)
     return (pfinal,s,p)
