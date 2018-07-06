@@ -325,9 +325,11 @@ nibbles to a byte here as well."""
     context = None
     for chunk in program:
         if context:
-            print(context + " : " + str(byteCount) + " : " + str(chunk))
+            pass
+#            print(context + " : " + str(byteCount) + " : " + str(chunk))
         else:
-            print(str(byteCount) + " : " + str(chunk))
+            pass
+#            print(str(byteCount) + " : " + str(chunk))
         chunk['byteIndex'] = byteCount
         bits = 0
         if chunk['type'] == 'instruction':

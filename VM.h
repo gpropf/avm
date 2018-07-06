@@ -84,7 +84,7 @@ class VM {
     Comparison _cmpReg;
 
 
-   
+
     int16_t getStringLength(char * startAddr);
     //static constexpr char * dmString = "UIFS";
     //static const String dwStrings[3] = {"8", "16", "32"};
@@ -94,7 +94,8 @@ class VM {
     RegPair getRegPair();
     //uint16_t ;
     String OpcodeWithWidth2String(OpcodeAndDataWidth opdw); // Might not do this after all.
-    uint16_t translateAddr(uint16_t addr);
+    //uint16_t translateAddr(const uint16_t addr) const;
+    uint16_t readAddr();
 
 
   public:
@@ -103,7 +104,7 @@ class VM {
     uint8_t * _reg;
     uint16_t _memSize, _stackSize, _ip16;
 
-  
+
     VM(uint16_t memSize, uint16_t stackSize);
     VM(uint8_t * memBase, uint16_t memBaseAddr, uint16_t stackBaseAddr, uint8_t * regBase);
     uint8_t * getPtr(uint16_t addr, Location locationType);
@@ -193,6 +194,7 @@ class VM {
     }
 
     template <class datum> datum readDataConst(uint16_t inAddr = 0) const {
+      //inAddr = translateAddr(inAddr);
       datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
       datum d = readDataAtPtr<datum>(dptr);
       return d;
@@ -204,11 +206,9 @@ class VM {
         inAddr = _ip16;
         _ip16 += sizeof(datum);
       }
-      /*
-            datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
-            datum d = *dptr;
-            return d;
-      */
+
+
+
       datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
       datum d = readDataAtPtr<datum>(dptr);
       return d;
@@ -227,74 +227,75 @@ class VM {
       datum * dptr = reinterpret_cast<datum*>(&_mem[inAddr]);
       *dptr = d;
     }
+    /*
+        template <class A1 = uint16_t, class A2 = uint8_t, class A3 = uint8_t>
+        void writeInstruction(Opcode c, A1 a1 = 0, A2 a2 = 0, A3 a3 = 0)
+        {
+          writeData(c);
+          OpcodeAndDataWidth opPair = getOpcodeAndDataWidth(c);
 
-    template <class A1 = uint16_t, class A2 = uint8_t, class A3 = uint8_t>
-    void writeInstruction(Opcode c, A1 a1 = 0, A2 a2 = 0, A3 a3 = 0)
-    {
-      writeData(c);
-      OpcodeAndDataWidth opPair = getOpcodeAndDataWidth(c);
-
-      // This switch only does something if we have an instruction with an argument
-      switch (opPair.c) {
-        case Opcode::SP_ADJ: {
-            writeData(a2, _ip16);
-            break;
+          // This switch only does something if we have an instruction with an argument
+          switch (opPair.c) {
+            case Opcode::SP_ADJ: {
+                writeData(a2, _ip16);
+                break;
+              }
+            case Opcode::INC_SPREL_UINT_8: {
+                writeData(a2, _ip16);
+                break;
+              }
+            case Opcode::MOV_SPREL2_REG_8: {
+                writeData(a2, _ip16);
+                writeData(a3, _ip16);
+                break;
+              }
+            case Opcode::MOV_REG2_SPREL_8: {
+                writeData(a2, _ip16);
+                writeData(a3, _ip16);
+                break;
+              }
+            case Opcode::PUSH_CONST_8:
+              writeData(a2, _ip16);
+              break;
+            case Opcode::CMP_INT_8:
+              writeData(a2, _ip16);
+              break;
+            case Opcode::UJMP:
+              writeData(a1, _ip16);
+              break;
+            case Opcode::JEQ:
+              writeData(a1, _ip16);
+              break;
+            case Opcode::CALL:
+              writeData(a1, _ip16);
+              break;
+            case Opcode::PUSH_MEM_8:
+              writeData(a1, _ip16);
+              break;
+            case Opcode::POP_REGS_8:
+              writeData(a2, _ip16);
+              break;
+            case Opcode::ADD_UINT_8:
+            case Opcode::MUL_UINT_8:
+            case Opcode::DIV_UINT_8:
+            case Opcode::SUB_UINT_8:
+              writeData(a2, _ip16);
+              break;
+            case Opcode::BINDAO:
+            case Opcode::BINDDO:
+            case Opcode::BINDDI:
+            case Opcode::BINDDP:
+            case Opcode::BINDAP:
+            case Opcode::BINDAI: {
+                writeData(a1, _ip16);
+                //_ip16 += (sizeof(a1));
+                writeData(a2, _ip16);
+                //_ip16 += (sizeof(a2));
+              }
+              break;
           }
-        case Opcode::INC_SPREL_UINT_8: {
-            writeData(a2, _ip16);
-            break;
-          }
-        case Opcode::MOV_SPREL2_REG_8: {
-            writeData(a2, _ip16);
-            writeData(a3, _ip16);
-            break;
-          }
-        case Opcode::MOV_REG2_SPREL_8: {
-            writeData(a2, _ip16);
-            writeData(a3, _ip16);
-            break;
-          }
-        case Opcode::PUSH_CONST_8:
-          writeData(a2, _ip16);
-          break;
-        case Opcode::CMP_INT_8:
-          writeData(a2, _ip16);
-          break;
-        case Opcode::UJMP:
-          writeData(a1, _ip16);
-          break;
-        case Opcode::JEQ:
-          writeData(a1, _ip16);
-          break;
-        case Opcode::CALL:
-          writeData(a1, _ip16);
-          break;
-        case Opcode::PUSH_MEM_8:
-          writeData(a1, _ip16);
-          break;
-        case Opcode::POP_REGS_8:
-          writeData(a2, _ip16);
-          break;
-        case Opcode::ADD_UINT_8:
-        case Opcode::MUL_UINT_8:
-        case Opcode::DIV_UINT_8:
-        case Opcode::SUB_UINT_8:
-          writeData(a2, _ip16);
-          break;
-        case Opcode::BINDAO:
-        case Opcode::BINDDO:
-        case Opcode::BINDDI:
-        case Opcode::BINDDP:
-        case Opcode::BINDAP:
-        case Opcode::BINDAI: {
-            writeData(a1, _ip16);
-            //_ip16 += (sizeof(a1));
-            writeData(a2, _ip16);
-            //_ip16 += (sizeof(a2));
-          }
-          break;
-      }
-    }
+        }
+    */
 };
 
 #endif
