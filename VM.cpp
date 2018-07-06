@@ -855,6 +855,18 @@ void VM::exec(Opcode opcode) {
           dprintln(String(addr), static_cast<uint8_t>(PrintCategory::STATUS));
           break;
         }
+        case Opcode::JNE: {
+          dprintln(F("JEQ"), static_cast<uint8_t>(PrintCategory::STATUS));
+          uint16_t addr = readAddr();
+          if (_cmpReg != Comparison::EQUAL ) {
+            _ip16 = addr;
+          } else {
+            dprint(F("NO "), static_cast<uint8_t>(PrintCategory::STATUS));
+          }
+          dprint(F("Jump to "), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(String(addr), static_cast<uint8_t>(PrintCategory::STATUS));
+          break;
+        }
       case Opcode::CALL: {
           uint16_t addr = readAddr();
           uint8_t * ipValPtr = reinterpret_cast<uint8_t*>(&_ip16);

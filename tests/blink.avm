@@ -1,7 +1,12 @@
 START:
-BINDAI N1 15
-BINDAO N3 10
 
+## Flashes the LED on pin 10, reads the button attached
+## to pin 2 and does not turn off the LED when button is
+## held down.
+
+BINDAI N1 15
+BINDDI N2 2
+BINDAO N3 10
 
 CALL LEDON
 NOOP
@@ -25,11 +30,16 @@ RET
 LEDOFF:
 POP_REGS_16 0,0
 PUSH_CONST_8 0
+MOV_MEM2_REG_16 N2 9
 MOV_SPREL2_REG_8 0 8
+CMP_INT_8 9,8
+JNE LEDOFF_BAILOUT
 MOV_REG2_MEM_8 8 N3
+LEDOFF_BAILOUT:
 RET
 
 
 DATASEG:
 2$N1:
+2$N2:
 2$N3:

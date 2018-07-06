@@ -61,10 +61,10 @@
 	    { "mnemonic" : "CMP_STRING", "base" : "FIXED_WIDTH_BASE", "offset" : "1" },
 
 	    { "mnemonic" : "JUMP_BASE", "base" : "FIXED_WIDTH_BASE", "offset" : "2", "comments" : "Jump Operations Base" },
-	    { "mnemonic" : "JNE", "base" : "JUMP_BASE" },
-	    { "mnemonic" : "JEQ", "base" : "JUMP_BASE",  "argFormats":["H"], "offset" : "1" },
-	    { "mnemonic" : "JLT", "base" : "JUMP_BASE", "offset" : "2" },
-	    { "mnemonic" : "JGT", "base" : "JUMP_BASE", "offset" : "3" },
+	    { "mnemonic" : "JNE", "base" : "JUMP_BASE", "argFormats":["H"] },
+	    { "mnemonic" : "JEQ", "base" : "JUMP_BASE", "argFormats":["H"], "offset" : "1" },
+	    { "mnemonic" : "JLT", "base" : "JUMP_BASE", "argFormats":["H"], "offset" : "2" },
+	    { "mnemonic" : "JGT", "base" : "JUMP_BASE", "argFormats":["H"], "offset" : "3" },
 	    { "mnemonic" : "UJMP", "base" : "JUMP_BASE", "argFormats":["H"], "offset" : "4", "comments" : " Unconditional jump" },
 
 	    { "mnemonic" : "BIND_BASE", "base" : "JUMP_BASE", "offset" : "5", "comments" : "Bind Operations Base" },
