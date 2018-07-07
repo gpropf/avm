@@ -79,6 +79,7 @@ class VM {
     VM * _nextVM = 0;
     PinBinding _pinBindings[NUM_PINS];
     //DataMode _dm;
+    uint8_t _lastAssignedPin;
 
     uint16_t _ip16Copy;
     Comparison _cmpReg;

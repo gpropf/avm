@@ -170,10 +170,19 @@ void VM::changeIP(int16_t addressDelta) {
 
 
 void VM::createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr) {
-  _pinBindings[pin].setIO(io);
-  _pinBindings[pin].setAD(ad);
-  _pinBindings[pin].setAddress(addr);
-  _pinBindings[pin].setPin(pin);
+  uint8_t pinToAssign = _lastAssignedPin;
+  for (uint8_t i = 0; i < _lastAssignedPin; i++) {
+    if (_pinBindings[i].getPin() == pin) {
+      pinToAssign = i;
+
+    }
+  }
+  _pinBindings[pinToAssign].setIO(io);
+  _pinBindings[pinToAssign].setAD(ad);
+  _pinBindings[pinToAssign].setAddress(addr);
+  _pinBindings[pinToAssign].setPin(pin);
+  if (pinToAssign == _lastAssignedPin)
+    _lastAssignedPin++;
 }
 
 
@@ -338,6 +347,7 @@ VM::VM(uint16_t memSize, uint16_t stackSize):  _memSize(memSize), _stackSize(sta
   _memBaseAddr = 0;
   _SP = STACK_TOP;
   _stackSize = stackSize;
+  _lastAssignedPin = 0;
   _ip16Copy = _ip16;
 
   // Fills the memory and stack with some values for now to show that it's working
@@ -356,7 +366,8 @@ VM::VM(uint8_t * memBase,
        uint8_t * regBase):
   _mem(memBase), _memBaseAddr(memBaseAddr),
   _SP(stackBaseAddr), _reg(regBase) {
-  _ip16 = 0;  
+  _ip16 = 0;
+  _lastAssignedPin = 0;
   _ip16Copy = _ip16;
 }
 
@@ -496,7 +507,7 @@ void VM::exec(Opcode opcode) {
   dprint(F(", Data width : "), static_cast<uint8_t>(PrintCategory::STATUS));
   dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
   opcode = opPair.c;
-  
+
   if (opcode == Opcode::BINDAO || opcode == Opcode::BINDAI ||
       opcode == Opcode::BINDDO || opcode == Opcode::BINDDI ||
       opcode == Opcode::BINDAP || opcode == Opcode::BINDDP) {
@@ -602,7 +613,7 @@ void VM::exec(Opcode opcode) {
           dprint(F("MOV_SPREL2_REG:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint8_t sprel = readData <uint8_t> ();
-          uint8_t reg = readData <uint8_t> ();          
+          uint8_t reg = readData <uint8_t> ();
           loadRegWithConst(reg);
           srcptr = getPtr(sprel, Location::SPREL);
           destptr = getPtr(reg, Location::REG);
@@ -611,7 +622,7 @@ void VM::exec(Opcode opcode) {
         }
       case Opcode::MOV_MEM2_REG_8: {
           dprint(F("MOV_MEM2_REG:"), static_cast<uint8_t>(PrintCategory::STATUS));
-          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));          
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           uint16_t addr = readAddr();
           uint8_t reg = readData <uint8_t> ();
           loadRegWithConst(reg);
@@ -667,7 +678,7 @@ void VM::exec(Opcode opcode) {
           dprint(F("POP_REGS:"), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           RegPair tr = getRegPair();
-          
+
           srcptr = getPtr(_SP, Location::MEM);
           destptr = getPtr(tr.reg1, Location::REG);
           moveData(srcptr, destptr, opPair.dw);
@@ -684,7 +695,7 @@ void VM::exec(Opcode opcode) {
       case Opcode::ADD_UINT_8: {
           // Add srcreg to destreg and leave the result in destreg
           dprint(F("ADD_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
-          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));  
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           doublePointer<uint32_t> dp = getRegPair2<uint32_t>();
           *(dp.destreg) += *(dp.srcreg);
           break;
@@ -692,7 +703,7 @@ void VM::exec(Opcode opcode) {
       case Opcode::MUL_UINT_8: {
           // Multiply srcreg and destreg and leave the result in destreg
           dprint(F("MUL_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
-          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));         
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           doublePointer<uint32_t> dp = getRegPair2<uint32_t>();
           *(dp.destreg) *= *(dp.srcreg);
           break;
@@ -716,7 +727,7 @@ void VM::exec(Opcode opcode) {
              The system is thus not set up to divide again by the same value but its cofactor.
           */
           dprint(F("DIV_UINT:"), static_cast<uint8_t>(PrintCategory::STATUS));
-          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));          
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           doublePointer<uint32_t> dp = getRegPair2<uint32_t>();
           *(dp.destreg) /= *(dp.srcreg);
           break;
@@ -780,7 +791,7 @@ void VM::exec(Opcode opcode) {
       case Opcode::ADD_FL: {
           // Add srcreg to destreg and leave the result in destreg
           dprint(F("ADD_FL:"), static_cast<uint8_t>(PrintCategory::STATUS));
-          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));          
+          dprintln(OpcodeWithWidth2String(opPair), static_cast<uint8_t>(PrintCategory::STATUS));
           doublePointer<float> dp = getRegPair2<float>();
           *(dp.destreg) += *(dp.srcreg);
           break;
@@ -855,7 +866,7 @@ void VM::exec(Opcode opcode) {
           dprintln(String(addr), static_cast<uint8_t>(PrintCategory::STATUS));
           break;
         }
-        case Opcode::JNE: {
+      case Opcode::JNE: {
           dprintln(F("JNE"), static_cast<uint8_t>(PrintCategory::STATUS));
           uint16_t addr = readAddr();
           if (_cmpReg != Comparison::EQUAL ) {
@@ -957,7 +968,7 @@ void VM::step() {
 }
 
 void VM::updateBoundData() {
-  for (uint8_t i = 0; i < NUM_PINS; i++) {   
+  for (uint8_t i = 0; i < NUM_PINS; i++) {
     _pinBindings[i].updatePin(*this);
   }
 }
