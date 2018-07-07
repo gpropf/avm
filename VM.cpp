@@ -856,7 +856,7 @@ void VM::exec(Opcode opcode) {
           break;
         }
         case Opcode::JNE: {
-          dprintln(F("JEQ"), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(F("JNE"), static_cast<uint8_t>(PrintCategory::STATUS));
           uint16_t addr = readAddr();
           if (_cmpReg != Comparison::EQUAL ) {
             _ip16 = addr;
