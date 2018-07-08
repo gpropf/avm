@@ -35,7 +35,7 @@ def getSerialDevice():
     return sdev
 
 
-class TestBlink(unittest.TestCase):
+class TestAVM(unittest.TestCase):
 
     
 
@@ -49,7 +49,8 @@ class TestBlink(unittest.TestCase):
         for line in lines:
             commandSentResponses = sendAndListen(ser, bytes(line,'utf-8'))
             prettyPrintArray(commandSentResponses)
-
+            
+        hexf.close()
         commandSentResponses = sendAndListen(ser, b's 500')
         prettyPrintArray(commandSentResponses)
         commandSentResponses = sendAndListen(ser,b'r')
@@ -57,9 +58,9 @@ class TestBlink(unittest.TestCase):
         commandSentResponses = sendAndListen(ser,b'q')
         prettyPrintArray(commandSentResponses)
         ser.close()
-        testline = commandSentResponses[43].split(":")[1].strip()
+        testline = commandSentResponses[44].split(":")[1].strip()
         self.assertEqual( int(testline), 255)
-
+        
 
 
     def test_loop_intmath(self):
@@ -73,12 +74,13 @@ class TestBlink(unittest.TestCase):
             commandSentResponses = sendAndListen(ser, bytes(line,'utf-8'))
             prettyPrintArray(commandSentResponses)
 
+        hexf.close()
         commandSentResponses = sendAndListen(ser, b's 200')
         prettyPrintArray(commandSentResponses)
         commandSentResponses = sendAndListen(ser,b'q')
         prettyPrintArray(commandSentResponses)
         ser.close()
-        testline = commandSentResponses[20].split(":")[1].strip()
+        testline = commandSentResponses[21].split(":")[1].strip()
         self.assertEqual( int(testline), 25)
 
         
@@ -93,11 +95,13 @@ class TestBlink(unittest.TestCase):
             commandSentResponses = sendAndListen(ser, bytes(line,'utf-8'))
             prettyPrintArray(commandSentResponses)
 
+        hexf.close()
         commandSentResponses = sendAndListen(ser, b's 20')
         prettyPrintArray(commandSentResponses)
         ser.close()
-        testline = commandSentResponses[0].strip()
+        testline = commandSentResponses[1].strip()
         self.assertEqual( float(testline), 407.02)
+        
 
         
 #################
@@ -121,9 +125,11 @@ def sendAndListen(ser, data = None, terminalNewline = b'\n', echoSentData = True
         ser.flush()
     time.sleep(1)
 
-    print("========================================== Begin Response ===")
-    response = 1
     responses = []
+    stringRepeats = 5
+    blockMarker = "=*="*stringRepeats
+    responses.append("\n" + blockMarker + " Begin Response " + blockMarker + "\n")
+    response = 1
     i = 0
     
     while response:
@@ -139,11 +145,11 @@ def sendAndListen(ser, data = None, terminalNewline = b'\n', echoSentData = True
             
         i = i + 1
 
-    print("\n======================================== End Response ===")
+    responses.append("\n" + blockMarker + " End Response " + blockMarker + "\n")
     return responses
 
 
-filename = "tests/floatmath.hex"
+#filename = "tests/floatmath.hex"
 
 def prettyPrintArray(arr, showLineNumbers = False):
     if showLineNumbers:
@@ -157,26 +163,5 @@ def prettyPrintArray(arr, showLineNumbers = False):
 
 
             
-def main():
-    ser = getSerialDevice()
-#    serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
-    print(ser.name) # check which port was really used
-
-    responses = sendAndListen(ser)
-    hexf = open(filename, "r")
-    lines = hexf.readlines()
-
-    for line in lines:
-        commandSentResponses = sendAndListen(ser, bytes(line,'utf-8'))
-        prettyPrintArray(commandSentResponses, True)
-
-    print("Sleeping for 2...")
-    commandSentResponses = sendAndListen(ser, b's 20')
-    prettyPrintArray(commandSentResponses, True)
-    commandSentResponses = sendAndListen(ser,b'r')
-    prettyPrintArray(commandSentResponses, True)
-    commandSentResponses = sendAndListen(ser,b'q')
-    prettyPrintArray(commandSentResponses, True)
-    ser.close()
-
-#main()
+if __name__ == '__main__':
+    unittest.main()
