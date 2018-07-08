@@ -1,6 +1,7 @@
 #ifndef config_h
 #define config_h
 
+//#define VERBOSE
 
 enum class PrintCategory : uint8_t {
   MATH = 0b00000001,
@@ -30,13 +31,14 @@ const uint16_t FUNCTION_START = 35;
 const uint16_t BAILOUT = 35;
 const uint8_t REGISTER_BLOCK_SIZE = 128;
 
-///*
+#ifdef VERBOSE
 const uint8_t categoriesToPrint = static_cast<uint8_t>(PrintCategory::POP) | static_cast<uint8_t>(PrintCategory::REG) |
                                   static_cast<uint8_t>(PrintCategory::REPL) | static_cast<uint8_t>(PrintCategory::STATUS) |
                                   static_cast<uint8_t>(PrintCategory::MEM) | static_cast<uint8_t>(PrintCategory::PUSH) |
                                   static_cast<uint8_t>(PrintCategory::MATH) | static_cast<uint8_t>(PrintCategory::PRINT);
+#else
+const uint8_t categoriesToPrint = static_cast<uint8_t>(PrintCategory::REPL) | static_cast<uint8_t>(PrintCategory::PRINT);
+#endif
 
-//*/
 
-//const uint8_t categoriesToPrint = static_cast<uint8_t>(PrintCategory::REPL) | static_cast<uint8_t>(PrintCategory::PRINT);
 #endif

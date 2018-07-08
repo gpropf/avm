@@ -33,7 +33,7 @@ void setup() {
     //#include "read-and-blink.h"
     //#include "pow.h"
 #include "boot.h"
-    65, 86, 77, 10, 0, 0, 0, 79, 0, 0, 84, 0
+    1,2,3,4,5
   };
   //uint8_t * srcptr = program;
   //uint8_t * destptr = &vm._mem[0];

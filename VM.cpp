@@ -850,7 +850,7 @@ void VM::exec(Opcode opcode) {
           dprint(String(tr.reg2), static_cast<uint8_t>(PrintCategory::STATUS));
           dprint(F(", as "), static_cast<uint8_t>(PrintCategory::STATUS));
           dprint(VM::_dataModeStrings[tr.reg1], static_cast<uint8_t>(PrintCategory::STATUS));
-          dprint(F(" is "), static_cast<uint8_t>(PrintCategory::STATUS));
+          dprintln(F(" is "), static_cast<uint8_t>(PrintCategory::STATUS));
           dprintln(s, static_cast<uint8_t>(PrintCategory::PRINT) | static_cast<uint8_t>(PrintCategory::STATUS));
           break;
         }

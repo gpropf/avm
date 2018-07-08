@@ -169,7 +169,12 @@ def chunkOnDblQuotes(program, verbose = False):
         numChunks = len(chunks)
         for i in range(numChunks):
             if i % 2 == 1:
-                chunks[i] = {'text':chunks[i], 'type':'DblQuotedChunk'}
+                chunkText = chunks[i]
+                textLen = len(chunkText) + 1 # pad with 0 to make a null terminated string
+                chunks[i] = {'text':chunkText, 'type':'DblQuotedChunk',
+                             'formatCode': str(textLen) + 's',
+                             'bitWidth': textLen * 8
+                             }
         outProgram = outProgram + chunks
     return outProgram
 
@@ -280,24 +285,6 @@ def buildExpressionTree(program, r = 0):
     return (dp, outList)
 
 
-def identifyContextBlocks(program):
-    dp = cl.deque(program)
-    outList = cl.deque()
-    while dp:
-        context = None
-        outChunk = dp.popleft()
-        if outChunk['text'] == "BEGIN":
-            context = 'beginContext'
-        elif outChunk['text'] == "END":
-            context = 'endContext'
-        outList.append(outChunk)
-        if context:
-            outChunk = dp.popleft()
-            outChunk['context'] = context
-            outList.append(outChunk)
-    return outList
-            
-
 def indexProgram(program):
     """We should now have enough information to note the byte index of
 each object in the program. We take account of the fact there are 2
@@ -305,29 +292,11 @@ nibbles to a byte here as well."""
     
     needNibble = False
     byteCount = 0
-    context = None
     for chunk in program:
-        if context:
-            pass
-#            print(context + " : " + str(byteCount) + " : " + str(chunk))
-        else:
-            pass
-#            print(str(byteCount) + " : " + str(chunk))
         chunk['byteIndex'] = byteCount
         bits = 0
         if chunk['type'] == 'instruction':
             bits = 8
-            
-        #elif 'resetIndex' in chunk:
-        #    oldByteCount = byteCount
-        #    resetIndex = chunk['resetIndex']
-            #print("Found resetIndex " + str(resetIndex) + " at old byte count " + str(oldByteCount))
-        elif 'context' in chunk:
-            ctx = chunk['context']
-            if ctx == 'beginContext':
-                context = chunk['text']
-            elif ctx == 'endContext':
-                context = None
         elif 'bitWidth' in chunk:
             bits = chunk['bitWidth']
             if bits == 4:
@@ -390,9 +359,11 @@ bytecode."""
 
         if chunk['type'] == 'float':
             bytes = struct.pack('f',chunk['value'])
+        elif chunk['type'] == 'DblQuotedChunk':            
+            bytes = struct.pack(chunk['formatCode'],str.encode(chunk['text']))
         else:
             if chunk['type'] == 'sint':
-                formatCodeIndex = 0
+                formatCodeIndex = 0 # the first indexed format code is the signed version
             if bitWidth == 4:
                 lowNibbleChunk = dp.popleft()
                 byteVal = chunk['value'] * 16 + lowNibbleChunk['value']
@@ -529,7 +500,6 @@ def test():
     print("chunkOnSpaces ==================================")
     printChunks(p)
     
-
     print("chunkAndClassify ==================================")
     p = chunkAndClassify(p)
     printChunks(p)
@@ -544,10 +514,6 @@ def test():
     
     print("buildExpressionTree ==================================")
     (dp,p) = buildExpressionTree(p)
-    printChunks(p)
-
-    print("identifyContextBlocks ==================================")
-    p = identifyContextBlocks(p)
     printChunks(p)
     
     print("captureIntructionArgs ==================================")
@@ -570,7 +536,5 @@ def test():
     p = emitValues(pfinal)
     printChunks(p)
 
-#    for c in p:
-#        print(c)
     return (pfinal,s,p)
 
