@@ -4,6 +4,7 @@
 # serial_tester.py
 # ======================================================================
 # Test the VM using the serial API and hot loaded code.
+# Usage: 'py.test serial_tester.py' or 'python -m pytest serial_tester.py'
 
 import sys, time
 if sys.version_info[0] != 3 or sys.version_info[1] < 6:
@@ -19,10 +20,28 @@ baudrate = 57600
 ### Begin Tests ###
 ###################
 
+def getSerialDevice():
+    serialDevices = ["/dev/ttyACM0", "/dev/ttyACM1"]
+    # a list of serial devices to try to open before each test. Necessary
+    # because the device changes a lot as the system remaps the Arduino
+    # serial port
+    sdev = None
+    for devName in serialDevices:
+        try:
+            sdev = serial.Serial(devName, baudrate, timeout=1)
+            break
+        except:
+            print ("Failed to open serial device: " + devName + ". Trying next device...")
+    return sdev
+
+
 class TestBlink(unittest.TestCase):
 
+    
+
     def test_blink(self):
-        ser = serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
+        #ser = serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
+        ser = getSerialDevice()
         responses = sendAndListen(ser)
         hexf = open("tests/blink.hex", "r")
         lines = hexf.readlines()
@@ -44,7 +63,8 @@ class TestBlink(unittest.TestCase):
 
 
     def test_loop_intmath(self):
-        ser = serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
+        ser = getSerialDevice()
+        time.sleep(2)
         responses = sendAndListen(ser)
         hexf = open("tests/loop-intmath.hex", "r")
         lines = hexf.readlines()
@@ -61,8 +81,10 @@ class TestBlink(unittest.TestCase):
         testline = commandSentResponses[20].split(":")[1].strip()
         self.assertEqual( int(testline), 25)
 
+        
     def test_floatmath(self):
-        ser = serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
+        ser = getSerialDevice()
+#        serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
         responses = sendAndListen(ser)
         hexf = open("tests/floatmath.hex", "r")
         lines = hexf.readlines()
@@ -106,15 +128,22 @@ def sendAndListen(ser, data = None, terminalNewline = b'\n', echoSentData = True
     
     while response:
         response = ser.readline()
-        rdecoded = response.decode()
-        responses.append(rdecoded)
+        try:
+            rdecoded = response.decode()
+            responses.append(rdecoded)
+        except:
+            print("Error during decoding, trying to continue...")
+            print("Begin Failed decoding:---------")
+            print(response)
+            print("End Failed decoding:---------")
+            
         i = i + 1
 
     print("\n======================================== End Response ===")
     return responses
 
 
-filename = "floatmath.hex"
+filename = "tests/floatmath.hex"
 
 def prettyPrintArray(arr, showLineNumbers = False):
     if showLineNumbers:
@@ -129,7 +158,8 @@ def prettyPrintArray(arr, showLineNumbers = False):
 
             
 def main():
-    ser = serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
+    ser = getSerialDevice()
+#    serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
     print(ser.name) # check which port was really used
 
     responses = sendAndListen(ser)
