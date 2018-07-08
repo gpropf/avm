@@ -62,7 +62,7 @@ void VM::printBootMsg(const String versionDetails) const {
 
 String VM::getAsString(uint16_t addr, const String modeString) const {
   uint8_t numModeStrings = sizeof(VM::_dataModeStrings) / sizeof(VM::_dataModeStrings[0]);
-  //dprintln(F("sizeof(VM::_dataModeStrings): ") + String(numModeStrings));
+
   for (uint8_t i = 0; i < numModeStrings; i++) {
     if (modeString == VM::_dataModeStrings[i]) {
       return getAsString(addr, static_cast<DataMode>(i));
@@ -71,12 +71,8 @@ String VM::getAsString(uint16_t addr, const String modeString) const {
   return String();
 }
 
-//uint16_t VM::translateAddr(const uint16_t addr) const {
-//  return addr - _memBaseAddr;
-//}
-
-uint16_t VM::readAddr() {
-  return readData<uint16_t>() - _memBaseAddr;
+uint16_t VM::translateAddr(const uint16_t addr) const {
+  return addr - _memBaseAddr;
 }
 
 String VM::getAsString(uint8_t* addr8, const DataMode dm) const {
@@ -113,10 +109,13 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) const {
             This one is different. We interpret the value at addr8 as a uint16_t
             VM memory address so if the thing at addr8 is 84 then we actually look
             at _mem[84] for the start of the null-terminated string.
+
+            We are now also treating these addresses as absolute addresses needing to
+            be translated for the child VMs.
         */
 
-        uint16_t memAddr = *reinterpret_cast<uint16_t*>(addr8);
-        //dprintln(F("String addr = ") + String(memAddr), static_cast<uint8_t>(PrintCategory::STATUS));
+        uint16_t memAddr = translateAddr(*reinterpret_cast<uint16_t*>(addr8));
+
         char currentChar = 39;
         // 39 is the code for "'". It's a cute way to have currentChar be non-zero
         // at the start and as a way to start the single-quoted string.
@@ -130,7 +129,6 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) const {
           currentChar = readDataConst<char>(memAddr++);
         }
         // dprintln(F("STRING:") + s, static_cast<uint8_t>(PrintCategory::REPL));
-
         return s;
       }
     default:
@@ -141,10 +139,16 @@ String VM::getAsString(uint8_t* addr8, const DataMode dm) const {
 
 
 String VM::getAsString(uint16_t addr, const DataMode dm) const {
+  // Take an address and get a pointer to that location in memory.
+  // Then call the pointer form of this method to get the actual string.
   uint8_t * realAddrPtr = reinterpret_cast<uint8_t*>(&_mem[addr]);
   return getAsString(realAddrPtr, dm);
 }
 
+
+uint16_t VM::readAddr() {
+  return translateAddr(readData<uint16_t>());
+}
 
 void VM::writeString(char * sptr, uint16_t inAddr , boolean advanceIP) {
   uint16_t stringLength =  getStringLength(sptr);
@@ -174,7 +178,6 @@ void VM::createBinding(uint8_t pin, uint8_t io, boolean ad, uint16_t addr) {
   for (uint8_t i = 0; i < _lastAssignedPin; i++) {
     if (_pinBindings[i].getPin() == pin) {
       pinToAssign = i;
-
     }
   }
   _pinBindings[pinToAssign].setIO(io);
@@ -228,7 +231,7 @@ void VM::PinBinding::setIO(uint8_t m) {
 }
 
 
-uint8_t VM::PinBinding::getIO() {
+uint8_t VM::PinBinding::getIO() const {
   return _io;
 }
 
@@ -238,7 +241,7 @@ void VM::PinBinding::setAD(boolean ad) {
 }
 
 
-boolean VM::PinBinding::getAD() {
+boolean VM::PinBinding::getAD() const {
   return _ad;
 }
 
@@ -252,8 +255,12 @@ void VM::PinBinding::setAddress(uint16_t address) {
   _address = address;
 }
 
+uint16_t VM::PinBinding::getAddress() const {
+  return _address;
+}
 
-uint8_t VM::PinBinding::getPin() {
+
+uint8_t VM::PinBinding::getPin() const {
   return _pin;
 }
 

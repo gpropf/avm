@@ -22,28 +22,15 @@ dataBitWidths = {'H':16,'h':16,'i':32,'I':32,'f':32,'b':8,'B':8, 'N':4}
 ## B: 8 bits, usually a data constant or stack offset
 ## N: a "nibble", 4 bits. Used to pack 2 register indices into a single byte.
 
-instructions = {
-  #  "PUSH_MEM_8": {"opcode":PUSH_MEM_8,},
-  
- #   "POP_REGS_8": {"opcode":POP_REGS_8, "argFormats":["N","N"]},
- #   "PRINT_AS": {"opcode":PRINT_AS, "argFormats":["N","N"]},
- #   "POP_REGS_16": {"opcode":POP_REGS_8 + END_8, "argFormats":["N","N"]},
-#    "UJMP": {"opcode":UJMP, "argFormats":["H"]},
- #   "CALL": {"opcode":CALL, "argFormats":["H"]},
- #   "MOV_SPREL2_REG_8": {"opcode": MOV_SPREL2_REG_8, "argFormats":["B","B"]},
- #   "MOV_MEM2_REG_16": {"opcode": MOV_MEM2_REG_8 + END_8, "argFormats":["H","B"]},  
- #   "RET": {"opcode": RET, "argFormats":[]},
-#    "NOOP": {"opcode": NOOP, "argFormats":[]},
-#    "MOV_REG2_SPREL_8": {"opcode": MOV_REG2_SPREL_8, "argFormats":["B","B"]},
- #   "CMP_INT_8": {"opcode": CMP_INT_8, "argFormats":["N","N"]},
-  #  "MUL_UINT_8": {"opcode": MUL_UINT_8, "argFormats":["N","N"]},
- #   "SUB_UINT_8": {"opcode": SUB_UINT_8, "argFormats":["N","N"]},
- #   "JEQ": {"opcode": JEQ, "argFormats":["H"]},
-#    "INC_SPREL_UINT_8": {"opcode": INC_SPREL_UINT_8, "argFormats":["B"]},
-    
-}
+# A note about "operators". I realized that I could get a lot done
+# here by making use of the concept of what might be called a
+# "compile-time operator". This is something that links tokens
+# together or tags them at an early stage of the compilation and which
+# is not present at runtime in any sense. In most of CS oeprators work
+# at runtime. Something like A = B + C means to assign the *runtime*
+# value of the sum of B and C to the variable A.
 
-instructions = { **instructions, **mdFixedWidth, **mdMultiWidth }
+instructions = { **mdFixedWidth, **mdMultiWidth }
 
 def leftUnary(leftArg, op):
     """ Process left unary operators. Currently only handles the declaration operator ":". The value of 'op' is ignored."""
@@ -52,7 +39,7 @@ def leftUnary(leftArg, op):
     else:
         return leftArg # Really this is an error but I'm not adding the exceptions yet.
         
-
+# operators: stage = when is this processed, combinator = function that does the processing of the arguments.
 operators = {':': {'stage':'leftUnary','combinator': leftUnary},
              ',': {'stage':'processTextOperators','combinator':(lambda x,y: y)},
              '.': {'stage':'processTextOperators','combinator':(lambda x,y: float(str(x['text']) + '.' +str(y['text'])))},
@@ -61,6 +48,14 @@ operators = {':': {'stage':'leftUnary','combinator': leftUnary},
              '*': {'stage':'sx','combinator':(lambda x,y: x * y)},
              '/': {'stage':'sx','combinator':(lambda x,y: x / y)},
              '//': {'stage':'sx','combinator':(lambda x,y: x // y)},
+
+# Dollar ($) is a special operator for variable declarations. '2$FOO:'
+# means "create a 2 byte variable called FOO". To use the FOO variable
+# you simply write FOO at other places in the code. The location
+# assigned to it is determined by where the original declaration
+# appears. I mostly put all my globals in a section declared as
+# DATASEG: that follows all the code.
+             
              '$': {'stage':'processTextOperators','combinator':(lambda x,y: { **y, **{'type':'variable', 'bitWidth': int(x['text']) * 8}})},
              '=': {'stage':'sx','combinator':(lambda x,y: y)}
 }
@@ -210,19 +205,7 @@ def chunkAndClassify(program, verbose = False):
                 outProgram.append(chunk)
                 # No need to classify further, we're done.
                 continue
-            m = re.match("^(\w+):(\d+)$", chunk) # Chunk is a a symbol, then ':', then a number
-            if m:
-                # Symbols declared with a numeric value after the colon (i.e. "FOO:3")
-                # have that value hardcoded no matter where they appear in the code.
-                # This allows for the creation of "local" variables for use by spawned VMs.
-                (label,index) = m.groups()
-                indexVal = int(index)
-                chunk = {'text':label, 'type':'label', 'resetIndex':indexVal,
-                         'value':indexVal, 'declaration': True, 'bitWidth':0}
-                # Floats are always going to take up 4 bytes.
-                outProgram.append(chunk)
-                # No need to classify further, we're done.
-                continue
+           
             #opcode = 0
             chunkParts = re.findall(r'\w+|:+|\(|\)|\++|,+|/+|\*+|\-+|\$+', chunk)
             chunkParts = list(map (lambda c: c.strip(),chunkParts))
@@ -266,7 +249,7 @@ groups."""
 
 
 def buildExpressionText(expList):
-    """ Builds a text representation of the expression from the syntax tree."""
+    """ Builds a text representation of the expression from the syntax tree. Probably will always remain experimental as I plan on moving complex compile-time shenanigans to the high level language side."""
     expTexts = []
     for expDict in expList:
         if type(expDict) == dict:
@@ -539,7 +522,7 @@ def printChunks(p):
     
 def test():
     """ Quickie test script meant to be run by just doing up-arrow at the ipython cmd line."""
-    p = stripComments("tests/parallel_loop-intmath_blink.avm")
+    p = stripComments("tests/loop-intmath.avm")
     p = chunkOnDblQuotes(p)
     p = chunkOnSpaces(p)
     

@@ -60,12 +60,13 @@ class VM {
         uint16_t read();
         void write(uint16_t val);
         void setAddress(uint16_t address);
-        boolean getAD();
+        inline uint16_t getAddress() const;
+        inline boolean getAD() const;
         void setAD(boolean aord);
-        uint8_t getIO();
+        inline uint8_t getIO() const;
         void setIO(uint8_t io);
         void setPin(uint8_t pin);
-        uint8_t getPin();
+        inline uint8_t getPin() const;
         void updatePin(VM & vm);
         void print();
 
@@ -95,8 +96,9 @@ class VM {
     RegPair getRegPair();
     //uint16_t ;
     String OpcodeWithWidth2String(OpcodeAndDataWidth opdw); // Might not do this after all.
-    //uint16_t translateAddr(const uint16_t addr) const;
+    
     uint16_t readAddr();
+    inline uint16_t translateAddr(const uint16_t addr) const;
 
 
   public:
@@ -114,7 +116,7 @@ class VM {
     String getAsString(uint8_t* addr8, const DataMode dm) const;
     String getAsString(uint16_t addr, const String modeString) const;
     String getAsString(uint16_t addr, const DataMode dm) const;
-    String getAsString(uint8_t regnum, const DataMode dm) const;
+   
 
 
     void writeString(char * sptr, uint16_t inAddr = 0, boolean advanceIP = true);
