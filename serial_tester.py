@@ -15,6 +15,8 @@ import serial
 import io
 import unittest
 
+from Asm import *
+
 baudrate = 57600
 
 ### Begin Tests ###
@@ -110,6 +112,7 @@ class TestAVM(unittest.TestCase):
         
     def test_string(self):
         responses = sendAndListen(self.ser)
+        compileAVMFile("tests/string.avm","hex")
         hexf = open("tests/string.hex", "r")
         lines = hexf.readlines()
 

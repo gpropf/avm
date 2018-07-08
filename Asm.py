@@ -157,6 +157,7 @@ def stripComments(filename, verbose = False):
         line = line.split('#')[0]
         program = program + [line]
         line = f.readline()
+    f.close()
     return program
  
 
