@@ -37,72 +37,92 @@ def getSerialDevice():
 
 class TestAVM(unittest.TestCase):
 
-    
 
+    def setUp(self):
+        self.ser = getSerialDevice()
+
+    def tearDown(self):
+        self.ser.close()
+
+    @unittest.skip("demonstrating skipping")
     def test_blink(self):
         #ser = serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
-        ser = getSerialDevice()
-        responses = sendAndListen(ser)
+        
+        responses = sendAndListen(self.ser)
         hexf = open("tests/blink.hex", "r")
         lines = hexf.readlines()
 
         for line in lines:
-            commandSentResponses = sendAndListen(ser, bytes(line,'utf-8'))
+            commandSentResponses = sendAndListen(self.ser, bytes(line,'utf-8'))
             prettyPrintArray(commandSentResponses)
             
         hexf.close()
-        commandSentResponses = sendAndListen(ser, b's 500')
+        commandSentResponses = sendAndListen(self.ser, b's 500')
         prettyPrintArray(commandSentResponses)
-        commandSentResponses = sendAndListen(ser,b'r')
+        commandSentResponses = sendAndListen(self.ser,b'r')
         prettyPrintArray(commandSentResponses)
-        commandSentResponses = sendAndListen(ser,b'q')
+        commandSentResponses = sendAndListen(self.ser,b'q')
         prettyPrintArray(commandSentResponses)
-        ser.close()
+        
         testline = commandSentResponses[44].split(":")[1].strip()
         self.assertEqual( int(testline), 255)
         
 
-
+    @unittest.skip("demonstrating skipping")
     def test_loop_intmath(self):
-        ser = getSerialDevice()
+        
         time.sleep(2)
-        responses = sendAndListen(ser)
+        responses = sendAndListen(self.ser)
         hexf = open("tests/loop-intmath.hex", "r")
         lines = hexf.readlines()
 
         for line in lines:
-            commandSentResponses = sendAndListen(ser, bytes(line,'utf-8'))
+            commandSentResponses = sendAndListen(self.ser, bytes(line,'utf-8'))
             prettyPrintArray(commandSentResponses)
 
         hexf.close()
-        commandSentResponses = sendAndListen(ser, b's 200')
+        commandSentResponses = sendAndListen(self.ser, b's 200')
         prettyPrintArray(commandSentResponses)
-        commandSentResponses = sendAndListen(ser,b'q')
+        commandSentResponses = sendAndListen(self.ser,b'q')
         prettyPrintArray(commandSentResponses)
-        ser.close()
+        
         testline = commandSentResponses[21].split(":")[1].strip()
         self.assertEqual( int(testline), 25)
 
-        
+    @unittest.skip("demonstrating skipping")    
     def test_floatmath(self):
-        ser = getSerialDevice()
+        
 #        serial.Serial('/dev/ttyACM0', baudrate, timeout=1)
-        responses = sendAndListen(ser)
+        responses = sendAndListen(self.ser)
         hexf = open("tests/floatmath.hex", "r")
         lines = hexf.readlines()
 
         for line in lines:
-            commandSentResponses = sendAndListen(ser, bytes(line,'utf-8'))
+            commandSentResponses = sendAndListen(self.ser, bytes(line,'utf-8'))
             prettyPrintArray(commandSentResponses)
 
         hexf.close()
-        commandSentResponses = sendAndListen(ser, b's 20')
+        commandSentResponses = sendAndListen(self.ser, b's 20')
         prettyPrintArray(commandSentResponses)
-        ser.close()
+        
         testline = commandSentResponses[1].strip()
         self.assertEqual( float(testline), 407.02)
         
+    def test_string(self):
+        responses = sendAndListen(self.ser)
+        hexf = open("tests/string.hex", "r")
+        lines = hexf.readlines()
 
+        for line in lines:
+            commandSentResponses = sendAndListen(self.ser, bytes(line,'utf-8'))
+            prettyPrintArray(commandSentResponses)
+            
+        hexf.close()
+        commandSentResponses = sendAndListen(self.ser, b's 5')
+        prettyPrintArray(commandSentResponses)
+        
+        testline = commandSentResponses[1].strip()
+        self.assertEqual( testline, "Greg")
         
 #################
 ### End Tests ###        
@@ -111,9 +131,10 @@ class TestAVM(unittest.TestCase):
 
 
 def sendAndListen(ser, data = None, terminalNewline = b'\n', echoSentData = True):
-    print("Writing data...")
+
     
     if data:
+        print("Writing data...")
         if echoSentData:
             print(data + terminalNewline)
         ser.flush()
@@ -123,6 +144,7 @@ def sendAndListen(ser, data = None, terminalNewline = b'\n', echoSentData = True
         ser.flush()
         ser.write(terminalNewline)
         ser.flush()
+        return []
     time.sleep(1)
 
     responses = []

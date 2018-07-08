@@ -17,31 +17,16 @@ verbosity = True
 #p4 = stage4(p3, verbose = verbosity)
 #p5 = stage5(p4, verbose = verbosity)
 
-p = stripComments(filename)
-p = chunkOnDblQuotes(p)
-p = chunkOnSpaces(p)
-p = chunkAndClassify(p)
-p = processTextOperators(p)
-p = processUnaryOps(p)
 
-(dp,p) = buildExpressionTree(p)
-p = captureIntructionArgs(p)
-p = indexProgram(p)
-s = buildSymbolTable(p)
-p = tagByteValues(p,s)
-p = emitValues(p)
 
-outputHex = True
+outputSuffix = "hex"
 if len(sys.argv) > 2:
     arg1 = sys.argv[2]
     if arg1 == "--C++":
-        outputHex = False
+        outputSuffix = "h"
 
         
 
-if outputHex:
-    printAsHexString(p)
-else:
-    printAsCStr(p)
+compileAVMFile(filename, outputSuffix)
 print()
 

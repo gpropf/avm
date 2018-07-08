@@ -373,9 +373,37 @@ bytecode."""
         outp = outp + [byte for byte in bytes]
     return outp
 
+def getOutputFilename(sourceFilename, suffix = "hex"):
+    fnParts = sourceFilename.split(".")
+    fnParts = fnParts[:-1]
+    fnParts.append(suffix)
+    outputFilename = str.join(".",fnParts)
+    return outputFilename
 
+def compileAVMFile(sourceFilename, suffix = "hex"):
+    p = stripComments(sourceFilename)
+    p = chunkOnDblQuotes(p)
+    p = chunkOnSpaces(p)
+    p = chunkAndClassify(p)
+    p = processTextOperators(p)
+    p = processUnaryOps(p)
 
-def printAsCStr(program):
+    (dp,p) = buildExpressionTree(p)
+    p = captureIntructionArgs(p)
+    p = indexProgram(p)
+    s = buildSymbolTable(p)
+    p = tagByteValues(p,s)
+    p = emitValues(p)
+    if suffix == "hex":
+        outText = formatAsHexString(p)
+    else:
+        outText = formatAsCString(p)
+    outputFilename = getOutputFilename(sourceFilename, suffix)
+    outfh = open(outputFilename,'w')
+    outfh.write(outText)
+    outfh.close()
+
+def formatAsCString(program):
     """print program As C-style uint8_t array:"""
     cstr = ""
     i = 0
@@ -384,11 +412,10 @@ def printAsCStr(program):
         cstr = cstr + str(code) + ","
         if i % 10 == 0:
             cstr = cstr + "\n"
+    return cstr
 
-    print(cstr)
 
-
-def printAsHexString(program, addr = 0):
+def formatAsHexString(program, addr = 0):
     """print program as block of hex characters:"""
     commandPrefix = "l "
     hexstr = ""
@@ -403,7 +430,7 @@ def printAsHexString(program, addr = 0):
         addr = addr + 1
         i = i + 1
         #print(hexstr)
-    print(hexstr)
+    return hexstr
     
 
 def makeMetadataForOpcode(mnemonic, argFormats):
