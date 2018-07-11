@@ -73,4 +73,4 @@ other larger computers if I think it would be fun.
 sensors. Probably each foreign function turns into a custom
 instruction compiled into whatever version of the VM we are using.
 
-2) Mute Language: See language spec at (./mute/README.md)
+2) Mute Language: See [language spec](./mute/README.md)
