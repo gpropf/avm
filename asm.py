@@ -28,5 +28,5 @@ if len(sys.argv) > 2:
         
 
 compileAVMFile(filename, outputSuffix)
-print()
+
 

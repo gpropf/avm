@@ -1,13 +1,11 @@
 START:
 BINDAI 2$N1 15
-BINDAO 2$N3 (7 + 3 )
-
-(3+2)
+BINDAO 2$N3 10
 
 
 CALL ADD2
 UJMP START # I'm a comment with a single quote!!!
-2$N8 "  "  ### More crazy comments
+#2$N8 "  "  ### More crazy comments
 ADD2:
 POP_REGS_16 0,0
 PUSH_CONST_16 130
@@ -31,7 +29,5 @@ NOOP N2:
 NOOP N4: "addf"
 NOOP N5:
 NOOP N6:
-
-(56+22 -(4 // 2$N1))
 
 FOO:

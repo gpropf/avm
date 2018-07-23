@@ -254,38 +254,6 @@ groups."""
     return program
 
 
-def buildExpressionText(expList):
-    """ Builds a text representation of the expression from the syntax tree. Probably will always remain experimental as I plan on moving complex compile-time shenanigans to the high level language side."""
-    expTexts = []
-    for expDict in expList:
-        if type(expDict) == dict:
-            expTexts.append(expDict['text'])
-        else:
-            expTexts.append("(")
-            expTexts.append(buildExpressionText(expDict))
-            expTexts.append(")")
-    return (" ").join(expTexts)
-
-def buildExpressionTree(program, r = 0):
-    """Somewhat experimental still. Meant to process compile-time math
- expressions like (V1 + 5) where V1 is the address of a variable."""
-    dp = cl.deque(program)
-    outList = cl.deque()
-    while dp:
-        outChunk = dp.popleft()
-        if type(outChunk) == dict:
-            if outChunk['type'] == "open-parenz":
-                (dp, outChunk) = buildExpressionTree(dp, r + 1)
-            elif outChunk['type'] == "close-parenz":
-                if r == 1:
-                    outList = {'text':buildExpressionText(outList),
-                               'type':'expression',
-                               'expressionTree': outList}
-                return (dp, outList)            
-        outList.append(outChunk)
-    return (dp, outList)
-
-
 def indexProgram(program):
     """We should now have enough information to note the byte index of
 each object in the program. We take account of the fact there are 2
@@ -388,8 +356,6 @@ def compileAVMFile(sourceFilename, suffix = "hex"):
     p = chunkAndClassify(p)
     p = processTextOperators(p)
     p = processUnaryOps(p)
-
-    (dp,p) = buildExpressionTree(p)
     p = captureIntructionArgs(p)
     p = indexProgram(p)
     s = buildSymbolTable(p)
@@ -399,6 +365,7 @@ def compileAVMFile(sourceFilename, suffix = "hex"):
         outText = formatAsHexString(p)
     else:
         outText = formatAsCString(p)
+    outText = outText + "\n"
     outputFilename = getOutputFilename(sourceFilename, suffix)
     outfh = open(outputFilename,'w')
     outfh.write(outText)
@@ -417,7 +384,7 @@ def formatAsCString(program):
 
 
 def formatAsHexString(program, addr = 0):
-    """print program as block of hex characters:"""
+    """print program as block of hex characters preceded by the 'l' (load) command for the VM's REPL:"""
     commandPrefix = "l "
     hexstr = ""
     i = 0
@@ -538,10 +505,6 @@ def test():
 
     print("processUnaryOps ==================================")
     p = processUnaryOps(p)
-    printChunks(p)
-    
-    print("buildExpressionTree ==================================")
-    (dp,p) = buildExpressionTree(p)
     printChunks(p)
     
     print("captureIntructionArgs ==================================")

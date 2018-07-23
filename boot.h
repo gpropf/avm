@@ -2,7 +2,7 @@
 #define boot_h
 
 //#include "parallel_loop-intmath_blink.h"
-//#include "tests/blink.h"
-#include "tests/string.h"
+#include "tests/blink.h"
+//#include "tests/string.h"
 
 #endif
