@@ -1,32 +1,35 @@
 #!/usr/bin/env python3
 
-import sys
+import argparse, sys
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
+
 
 from Asm import *
 
-filename = sys.argv[1]
+parser = argparse.ArgumentParser(description='Compile avm files to either C++ header files or REPL hotload commands and hex code of binary.')
 
-verbosity = True
-#verbosity = False
 
-#program = chunkifyProgram(filename, verbose = verbosity)
-#p1 = stage1(program, verbose = verbosity)
-#p2 = stage2(p1, verbose = verbosity)
-#p3 = stage3(p2, verbose = verbosity)
-#locateRefs(p3, verbose = verbosity)    
-#p4 = stage4(p3, verbose = verbosity)
-#p5 = stage5(p4, verbose = verbosity)
+parser.add_argument("--cpp", help="Write out C++ header file, default is REPL hotload command blocks",
+                    action="store_true")
 
+parser.add_argument("avmfiles", nargs='+')
+
+args = parser.parse_args()
 
 
 outputSuffix = "hex"
-if len(sys.argv) > 2:
-    arg1 = sys.argv[2]
-    if arg1 == "--C++":
-        outputSuffix = "h"
+filetype = "hex"
 
-        
+if args.cpp:
+    outputSuffix = "h"
+    filetype = "C++ header"
 
-compileAVMFile(filename, outputSuffix)
+for filename in args.avmfiles:
+    print("Compiling: " + filename + " to " + filetype + " file...")
+    compileAVMFile(filename, outputSuffix)
 
 
