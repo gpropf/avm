@@ -23,6 +23,7 @@ data IOPin = IOPin { pinType :: IOPinType
                    } deriving (Show)
 
 
+
 data Func = Func { fname :: [Char], args :: [Var] , asm :: [Char]} deriving (Show)
 data Var = Var { vname :: [Char], varType :: [Char], location :: Int } deriving (Show)
 data CompilerContext = CompilerContext { vars :: [Var], functions :: [Func], contextAsm :: [Char] } | NullContext deriving (Show)
@@ -37,6 +38,10 @@ addVarToCC v cc =
 
 
 swapCC incc cmd = cmd { globalContext = incc }
+
+
+
+
 
 eol :: GenParser Char st Char
 eol = char '\n'
@@ -64,11 +69,13 @@ handleErrors eparseList =
     Right pl ->
       Right $ firstPassCC pl
 
+
 firstPass parseList = runST $ do
   varList <- newSTRef []
   forM_ parseList $ \v -> do
     modifySTRef varList $ ((:) . (pinNum)) v
   readSTRef varList
+
 
 firstPassCC parseList = runST $ do
   cmd <- newSTRef initCMD
@@ -80,7 +87,6 @@ firstPassCC parseList = runST $ do
         newcc' = addVarToCC newvar newcc
     modifySTRef cmd $ (swapCC newcc') . (\cmd -> cmd {ip = (ip cmd) + 2})
   readSTRef cmd
-
 
 main :: IO ()
 main = do
