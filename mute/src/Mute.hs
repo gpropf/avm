@@ -1,4 +1,6 @@
-module Mute (pindefs, firstPassCC, IOPin(..), Var(..), IOPinType(..), emit, parseProgram, num, mnum, aout, ain, din, dout, varName) where
+module Mute (pindefs, firstPassCC, IOPin(..), Var(..), IOPinType(..), Statement(..)
+            , emit, parseProgram, num, mnum, aout, ain, din, dout, varName, pindef
+            , digital, analog, regularParse, statement, statements) where
 
 
 --import Parsec
@@ -29,6 +31,8 @@ data IOPinType = AnalogIn | AnalogOut | DigitalIn | DigitalOut deriving (Show)
 data IOPin = IOPin { pinType :: IOPinType
                    , pinNum :: Int
                    } deriving (Show)
+
+data Statement = VarStmt Var  | IOPinStmt IOPin deriving (Show)
 
 
 
@@ -132,22 +136,26 @@ digital = do
   pin <- try din <|> dout
   return pin
 
+-- pindef :: GenParser Char st IOPin
 pindef = do
   pinType <- digital <|> analog
   pinNum <- num
   --return (pintype, pinnum)
-  return (IOPin pinType (fromIntegral pinNum))
+  return $ IOPinStmt (IOPin pinType (fromIntegral pinNum))
 
 pindefs = do
   endBy pindef whitespace
 
-varName :: GenParser Char st [Char]
+statements = do
+  endBy statement whitespace
+
+varName :: GenParser Char st Statement
 varName = do
   sc <- lower
   nextLetters <- many ( alphaNum <|> char '_' )
-  return $ sc : nextLetters
+  return $ VarStmt (Var (sc : nextLetters) "" 1)
 
-
+statement = pindef <|> varName
 
 parseProgram = do
   pd <- pindefs
